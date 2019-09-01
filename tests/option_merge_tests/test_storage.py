@@ -51,8 +51,8 @@ describe TestCase, "Storage":
         self.storage = Storage()
 
     it "Has data and deleted paths":
-        self.assertEqual(self.storage.deleted, [])
-        self.assertEqual(self.storage.data, [])
+        assert self.storage.deleted == []
+        assert self.storage.data == []
 
     it "adds new data at the start":
         path1 = Path(mock.Mock(name="path1"))
@@ -67,51 +67,50 @@ describe TestCase, "Storage":
         converter1 = mock.Mock(name="converter1")
         converter2 = mock.Mock(name="converter2")
 
-        self.assertEqual(self.storage.deleted, [])
-        self.assertEqual(self.storage.data, [])
+        assert self.storage.deleted == []
+        assert self.storage.data == []
 
         self.storage.add(path1, data1, source=source1)
-        self.assertEqual(self.storage.deleted, [])
-        self.assertEqual(self.storage.data, [(path1, data1, source1)])
+        assert self.storage.deleted == []
+        assert self.storage.data == [(path1, data1, source1)]
 
         self.storage.add(path2, data2, source=source2)
-        self.assertEqual(self.storage.deleted, [])
-        self.assertEqual(self.storage.data, [(path2, data2, source2), (path1, data1, source1)])
+        assert self.storage.deleted == []
+        assert self.storage.data == [(path2, data2, source2), (path1, data1, source1)]
 
     describe "Deleting":
         it "removes first thing with the same path":
             self.storage.add(Path(["a", "b"]), d1)
             self.storage.add(Path(["b", "c"]), d2)
             self.storage.add(Path(["a", "b"]), d3)
-            self.assertEqual(
-                self.storage.data,
-                [(["a", "b"], d3, None), (["b", "c"], d2, None), (["a", "b"], d1, None)],
-            )
+            assert self.storage.data == [
+                (["a", "b"], d3, None),
+                (["b", "c"], d2, None),
+                (["a", "b"], d1, None),
+            ]
             self.storage.delete("a.b")
-            self.assertEqual(self.storage.data, [(["b", "c"], d2, None), (["a", "b"], d1, None)])
+            assert self.storage.data == [(["b", "c"], d2, None), (["a", "b"], d1, None)]
 
         it "removes first thing starting with the same path":
             self.storage.add(Path(["a", "b", "c"]), d1)
             self.storage.add(Path(["b", "c"]), d2)
             self.storage.add(Path(["a", "b", "d"]), d3)
             self.storage.add(Path(["a", "bd"]), d4)
-            self.assertEqual(
-                self.storage.data,
-                [
-                    (["a", "bd"], d4, None),
-                    (["a", "b", "d"], d3, None),
-                    (["b", "c"], d2, None),
-                    (["a", "b", "c"], d1, None),
-                ],
-            )
+            assert self.storage.data == [
+                (["a", "bd"], d4, None),
+                (["a", "b", "d"], d3, None),
+                (["b", "c"], d2, None),
+                (["a", "b", "c"], d1, None),
+            ]
             self.storage.delete("a.b")
-            self.assertEqual(
-                self.storage.data,
-                [(["a", "bd"], d4, None), (["b", "c"], d2, None), (["a", "b", "c"], d1, None)],
-            )
+            assert self.storage.data == [
+                (["a", "bd"], d4, None),
+                (["b", "c"], d2, None),
+                (["a", "b", "c"], d1, None),
+            ]
 
             self.storage.delete("a.b")
-            self.assertEqual(self.storage.data, [(["a", "bd"], d4, None), (["b", "c"], d2, None)])
+            assert self.storage.data == [(["a", "bd"], d4, None), (["b", "c"], d2, None)]
 
         it "deletes inside the info if it can":
             self.storage.add(Path(["a", "b", "c"]), d1)
@@ -133,24 +132,19 @@ describe TestCase, "Storage":
             with mock.patch.object(self.storage, "delete_from_data", delete_from_data):
                 self.storage.delete("a.b.c.d")
 
-            self.assertEqual(
-                delete_from_data.mock_calls, [mock.call(d3, "c.d"), mock.call(d1, "d")]
-            )
+            assert delete_from_data.mock_calls == [mock.call(d3, "c.d"), mock.call(d1, "d")]
 
         it "raises an Index error if it can't find the key":
             self.storage.add(Path(["a", "b", "c"]), d1)
             self.storage.add(Path(["b", "c"]), d2)
             self.storage.add(Path(["a", "b", "d"]), d3)
             self.storage.add(Path(["a", "bd"]), d4)
-            self.assertEqual(
-                self.storage.data,
-                [
-                    (["a", "bd"], d4, None),
-                    (["a", "b", "d"], d3, None),
-                    (["b", "c"], d2, None),
-                    (["a", "b", "c"], d1, None),
-                ],
-            )
+            assert self.storage.data == [
+                (["a", "bd"], d4, None),
+                (["a", "b", "d"], d3, None),
+                (["b", "c"], d2, None),
+                (["a", "b", "c"], d1, None),
+            ]
 
             with self.fuzzyAssertRaisesError(KeyError, "a.c"):
                 self.storage.delete("a.c")
@@ -159,26 +153,28 @@ describe TestCase, "Storage":
             self.storage.add(Path([]), {"a": "b"})
             self.storage.add(Path([]), {"c": "d"})
             self.storage.add(Path([]), {"a": {"d": "e"}})
-            self.assertEqual(
-                self.storage.data,
-                [([], {"a": {"d": "e"}}, None), ([], {"c": "d"}, None), ([], {"a": "b"}, None)],
-            )
+            assert self.storage.data == [
+                ([], {"a": {"d": "e"}}, None),
+                ([], {"c": "d"}, None),
+                ([], {"a": "b"}, None),
+            ]
 
             self.storage.delete("a.d")
-            self.assertEqual(
-                self.storage.data,
-                [([], {"a": {}}, None), ([], {"c": "d"}, None), ([], {"a": "b"}, None)],
-            )
+            assert self.storage.data == [
+                ([], {"a": {}}, None),
+                ([], {"c": "d"}, None),
+                ([], {"a": "b"}, None),
+            ]
 
             self.storage.delete("a")
-            self.assertEqual(
-                self.storage.data, [([], {}, None), ([], {"c": "d"}, None), ([], {"a": "b"}, None)]
-            )
+            assert self.storage.data == [
+                ([], {}, None),
+                ([], {"c": "d"}, None),
+                ([], {"a": "b"}, None),
+            ]
 
             self.storage.delete("a")
-            self.assertEqual(
-                self.storage.data, [([], {}, None), ([], {"c": "d"}, None), ([], {}, None)]
-            )
+            assert self.storage.data == [([], {}, None), ([], {"c": "d"}, None), ([], {}, None)]
 
     describe "Delete from data":
         it "returns False if the data is not a dictionary":
@@ -192,29 +188,29 @@ describe TestCase, "Storage":
         it "deletes the item and returns True if the data contains the key":
             data = {"one": 1, "two": 2, "three.four": 3}
             res = self.storage.delete_from_data(data, "one")
-            self.assertEqual(data, {"two": 2, "three.four": 3})
+            assert data == {"two": 2, "three.four": 3}
             assert res is True
 
             res = self.storage.delete_from_data(data, "three.four")
-            self.assertEqual(data, {"two": 2})
+            assert data == {"two": 2}
             assert res is True
 
         it "says false if given an empty string to delete":
             data = {"one": 1, "two": 2, "three.four": 3}
             res = self.storage.delete_from_data(data, "")
-            self.assertEqual(data, {"one": 1, "two": 2, "three.four": 3})
+            assert data == {"one": 1, "two": 2, "three.four": 3}
             assert res is False
 
         it "deletes full keys before sub keys":
             data = {"one": 1, "two": 2, "three.four": 3, "three": {"four": 5}}
             res = self.storage.delete_from_data(data, "three.four")
-            self.assertEqual(data, {"one": 1, "two": 2, "three": {"four": 5}})
+            assert data == {"one": 1, "two": 2, "three": {"four": 5}}
             assert res is True
 
         it "deletes into dictionaries":
             data = {"one": {"two": {"three.four": {"five": 6}, "seven": 7}}}
             res = self.storage.delete_from_data(data, "one.two.three.four.five")
-            self.assertEqual(data, {"one": {"two": {"three.four": {}, "seven": 7}}})
+            assert data == {"one": {"two": {"three.four": {}, "seven": 7}}}
             assert res is True
 
     describe "Getting path and val":
@@ -225,10 +221,9 @@ describe TestCase, "Storage":
                 data = mock.Mock(name="data")
                 source = mock.Mock(name="source")
 
-                self.assertEqual(
-                    list(self.storage.determine_path_and_val(path, info_path, data, source)),
-                    [(info_path, "", data)],
-                )
+                assert (
+                    list(self.storage.determine_path_and_val(path, info_path, data, source))
+                ) == [(info_path, "", data)]
 
         describe "No info_path":
             it "returns value into data":
@@ -238,10 +233,9 @@ describe TestCase, "Storage":
                 info_path = []
                 source = mock.Mock(name="source")
 
-                self.assertEqual(
-                    list(self.storage.determine_path_and_val(path, info_path, data, source)),
-                    [(["a", Path("b")], "a.b", val)],
-                )
+                assert (
+                    list(self.storage.determine_path_and_val(path, info_path, data, source))
+                ) == [(["a", Path("b")], "a.b", val)]
 
             it "yields nothing if path not in data":
                 val = mock.Mock(name="val")
@@ -250,9 +244,9 @@ describe TestCase, "Storage":
                 info_path = []
                 source = mock.Mock(name="source")
 
-                self.assertEqual(
-                    list(self.storage.determine_path_and_val(path, info_path, data, source)), []
-                )
+                assert (
+                    list(self.storage.determine_path_and_val(path, info_path, data, source))
+                ) == []
 
         describe "Path begins with info_path":
             it "returns found val or dict in the data from path remainder after info_path":
@@ -262,10 +256,9 @@ describe TestCase, "Storage":
                 path = Path("a.b")
                 source = mock.Mock(name="source")
 
-                self.assertEqual(
-                    list(self.storage.determine_path_and_val(path, info_path, data, source)),
-                    [(["a", "b"], "b", {"c": {"d": val}})],
-                )
+                assert (
+                    list(self.storage.determine_path_and_val(path, info_path, data, source))
+                ) == [(["a", "b"], "b", {"c": {"d": val}})]
 
             it "yields nothing if rest of path not in data":
                 val = mock.Mock(name="val")
@@ -274,9 +267,9 @@ describe TestCase, "Storage":
                 path = Path("a.b")
                 source = mock.Mock(name="source")
 
-                self.assertEqual(
-                    list(self.storage.determine_path_and_val(path, info_path, data, source)), []
-                )
+                assert (
+                    list(self.storage.determine_path_and_val(path, info_path, data, source))
+                ) == []
 
         describe "Info_path begins with path":
             it "returns made dictionary with remainder info_path":
@@ -285,10 +278,9 @@ describe TestCase, "Storage":
                 path = Path("a.b.e")
                 source = mock.Mock(name="source")
 
-                self.assertEqual(
-                    list(self.storage.determine_path_and_val(path, info_path, data, source)),
-                    [(["a", "b.e"], "", {"c": {"d": data}})],
-                )
+                assert (
+                    list(self.storage.determine_path_and_val(path, info_path, data, source))
+                ) == [(["a", "b.e"], "", {"c": {"d": data}})]
 
     describe "Getting info":
         it "returns all the values it finds":
@@ -300,91 +292,72 @@ describe TestCase, "Storage":
             self.storage.add(Path(["a", "b", "c", "d", "e"]), d5, source=s5)
             self.storage.add(Path(["a", "b", "c"]), {"d": {"e": d6}}, source=s6)
 
-            self.assertEqual(
-                self.storage.data,
-                [
-                    (["a", "b", "c"], {"d": {"e": d6}}, s6),
-                    (["a", "b", "c", "d", "e"], d5, s5),
-                    ([], {"a": {"bd": d4}}, s1),
-                    (["a", "bd"], {"1": d4}, s2),
-                    (["a", "b", "d"], d3, s4),
-                    (["b", "c"], d2, s5),
-                    (["a", "b", "c"], d1, s1),
-                ],
-            )
+            assert self.storage.data == [
+                (["a", "b", "c"], {"d": {"e": d6}}, s6),
+                (["a", "b", "c", "d", "e"], d5, s5),
+                ([], {"a": {"bd": d4}}, s1),
+                (["a", "bd"], {"1": d4}, s2),
+                (["a", "b", "d"], d3, s4),
+                (["b", "c"], d2, s5),
+                (["a", "b", "c"], d1, s1),
+            ]
 
             path1 = Path("a.bd")
             path2 = Path("a.b.c")
             path3 = Path("a.bd.1")
             path4 = Path("")
 
-            self.assertEqual(
-                list((p.path, p.data, p.source()) for p in self.storage.get_info(path1)),
-                [(Path("a.bd"), d4, s1), (Path("a.bd"), {"1": d4}, s2)],
-            )
-            self.assertEqual(
-                list((p.path, p.data, p.source()) for p in self.storage.get_info(path2)),
-                [
-                    (["a", "b", "c"], {"d": {"e": d6}}, s6),
-                    (["a", "b", "c"], {"d": {"e": d5}}, s5),
-                    (["a", "b", "c"], d1, s1),
-                ],
-            )
-            self.assertEqual(
-                list((p.path, p.data, p.source()) for p in self.storage.get_info(path3)),
-                [(["a", "bd", "1"], d4, s2)],
-            )
-            self.assertEqual(
-                list((p.path, p.data, p.source()) for p in self.storage.get_info(path4)),
-                [
-                    (Path(""), {"a": {"b": {"c": {"d": {"e": d6}}}}}, s6),
-                    (Path(""), {"a": {"b": {"c": {"d": {"e": d5}}}}}, s5),
-                    (Path(""), {"a": {"bd": d4}}, s1),
-                    (Path(""), {"a": {"bd": {"1": d4}}}, s2),
-                    (Path(""), {"a": {"b": {"d": d3}}}, s4),
-                    (Path(""), {"b": {"c": d2}}, s5),
-                    (Path(""), {"a": {"b": {"c": d1}}}, s1),
-                ],
-            )
+            assert (list((p.path, p.data, p.source()) for p in self.storage.get_info(path1))) == [
+                (Path("a.bd"), d4, s1),
+                (Path("a.bd"), {"1": d4}, s2),
+            ]
+            assert (list((p.path, p.data, p.source()) for p in self.storage.get_info(path2))) == [
+                (["a", "b", "c"], {"d": {"e": d6}}, s6),
+                (["a", "b", "c"], {"d": {"e": d5}}, s5),
+                (["a", "b", "c"], d1, s1),
+            ]
+            assert (list((p.path, p.data, p.source()) for p in self.storage.get_info(path3))) == [
+                (["a", "bd", "1"], d4, s2)
+            ]
+            assert (list((p.path, p.data, p.source()) for p in self.storage.get_info(path4))) == [
+                (Path(""), {"a": {"b": {"c": {"d": {"e": d6}}}}}, s6),
+                (Path(""), {"a": {"b": {"c": {"d": {"e": d5}}}}}, s5),
+                (Path(""), {"a": {"bd": d4}}, s1),
+                (Path(""), {"a": {"bd": {"1": d4}}}, s2),
+                (Path(""), {"a": {"b": {"d": d3}}}, s4),
+                (Path(""), {"b": {"c": d2}}, s5),
+                (Path(""), {"a": {"b": {"c": d1}}}, s1),
+            ]
 
         it "returns DataPath objects if that's what it finds":
             self.storage.add(Path(["a", "b", "c"]), d1, source=s1)
             self.storage.add(Path(["b", "c"]), d2, source=s2)
             self.storage.add(Path(["a", "b", "d"]), d3, source=s3)
             self.storage.add(Path(["a", "bd"]), {"1": d4}, source=s4)
-            self.assertEqual(
-                self.storage.data,
-                [
-                    (["a", "bd"], {"1": d4}, s4),
-                    (["a", "b", "d"], d3, s3),
-                    (["b", "c"], d2, s2),
-                    (["a", "b", "c"], d1, s1),
-                ],
-            )
+            assert self.storage.data == [
+                (["a", "bd"], {"1": d4}, s4),
+                (["a", "b", "d"], d3, s3),
+                (["b", "c"], d2, s2),
+                (["a", "b", "c"], d1, s1),
+            ]
 
-            self.assertEqual(
-                list((p.path, p.data, p.source()) for p in self.storage.get_info("a")),
-                [
-                    (Path(["a"]), {"bd": {"1": d4}}, s4),
-                    (Path(["a"]), {"b": {"d": d3}}, s3),
-                    (Path(["a"]), {"b": {"c": d1}}, s1),
-                ],
-            )
+            assert list((p.path, p.data, p.source()) for p in self.storage.get_info("a")) == [
+                (Path(["a"]), {"bd": {"1": d4}}, s4),
+                (Path(["a"]), {"b": {"d": d3}}, s3),
+                (Path(["a"]), {"b": {"c": d1}}, s1),
+            ]
 
         it "raises KeyError if no key is found":
             self.storage.add(Path(["a", "b", "c"]), d1)
             self.storage.add(Path(["b", "c"]), d2)
             self.storage.add(Path(["a", "b", "d"]), d3)
             self.storage.add(Path(["a", "bd"]), {"1": d4})
-            self.assertEqual(
-                self.storage.data,
-                [
-                    (["a", "bd"], {"1": d4}, None),
-                    (["a", "b", "d"], d3, None),
-                    (["b", "c"], d2, None),
-                    (["a", "b", "c"], d1, None),
-                ],
-            )
+            assert self.storage.data == [
+                (["a", "bd"], {"1": d4}, None),
+                (["a", "b", "d"], d3, None),
+                (["b", "c"], d2, None),
+                (["a", "b", "c"], d1, None),
+            ]
 
             with self.fuzzyAssertRaisesError(KeyError, "e.g"):
                 list(self.storage.get_info("e.g"))
@@ -402,7 +375,7 @@ describe TestCase, "Storage":
             get_info.return_value = [info, info2]
 
             with mock.patch.object(self.storage, "get_info", get_info):
-                self.assertIs(self.storage.get(path), data)
+                assert self.storage.get(path) is data
 
             get_info.assert_called_once_with(path)
 
@@ -427,85 +400,84 @@ describe TestCase, "Storage":
             self.storage.add(Path([]), {"a": {"bd": d4}}, source=s1)
             self.storage.add(Path(["a", "b", "c", "d", "e"]), d5, source=s5)
             self.storage.add(Path(["a", "b", "c"]), {"d": {"e": d6}}, source=s6)
-            self.assertEqual(
-                self.storage.data,
-                [
-                    (["a", "b", "c"], {"d": {"e": d6}}, s6),
-                    (["a", "b", "c", "d", "e"], d5, s5),
-                    ([], {"a": {"bd": d4}}, s1),
-                    (["a", "bd"], {"1": d4}, s2),
-                    (["a", "b", "d"], d3, s4),
-                    (["b", "c"], d2, s5),
-                    (["a", "b", "c"], d1, s1),
-                ],
-            )
+            assert self.storage.data == [
+                (["a", "b", "c"], {"d": {"e": d6}}, s6),
+                (["a", "b", "c", "d", "e"], d5, s5),
+                ([], {"a": {"bd": d4}}, s1),
+                (["a", "bd"], {"1": d4}, s2),
+                (["a", "b", "d"], d3, s4),
+                (["b", "c"], d2, s5),
+                (["a", "b", "c"], d1, s1),
+            ]
 
-            self.assertEqual(self.storage.source_for(Path("a.b.c")), [s6, s5, s1])
-            self.assertEqual(self.storage.source_for(Path("a.b.c.d.e")), [s6, s5])
-            self.assertEqual(self.storage.source_for(Path("a.b.c.d")), [s6, s5])
-            self.assertEqual(self.storage.source_for(Path("a.bd")), [s1, s2])
-            self.assertEqual(self.storage.source_for(Path("a.bd.1")), [s2])
+            assert self.storage.source_for(Path("a.b.c")) == [s6, s5, s1]
+            assert self.storage.source_for(Path("a.b.c.d.e")) == [s6, s5]
+            assert self.storage.source_for(Path("a.b.c.d")) == [s6, s5]
+            assert self.storage.source_for(Path("a.bd")) == [s1, s2]
+            assert self.storage.source_for(Path("a.bd.1")) == [s2]
 
     describe "keys_after":
         it "yields combined keys from datas":
             self.storage.add(Path([]), {"a": 1, "b": 2})
             self.storage.add(Path([]), {"b": 3, "d": 4})
-            self.assertEqual(sorted(self.storage.keys_after("")), sorted(["a", "b", "d"]))
+            assert sorted(self.storage.keys_after("")) == sorted(["a", "b", "d"])
 
         it "yields from incomplete paths":
             self.storage.add(Path(["1", "2", "3"]), {"a": 1, "b": 2})
-            self.assertEqual(sorted(self.storage.keys_after("1")), sorted(["2"]))
+            assert sorted(self.storage.keys_after("1")) == sorted(["2"])
 
         it "stops after complete paths":
             self.storage.add(Path(["1", "2", "3"]), {"a": 1, "b": 2})
             self.storage.add(Path(["1"]), d1)
-            self.assertEqual(sorted(self.storage.keys_after("1")), sorted([]))
+            assert sorted(self.storage.keys_after("1")) == sorted([])
 
     describe "as_dict":
         it "Returns the dictionary if there is only one":
             self.storage.add(Path([]), {"a": 1, "b": 2})
-            self.assertEqual(self.storage.as_dict(Path([])), {"a": 1, "b": 2})
+            assert self.storage.as_dict(Path([])) == {"a": 1, "b": 2}
 
         it "merges from the back to the front if there is multiple dictionaries":
             self.storage.add(Path([]), {"a": 1, "b": 2})
             self.storage.add(Path([]), {"a": 2, "c": 3})
-            self.assertEqual(self.storage.as_dict(Path([])), {"a": 2, "b": 2, "c": 3})
+            assert self.storage.as_dict(Path([])) == {"a": 2, "b": 2, "c": 3}
 
         it "returns the subpath that is provided":
             self.storage.add(Path([]), {"a": {"d": 1}, "b": 2})
             self.storage.add(Path([]), {"a": {"d": 3}, "c": 3})
-            self.assertEqual(self.storage.as_dict(Path(["a"])), {"d": 3})
+            assert self.storage.as_dict(Path(["a"])) == {"d": 3}
 
         it "returns subpath if the data is in storage with a prefix":
             self.storage.add(Path([]), {"a": {"d": 1}, "b": 2})
             self.storage.add(Path(["a"]), {"d": 3})
-            self.assertEqual(self.storage.as_dict(Path(["a"])), {"d": 3})
+            assert self.storage.as_dict(Path(["a"])) == {"d": 3}
 
         it "unrolls MergedOptions it finds":
             options = MergedOptions.using({"f": 5})
             self.storage.add(Path([]), {"a": {"d": 1}, "b": 2})
             self.storage.add(Path(["a"]), {"d": 3, "e": options})
-            self.assertEqual(self.storage.as_dict(Path(["a"])), {"d": 3, "e": {"f": 5}})
+            assert self.storage.as_dict(Path(["a"])) == {"d": 3, "e": {"f": 5}}
 
         it "ignores unrelated dataz":
             options = MergedOptions.using({"f": 5})
             self.storage.add(Path([]), {"g": {"d": 1}, "b": 2})
             self.storage.add(Path(["a"]), {"d": 3, "e": options})
-            self.assertEqual(self.storage.as_dict(Path(["a"])), {"d": 3, "e": {"f": 5}})
+            assert self.storage.as_dict(Path(["a"])) == {"d": 3, "e": {"f": 5}}
 
         it "doesn't infinitely recurse":
             self.storage.add(Path([]), {"a": {"d": 1}, "b": MergedOptions(storage=self.storage)})
             self.storage.add(Path(["a"]), {"d": 3, "e": MergedOptions(storage=self.storage)})
-            self.assertEqual(
-                self.storage.as_dict(Path(["a"])), {"d": 3, "e": {"a": {"e": {}, "d": 3}, "b": {}}}
-            )
+            assert self.storage.as_dict(Path(["a"])) == {
+                "d": 3,
+                "e": {"a": {"e": {}, "d": 3}, "b": {}},
+            }
 
         it "allows different parts of the same storage":
             self.storage.add(Path([]), {"a": {"d": 1}, "b": 2})
             self.storage.add(Path(["a"]), {"d": 3, "e": MergedOptions(storage=self.storage)})
-            self.assertEqual(
-                self.storage.as_dict(Path(["a"])), {"d": 3, "e": {"a": {"e": {}, "d": 3}, "b": 2}}
-            )
+            assert self.storage.as_dict(Path(["a"])) == {
+                "d": 3,
+                "e": {"a": {"e": {}, "d": 3}, "b": 2},
+            }
 
         it "works if the first item is a MergedOptions":
             options = MergedOptions.using({"blah": {"stuff": 1}})
@@ -513,13 +485,13 @@ describe TestCase, "Storage":
             options["blah"].update({"stuff": {"tree": 20}})
             self.storage.add(Path([]), options)
 
-            self.assertEqual(self.storage.as_dict(Path(["blah", "stuff"])), {"tree": 20})
-            self.assertEqual(self.storage.as_dict(Path(["blah", "meh"])), {"8": "9"})
+            assert self.storage.as_dict(Path(["blah", "stuff"])) == {"tree": 20}
+            assert self.storage.as_dict(Path(["blah", "meh"])) == {"8": "9"}
 
         it "works if the data is prefixed":
             options = MergedOptions()
             options[["blah", "stuff"]] = 1
-            self.assertEqual(options.as_dict(), {"blah": {"stuff": 1}})
+            assert options.as_dict() == {"blah": {"stuff": 1}}
 
 describe TestCase, "DataPath":
     it "takes in path, data and source":
@@ -528,32 +500,32 @@ describe TestCase, "DataPath":
         data = mock.Mock(name="data")
         source = mock.Mock(name="source")
         instance = DataPath(path, data, source)
-        self.assertIs(instance.path, path)
-        self.assertIs(instance.data, data)
-        self.assertIs(instance.source, source)
+        assert instance.path is path
+        assert instance.data is data
+        assert instance.source is source
 
     describe "keys_after":
         it "returns keys from data if path matches":
             p = DataPath(Path(["1", "2"]), {"a": 3, "b": 4}, s1)
-            self.assertEqual(sorted(p.keys_after(Path("1.2"))), sorted(["a", "b"]))
+            assert sorted(p.keys_after(Path("1.2"))) == sorted(["a", "b"])
 
             p = DataPath(Path(["1"]), {"a": 3, "b": 4}, s1)
-            self.assertEqual(sorted(p.keys_after(Path("1"))), sorted(["a", "b"]))
+            assert sorted(p.keys_after(Path("1"))) == sorted(["a", "b"])
 
             p = DataPath(Path([]), {"a": {1: 2}})
-            self.assertEqual(sorted(p.keys_after(Path("a"))), sorted([1]))
+            assert sorted(p.keys_after(Path("a"))) == sorted([1])
 
         it "raises NotFound if no match":
             p = DataPath(Path(["1", "2"]), {"a": 3, "b": 4}, s1)
             with self.fuzzyAssertRaisesError(NotFound):
-                self.assertEqual(sorted(p.keys_after(Path("1.3"))), sorted([]))
+                assert sorted(p.keys_after(Path("1.3"))) == sorted([])
 
             with self.fuzzyAssertRaisesError(NotFound):
-                self.assertEqual(sorted(p.keys_after(Path("3"))), sorted([]))
+                assert sorted(p.keys_after(Path("3"))) == sorted([])
 
         it "returns first key after part if path is bigger":
             p = DataPath(Path(["1", "2", "3"]), {"a": 3, "b": 4}, s1)
-            self.assertEqual(sorted(p.keys_after(Path("1"))), sorted(["2"]))
+            assert sorted(p.keys_after(Path("1"))) == sorted(["2"])
 
         it "raises NotFound if ask for a bigger path than exists":
             p = DataPath(Path(["1", "2", "3"]), {"a": 3, "b": 4}, s1)
@@ -563,22 +535,22 @@ describe TestCase, "DataPath":
     describe "value_after":
         it "returns value":
             p = DataPath(Path(["a"]), d1, s1)
-            self.assertIs(p.value_after(Path("a")), d1)
+            assert p.value_after(Path("a")) is d1
 
             p = DataPath(Path([]), {"a": d1}, s1)
-            self.assertIs(p.value_after(Path("a")), d1)
+            assert p.value_after(Path("a")) is d1
 
         it "makes dicts from incomplete paths":
             p = DataPath(Path(["a", "b", "c"]), d1, s1)
-            self.assertEqual(p.value_after(Path("a")), {"b": {"c": d1}})
+            assert p.value_after(Path("a")) == {"b": {"c": d1}}
 
             p = DataPath(Path(["a", "b"]), {"c": d1}, s1)
-            self.assertEqual(p.value_after(Path("a")), {"b": {"c": d1}})
+            assert p.value_after(Path("a")) == {"b": {"c": d1}}
 
         it "raises NotFound if not found":
             p = DataPath(Path(["a", "b", "c"]), d1, s1)
             with self.fuzzyAssertRaisesError(NotFound):
-                self.assertEqual(p.value_after(Path("b")), None)
+                assert p.value_after(Path("b")) == None
 
             p = DataPath(Path(["a"]), {"b": d1}, s1)
             with self.fuzzyAssertRaisesError(NotFound):

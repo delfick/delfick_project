@@ -10,7 +10,7 @@ import mock
 
 describe TestCase, "AddonGetter":
     it "defaults a option_merge.addons namespace":
-        self.assertEqual(list(AddonGetter().namespaces.keys()), ["option_merge.addons"])
+        assert list(AddonGetter().namespaces.keys()) == ["option_merge.addons"]
 
     describe "add_namespace":
         it "registers result_spec and addon_spec in the namespaces dict":
@@ -41,21 +41,21 @@ describe TestCase, "AddonGetter":
                 "option_merge_addons.pkg_resources.iter_entry_points", fake_iter_entry_points
             ):
                 getter = AddonGetter()
-                self.assertEqual(getter.entry_points, {"option_merge.addons": {}})
+                assert getter.entry_points == {"option_merge.addons": {}}
                 getter.add_namespace(namespace)
-                self.assertEqual(
-                    getter.entry_points,
-                    {"option_merge.addons": {}, namespace: {"entry1": [ep1], "entry2": [ep2, ep3]}},
-                )
+                assert getter.entry_points == {
+                    "option_merge.addons": {},
+                    namespace: {"entry1": [ep1], "entry2": [ep2, ep3]},
+                }
 
-            self.assertEqual(
-                fake_iter_entry_points.mock_calls,
-                [mock.call("option_merge.addons"), mock.call(namespace)],
-            )
+            assert fake_iter_entry_points.mock_calls == [
+                mock.call("option_merge.addons"),
+                mock.call(namespace),
+            ]
 
     describe "all_for":
         it "yields nothing if we don't know about the namespace":
-            self.assertEqual(list(AddonGetter().all_for("blah")), [])
+            assert list(AddonGetter().all_for("blah")) == []
 
         it "yields all known names for namespace":
             getter = AddonGetter()
@@ -63,9 +63,7 @@ describe TestCase, "AddonGetter":
                 "one": mock.Mock(name="one"),
                 "two": mock.Mock(name="two"),
             }
-            self.assertEqual(
-                sorted(getter.all_for("blah")), sorted([("blah", "one"), ("blah", "two")])
-            )
+            assert sorted(getter.all_for("blah")) == sorted([("blah", "one"), ("blah", "two")])
 
     describe "get":
         before_each:
@@ -75,7 +73,7 @@ describe TestCase, "AddonGetter":
 
         it "Logs a warning and does nothing if namespace is unknown":
             assert "bob" not in self.getter.namespaces
-            self.assertIs(self.getter("bob", "one", self.collector), None)
+            assert self.getter("bob", "one", self.collector) is None
 
         it "finds all the entry points and resolved the into the addon_spec":
             known = mock.Mock(name="known")
@@ -108,9 +106,7 @@ describe TestCase, "AddonGetter":
                 find_entry_points=fake_find_entry_points,
                 resolve_entry_points=fake_resolve_entry_points,
             ):
-                self.assertEqual(
-                    self.getter(namespace, entry_point_name, collector, known), normalised
-                )
+                assert self.getter(namespace, entry_point_name, collector, known) == normalised
 
             addon_spec.normalise.assert_called_once_with(
                 Meta({}, []),
@@ -147,7 +143,7 @@ describe TestCase, "AddonGetter":
             )
 
             result_maker = fake_resolve_entry_points.mock_calls[0][1][3]
-            self.assertIs(result_maker(blah="one"), result)
+            assert result_maker(blah="one") is result
             result_spec.normalise.assert_called_once_with(mock.ANY, {"blah": "one"})
 
     describe "find_entry_points":
@@ -169,7 +165,7 @@ describe TestCase, "AddonGetter":
                 found = res.find_entry_points(
                     self.namespace, self.entry_point_name, self.entry_point_full_name
                 )
-                self.assertEqual(found, [ep])
+                assert found == [ep]
 
         it "complains if it finds no entry points":
             fake_iter_entry_points = mock.Mock(name="iter_entry_points", return_value=[])
@@ -201,7 +197,7 @@ describe TestCase, "AddonGetter":
                 found = res.find_entry_points(
                     self.namespace, self.entry_point_name, self.entry_point_full_name
                 )
-                self.assertEqual(found, [ep, ep2])
+                assert found == [ep, ep2]
 
     describe "resolve_entry_points":
         before_each:
@@ -278,7 +274,7 @@ describe TestCase, "AddonGetter":
                     self.entry_point_full_name,
                     [],
                 )
-                self.assertEqual(res, (resolver, extras))
+                assert res == (resolver, extras)
 
     describe "get_hooks_and_extras":
         it "finds hooks from the modules":
@@ -287,7 +283,7 @@ describe TestCase, "AddonGetter":
             module2 = type("module", (object,), {"hook": option_merge_addon_hook()(hook1)})
             modules = [module1, module2]
 
-            self.assertEqual(AddonGetter().get_hooks_and_extras(modules, []), ([module2.hook], []))
+            assert AddonGetter().get_hooks_and_extras(modules, []) == ([module2.hook], [])
 
         it "can find multiple hooks from the modules":
             hook1 = lambda *args, **kwargs: None
@@ -304,8 +300,9 @@ describe TestCase, "AddonGetter":
             )
             modules = [module1, module2]
 
-            self.assertEqual(
-                AddonGetter().get_hooks_and_extras(modules, []), ([module2.hook, module2.other], [])
+            assert AddonGetter().get_hooks_and_extras(modules, []) == (
+                [module2.hook, module2.other],
+                [],
             )
 
         it "can find multiple hooks from multiple modules":
@@ -324,9 +321,9 @@ describe TestCase, "AddonGetter":
             )
             modules = [module1, module2]
 
-            self.assertEqual(
-                AddonGetter().get_hooks_and_extras(modules, []),
-                ([module1.fasf, module2.hook, module2.other], []),
+            assert AddonGetter().get_hooks_and_extras(modules, []) == (
+                [module1.fasf, module2.hook, module2.other],
+                [],
             )
 
         it "finds extras from the hooks":
@@ -349,12 +346,9 @@ describe TestCase, "AddonGetter":
             )
             modules = [module1, module2]
 
-            self.assertEqual(
-                AddonGetter().get_hooks_and_extras(modules, []),
-                (
-                    [module1.fasf, module2.hook, module2.other],
-                    [("one", "two"), ("one", "three"), ("four", "five")],
-                ),
+            assert AddonGetter().get_hooks_and_extras(modules, []) == (
+                [module1.fasf, module2.hook, module2.other],
+                [("one", "two"), ("one", "three"), ("four", "five")],
             )
 
         it "deals with __all__":
@@ -374,9 +368,9 @@ describe TestCase, "AddonGetter":
             all_for = mock.Mock(name="all_for", return_value=all_pairs)
 
             with mock.patch.object(AddonGetter, "all_for", all_for):
-                self.assertEqual(
-                    AddonGetter().get_hooks_and_extras(modules, [("one", "two")]),
-                    ([module1.asdf], [("one", "one"), ("one", "four"), ("one", "three")]),
+                assert AddonGetter().get_hooks_and_extras(modules, [("one", "two")]) == (
+                    [module1.asdf],
+                    [("one", "one"), ("one", "four"), ("one", "three")],
                 )
 
             all_for.assert_called_once_with("one")
@@ -409,9 +403,9 @@ describe TestCase, "AddonGetter":
 
             resolver = AddonGetter().get_resolver(self.collector, self.result_maker, hooks)
 
-            self.assertEqual(called, [])
+            assert called == []
             list(resolver(post_register=True, kw3=kw3, kw4=kw4))
-            self.assertEqual(called, [(self.collector, 1), (self.collector, 3)])
+            assert called == [(self.collector, 1), (self.collector, 3)]
 
         it "calls non post_register hooks if post_register is False and passes in the collector and result_maker":
             called = []
@@ -432,9 +426,9 @@ describe TestCase, "AddonGetter":
 
             resolver = AddonGetter().get_resolver(self.collector, self.result_maker, hooks)
 
-            self.assertEqual(called, [])
+            assert called == []
             list(resolver(post_register=False))
-            self.assertEqual(
-                called,
-                [(self.collector, self.result_maker, 2), (self.collector, self.result_maker, 4)],
-            )
+            assert called == [
+                (self.collector, self.result_maker, 2),
+                (self.collector, self.result_maker, 4),
+            ]

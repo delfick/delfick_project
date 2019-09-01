@@ -23,10 +23,10 @@ describe TestCase, "Path":
         ignore_converters = mock.Mock(name="ignore_converters")
         path_obj = Path(path, configuration, converters, ignore_converters)
 
-        self.assertEqual(path_obj.path, path)
-        self.assertIs(path_obj.converters, converters)
-        self.assertIs(path_obj.configuration, configuration)
-        self.assertIs(path_obj.ignore_converters, ignore_converters)
+        assert path_obj.path == path
+        assert path_obj.converters is converters
+        assert path_obj.configuration is configuration
+        assert path_obj.ignore_converters is ignore_converters
 
     describe "Convert factory method":
         it "returns the same object if already a Path object":
@@ -40,10 +40,10 @@ describe TestCase, "Path":
 
     describe "Special methods":
         it "dot joins the path for __unicode__":
-            self.assertEqual(str(Path("a.b.c.d")), "a.b.c.d")
-            self.assertEqual(str(Path(["a.b", "c", "d"])), "a.b.c.d")
-            self.assertEqual(str(Path(["a", "b", "c", "d"])), "a.b.c.d")
-            self.assertEqual(str(Path([["a", "b"], "c", "d"])), "ab.c.d")
+            assert str(Path("a.b.c.d")) == "a.b.c.d"
+            assert str(Path(["a.b", "c", "d"])) == "a.b.c.d"
+            assert str(Path(["a", "b", "c", "d"])) == "a.b.c.d"
+            assert str(Path([["a", "b"], "c", "d"])) == "ab.c.d"
 
         it "returns boolean status of path for __nonzero__":
             assert Path("asdf")
@@ -52,43 +52,43 @@ describe TestCase, "Path":
             assert not Path([])
 
         it "returns the length of path parts for __len__":
-            self.assertEqual(len(Path("adsf")), 1)
-            self.assertEqual(len(Path("")), 0)
-            self.assertEqual(len(Path(["a.b", "c", "d"])), 3)
+            assert len(Path("adsf")) == 1
+            assert len(Path("")) == 0
+            assert len(Path(["a.b", "c", "d"])) == 3
 
         it "yields each part of path parts for __iter__":
-            self.assertEqual(list(Path("adsf")), ["adsf"])
-            self.assertEqual(list(Path("")), [])
-            self.assertEqual(list(Path(["a.b", "c", "d"])), ["a.b", "c", "d"])
+            assert list(Path("adsf")) == ["adsf"]
+            assert list(Path("")) == []
+            assert list(Path(["a.b", "c", "d"])) == ["a.b", "c", "d"]
 
         it "includes str of Path for repr":
-            self.assertEqual(repr(Path("asdf.asdf.1")), "<Path(asdf.asdf.1)>")
-            self.assertEqual(repr(Path(["asdf", "asdf", "1"])), "<Path(asdf.asdf.1)>")
+            assert repr(Path("asdf.asdf.1")) == "<Path(asdf.asdf.1)>"
+            assert repr(Path(["asdf", "asdf", "1"])) == "<Path(asdf.asdf.1)>"
 
         it "converts dot_joined of paths to determine equality":
-            self.assertEqual(Path("asdf.adsf.1"), "asdf.adsf.1")
-            self.assertEqual(Path(["asdf", "adsf", "1"]), "asdf.adsf.1")
+            assert Path("asdf.adsf.1") == "asdf.adsf.1"
+            assert Path(["asdf", "adsf", "1"]) == "asdf.adsf.1"
 
-            self.assertEqual(Path("asdf.adsf.1"), ["asdf", "adsf", "1"])
-            self.assertEqual(Path(["asdf", "adsf", "1"]), ["asdf", "adsf", "1"])
+            assert Path("asdf.adsf.1") == ["asdf", "adsf", "1"]
+            assert Path(["asdf", "adsf", "1"]) == ["asdf", "adsf", "1"]
 
-            self.assertEqual(Path("asdf.adsf.1"), Path("asdf.adsf.1"))
-            self.assertEqual(Path(["asdf", "adsf", "1"]), Path(["asdf", "adsf", "1"]))
+            assert Path("asdf.adsf.1") == Path("asdf.adsf.1")
+            assert Path(["asdf", "adsf", "1"]) == Path(["asdf", "adsf", "1"])
 
         it "converts dot_joined of paths to determine inequality":
             with self.fuzzyAssertRaisesError(
                 AssertionError, "<Path\(asdf.adsf.1\)> == 'asdf.adsf.1'"
             ):
-                self.assertNotEqual(Path("asdf.adsf.1"), "asdf.adsf.1")
+                assert Path("asdf.adsf.1") != "asdf.adsf.1"
 
-            self.assertNotEqual(Path("asdf.adsf.2"), "asdf.adsf.1")
-            self.assertNotEqual(Path(["asdf", "adsf", "3"]), "asdf.adsf.1")
+            assert Path("asdf.adsf.2") != "asdf.adsf.1"
+            assert Path(["asdf", "adsf", "3"]) != "asdf.adsf.1"
 
-            self.assertNotEqual(Path("asdf.adsf.4"), ["asdf", "adsf", "1"])
-            self.assertNotEqual(Path(["asdf", "adsf", "5"]), ["asdf", "adsf", "1"])
+            assert Path("asdf.adsf.4") != ["asdf", "adsf", "1"]
+            assert Path(["asdf", "adsf", "5"]) != ["asdf", "adsf", "1"]
 
-            self.assertNotEqual(Path("asdf.adsf.6"), Path("asdf.adsf.1"))
-            self.assertNotEqual(Path(["asdf", "adsf", "7"]), Path(["asdf", "adsf", "1"]))
+            assert Path("asdf.adsf.6") != Path("asdf.adsf.1")
+            assert Path(["asdf", "adsf", "7"]) != Path(["asdf", "adsf", "1"])
 
         it "joins self to other and creates a clone using the result for __add__":
             path = mock.Mock(name="path")
@@ -102,26 +102,26 @@ describe TestCase, "Path":
             path_obj = Path(path)
             with mock.patch("option_merge.path.join", join):
                 with mock.patch.multiple(path_obj, using=using):
-                    self.assertIs(path_obj + other, clone)
+                    assert path_obj + other is clone
 
             using.assert_called_once_with(joined)
             join.assert_called_once_with(path_obj, other)
 
         it "uses the dot_join of the path for hashing the path":
             path = mock.Mock(name="path")
-            self.assertEqual(hash(Path(path)), hash(dot_joiner(path)))
-            self.assertEqual(hash(Path(["1", "2", "3"])), hash("1.2.3"))
-            self.assertEqual(hash(Path("1.2.3")), hash("1.2.3"))
+            assert hash(Path(path)) == hash(dot_joiner(path))
+            assert hash(Path(["1", "2", "3"])) == hash("1.2.3")
+            assert hash(Path("1.2.3")) == hash("1.2.3")
 
     describe "without":
         it "uses string_slicing if path is a string":
-            self.assertEqual(Path("1.2.3").without("1.2"), Path("3"))
-            self.assertEqual(Path("1.2.3").without(Path("1.2")), Path("3"))
-            self.assertEqual(Path("1.2.3").without(Path(["1", "2"])), Path("3"))
+            assert Path("1.2.3").without("1.2") == Path("3")
+            assert Path("1.2.3").without(Path("1.2")) == Path("3")
+            assert Path("1.2.3").without(Path(["1", "2"])) == Path("3")
 
         it "works with string base against list path":
-            self.assertEqual(Path(["1", "2", "3"]).without("1.2"), Path("3"))
-            self.assertEqual(Path(["1", "2", "3"]).without(Path("1.2")), Path("3"))
+            assert Path(["1", "2", "3"]).without("1.2") == Path("3")
+            assert Path(["1", "2", "3"]).without(Path("1.2")) == Path("3")
 
         it "raises NotFound if the prefix is not in the path":
             with self.fuzzyAssertRaisesError(NotFound):
@@ -131,13 +131,13 @@ describe TestCase, "Path":
                 Path(["1", "2", "3"]).without("5.2")
 
         it "returns the path if base is empty":
-            self.assertEqual(Path("a.b").without(""), Path("a.b"))
-            self.assertEqual(Path("a.b").without([]), Path("a.b"))
-            self.assertEqual(Path("a.b").without(Path("")), Path("a.b"))
+            assert Path("a.b").without("") == Path("a.b")
+            assert Path("a.b").without([]) == Path("a.b")
+            assert Path("a.b").without(Path("")) == Path("a.b")
 
-            self.assertEqual(Path(["a", "b"]).without(""), Path("a.b"))
-            self.assertEqual(Path(["a", "b"]).without([]), Path("a.b"))
-            self.assertEqual(Path(["a", "b"]).without(Path("")), Path("a.b"))
+            assert Path(["a", "b"]).without("") == Path("a.b")
+            assert Path(["a", "b"]).without([]) == Path("a.b")
+            assert Path(["a", "b"]).without(Path("")) == Path("a.b")
 
     describe "Prefixed":
         it "returns a clone with the prefix joined to the path":
@@ -152,26 +152,26 @@ describe TestCase, "Path":
             path_obj = Path(path)
             with mock.patch("option_merge.path.join", join):
                 with mock.patch.multiple(path_obj, using=using):
-                    self.assertIs(path_obj.prefixed(prefix), clone)
+                    assert path_obj.prefixed(prefix) is clone
 
             using.assert_called_once_with(joined)
             join.assert_called_once_with(prefix, path_obj)
 
     describe "startswith":
         it "says whether the dot join of the path startswith the base":
-            self.assertEqual(Path(["a.b", "c.d"]).startswith("a.b.c"), True)
-            self.assertEqual(Path("a.b.c.d").startswith("a.b.c"), True)
+            assert Path(["a.b", "c.d"]).startswith("a.b.c") == True
+            assert Path("a.b.c.d").startswith("a.b.c") == True
 
-            self.assertEqual(Path(["a.b", "c.d"]).startswith("b.c.d"), False)
-            self.assertEqual(Path("a.b.c.d").startswith("b.c.d"), False)
+            assert Path(["a.b", "c.d"]).startswith("b.c.d") == False
+            assert Path("a.b.c.d").startswith("b.c.d") == False
 
     describe "endswith":
         it "says whether the dot join of the path endswith the suffix":
-            self.assertEqual(Path(["a.b", "c.d"]).endswith("b.c.d"), True)
-            self.assertEqual(Path("a.b.c.d").endswith("b.c.d"), True)
+            assert Path(["a.b", "c.d"]).endswith("b.c.d") == True
+            assert Path("a.b.c.d").endswith("b.c.d") == True
 
-            self.assertEqual(Path(["a.b", "c.d"]).endswith("a.b.c"), False)
-            self.assertEqual(Path("a.b.c.d").endswith("a.b.c"), False)
+            assert Path(["a.b", "c.d"]).endswith("a.b.c") == False
+            assert Path("a.b.c.d").endswith("a.b.c") == False
 
     describe "using":
         it "returns the same class with the new path and other same values and ignore_converters as True":
@@ -187,11 +187,11 @@ describe TestCase, "Path":
             path = Path2(p1, conf, converters, ignore_converters=ignore_converters)
             new_path = path.using(p2)
 
-            self.assertEqual(type(new_path), Path2)
-            self.assertIs(new_path.path, p2)
-            self.assertIs(new_path.configuration, conf)
-            self.assertIs(new_path.converters, converters)
-            self.assertIs(new_path.ignore_converters, False)
+            assert type(new_path) == Path2
+            assert new_path.path is p2
+            assert new_path.configuration is conf
+            assert new_path.converters is converters
+            assert new_path.ignore_converters is False
 
         it "returns the same class with the new path and other overrides":
             p1 = mock.Mock(name="p1")
@@ -209,11 +209,11 @@ describe TestCase, "Path":
             path = Path2(p1, conf, converters, ignore_converters=ignore_converters)
             new_path = path.using(p2, conf2, converters2, ignore_converters2)
 
-            self.assertEqual(type(new_path), Path2)
-            self.assertIs(new_path.path, p2)
-            self.assertIs(new_path.configuration, conf2)
-            self.assertIs(new_path.converters, converters2)
-            self.assertIs(new_path.ignore_converters, ignore_converters2)
+            assert type(new_path) == Path2
+            assert new_path.path is p2
+            assert new_path.configuration is conf2
+            assert new_path.converters is converters2
+            assert new_path.ignore_converters is ignore_converters2
 
     describe "Clone":
         it "Returns a new path with same everything":
@@ -224,10 +224,10 @@ describe TestCase, "Path":
 
             path = Path(p1, conf, converters, ignore_converters=ignore_converters)
             new_path = path.clone()
-            self.assertIs(path.path, new_path.path)
-            self.assertIs(path.converters, new_path.converters)
-            self.assertIs(path.configuration, new_path.configuration)
-            self.assertIs(path.ignore_converters, new_path.ignore_converters)
+            assert path.path is new_path.path
+            assert path.converters is new_path.converters
+            assert path.configuration is new_path.configuration
+            assert path.ignore_converters is new_path.ignore_converters
 
     describe "ignoring_converters":
         it "returns a clone with the same path and ignore_converters default to True":
@@ -238,10 +238,10 @@ describe TestCase, "Path":
 
             new_path = path.ignoring_converters()
             assert new_path is not path
-            self.assertIs(new_path.path, p1)
-            self.assertIs(new_path.configuration, conf)
-            self.assertIs(new_path.converters, converters)
-            self.assertIs(new_path.ignore_converters, True)
+            assert new_path.path is p1
+            assert new_path.configuration is conf
+            assert new_path.converters is converters
+            assert new_path.ignore_converters is True
 
         it "can be given an ignore_converters to use":
             p1 = mock.Mock(name="p1")
@@ -252,10 +252,10 @@ describe TestCase, "Path":
             ignore_converters2 = mock.Mock(name="ignore_converters2")
             new_path = path.ignoring_converters(ignore_converters=ignore_converters2)
             assert new_path is not path
-            self.assertIs(new_path.path, p1)
-            self.assertIs(new_path.configuration, conf)
-            self.assertIs(new_path.converters, converters)
-            self.assertIs(new_path.ignore_converters, ignore_converters2)
+            assert new_path.path is p1
+            assert new_path.configuration is conf
+            assert new_path.converters is converters
+            assert new_path.ignore_converters is ignore_converters2
 
     describe "Doing a conversion":
         it "returns value as is if there are no converters":
@@ -267,7 +267,7 @@ describe TestCase, "Path":
 
             path = Path(p1)
             with mock.patch.object(path, "find_converter", find_converter):
-                self.assertEqual(path.do_conversion(value), (value, False))
+                assert path.do_conversion(value) == (value, False)
 
         it "uses found converter and marks path as done with converters":
             p1 = mock.Mock(name="p1")
@@ -276,7 +276,7 @@ describe TestCase, "Path":
             converters.activate()
 
             path = Path(p1, converters=converters)
-            self.assertEqual(converters.converted(path), False)
+            assert converters.converted(path) == False
 
             converted = mock.Mock(name="converted")
             converter = mock.Mock(name="converter")
@@ -286,11 +286,11 @@ describe TestCase, "Path":
             find_converter.return_value = (converter, True)
 
             with mock.patch.object(path, "find_converter", find_converter):
-                self.assertEqual(path.do_conversion(value), (converted, True))
+                assert path.do_conversion(value) == (converted, True)
 
             # Converters should now have converted value
-            self.assertEqual(converters.converted(path), True)
-            self.assertIs(converters.converted_val(path), converted)
+            assert converters.converted(path) == True
+            assert converters.converted_val(path) is converted
 
             converter.assert_called_once_with(path, value)
             converted.post_setup.assert_called_once_with()
@@ -310,15 +310,15 @@ describe TestCase, "Path":
             self.path = Path(self.p1, converters=self.converters)
 
         it "returns None if set to ignore_converters":
-            self.assertEqual(self.path.ignoring_converters().find_converter(), (None, False))
+            assert self.path.ignoring_converters().find_converter() == (None, False)
 
         it "returns the first converter that has no matches attribute":
-            self.assertEqual(self.path.find_converter(), (self.converter1, True))
+            assert self.path.find_converter() == (self.converter1, True)
 
         it "returns the first converter that matches the path":
             self.converter1.matches.return_value = False
             self.converter2.matches.return_value = True
-            self.assertEqual(self.path.find_converter(), (self.converter2, True))
+            assert self.path.find_converter() == (self.converter2, True)
 
             self.converter1.matches.assert_called_once_with(self.path)
             self.converter2.matches.assert_called_once_with(self.path)
@@ -327,7 +327,7 @@ describe TestCase, "Path":
             self.converter1.matches.return_value = False
             self.converter2.matches.return_value = False
             self.converter3.matches.return_value = False
-            self.assertEqual(self.path.find_converter(), (None, False))
+            assert self.path.find_converter() == (None, False)
 
             self.converter1.matches.assert_called_once_with(self.path)
             self.converter2.matches.assert_called_once_with(self.path)
@@ -337,7 +337,7 @@ describe TestCase, "Path":
         it "returns False if there are no converters":
             p1 = mock.Mock(name="p1")
             path = Path(p1, converters=None)
-            self.assertEqual(path.converted(), False)
+            assert path.converted() == False
 
         it "returns what converters returns":
             p1 = mock.Mock(name="p1")
@@ -346,7 +346,7 @@ describe TestCase, "Path":
             converters.converted.return_value = result
 
             path = Path(p1, converters=converters)
-            self.assertIs(path.converted(), result)
+            assert path.converted() is result
 
     describe "Finding a converted value":
         it "returns what converters returns":
@@ -356,4 +356,4 @@ describe TestCase, "Path":
             converters.converted_val.return_value = result
 
             path = Path(p1, converters=converters)
-            self.assertIs(path.converted_val(), result)
+            assert path.converted_val() is result

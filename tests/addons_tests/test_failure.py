@@ -98,16 +98,14 @@ describe TestCase, "Failure":
     it "doesn't complain if the addon has no hook":
         register = Register(self.getter, self.collector)
         register.add_pairs(("failure.addons", "nohook"))
-        self.assertEqual(global_register["nohook_found"], False)
+        assert global_register["nohook_found"] == False
         register.recursive_import_known()
-        self.assertEqual(global_register["nohook_found"], True)
+        assert global_register["nohook_found"] == True
 
     it "doesn't complain if the hook doesn't have a result":
-        self.assertEqual(self.collector.configuration["resolved"], [])
+        assert self.collector.configuration["resolved"] == []
         Register(self.getter, self.collector).register(("failure.addons", "noresult"))
-        self.assertEqual(
-            self.collector.configuration["resolved"], [("namespace_failure.noresult",)]
-        )
+        assert self.collector.configuration["resolved"] == [("namespace_failure.noresult",)]
 
     it "complains if you try to make extra with a post_register hook":
         with self.fuzzyAssertRaisesError(

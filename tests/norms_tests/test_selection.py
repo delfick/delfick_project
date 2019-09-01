@@ -17,10 +17,10 @@ describe TestCase, "Selection":
             Changed = Original.selection("Changed", ["one", "three"])
             changed = Changed(one=1, three=3)
             assert not hasattr(changed, "two")
-            self.assertEqual(changed.one, 1)
-            self.assertEqual(changed.three, 3)
+            assert changed.one == 1
+            assert changed.three == 3
 
-            self.assertEqual(sorted(changed.fields), sorted(["one", "three"]))
+            assert sorted(changed.fields) == sorted(["one", "three"])
 
         it "works with fields that have defaults":
 
@@ -30,12 +30,11 @@ describe TestCase, "Selection":
             Changed = Original.selection("Changed", ["one", "two"])
             changed = Changed(two=5)
             assert not hasattr(changed, "three")
-            self.assertEqual(changed.one, 2)
-            self.assertEqual(changed.two, 5)
+            assert changed.one == 2
+            assert changed.two == 5
 
-            self.assertEqual(
-                sorted(str(t) for t in changed.fields),
-                sorted([str(t) for t in (("one", 2), "two")]),
+            assert sorted(str(t) for t in changed.fields) == sorted(
+                [str(t) for t in (("one", 2), "two")]
             )
 
         it "works for fields that are dictionaries to help messages":
@@ -46,10 +45,10 @@ describe TestCase, "Selection":
             Changed = Original.selection("Changed", ["one", "two"])
             changed = Changed(one=1)
             assert not hasattr(changed, "three")
-            self.assertEqual(changed.one, 1)
-            self.assertEqual(changed.two, 6)
+            assert changed.one == 1
+            assert changed.two == 6
 
-            self.assertEqual(changed.fields, {"one": "one!", ("two", 6): "two"})
+            assert changed.fields == {"one": "one!", ("two", 6): "two"}
 
     describe "with dictobj.Spec":
         it "works":
@@ -64,9 +63,9 @@ describe TestCase, "Selection":
             changed = Changed.FieldSpec().empty_normalise(one="1", three="3")
 
             assert not hasattr(changed, "four")
-            self.assertEqual(changed.one, "1")
-            self.assertEqual(changed.two, 3)
-            self.assertEqual(changed.three, "3")
+            assert changed.one == "1"
+            assert changed.two == 3
+            assert changed.three == "3"
 
         it "allows optional values":
 
@@ -82,9 +81,9 @@ describe TestCase, "Selection":
             changed = Changed.FieldSpec().empty_normalise(one="1")
 
             assert not hasattr(changed, "four")
-            self.assertEqual(changed.one, "1")
-            self.assertEqual(changed.two, 3)
-            self.assertEqual(changed.three, sb.NotSpecified)
+            assert changed.one == "1"
+            assert changed.two == 3
+            assert changed.three == sb.NotSpecified
 
         it "allows setting all values to be optional":
 
@@ -99,8 +98,8 @@ describe TestCase, "Selection":
 
             assert not hasattr(changed, "three")
             assert not hasattr(changed, "four")
-            self.assertEqual(changed.one, sb.NotSpecified)
-            self.assertEqual(changed.two, sb.NotSpecified)
+            assert changed.one == sb.NotSpecified
+            assert changed.two == sb.NotSpecified
 
         it "allows setting all values to be required":
 

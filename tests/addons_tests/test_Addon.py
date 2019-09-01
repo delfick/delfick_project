@@ -13,19 +13,19 @@ describe TestCase, "Addon":
         addon = Addon.FieldSpec().normalise(
             Meta({}, []), {"name": "bob", "resolver": resolver, "namespace": "stuff"}
         )
-        self.assertEqual(addon.name, "bob")
-        self.assertEqual(addon.resolver, resolver)
-        self.assertEqual(addon.namespace, "stuff")
+        assert addon.name == "bob"
+        assert addon.resolver == resolver
+        assert addon.namespace == "stuff"
 
     describe "resolved":
         it "Gets the list from calling the resolver":
             resolved = mock.Mock(name="resolved")
             resolver = mock.Mock(name="resolver", return_value=[resolved])
             addon = Addon(name="a1", resolver=resolver, namespace="yeap", extras=[])
-            self.assertEqual(addon.resolved, [resolved])
+            assert addon.resolved == [resolved]
 
             # And it gets memoized
-            self.assertEqual(addon.resolved, [resolved])
+            assert addon.resolved == [resolved]
             resolver.assert_called_once_with()
             resolver.assert_called_once_with()
 
@@ -62,14 +62,11 @@ describe TestCase, "Addon":
             addon = Addon(name="a2", resolver=resolver, namespace="stuff", extras=[])
             addon.process(collector)
 
-            self.assertEqual(
-                collector.register_converters.mock_calls,
-                [
-                    mock.call([specs1, specs2], Meta, configuration, NotSpecified),
-                    mock.call([specs3], Meta, configuration, NotSpecified),
-                    mock.call(None, Meta, configuration, NotSpecified),
-                ],
-            )
+            assert collector.register_converters.mock_calls == [
+                mock.call([specs1, specs2], Meta, configuration, NotSpecified),
+                mock.call([specs3], Meta, configuration, NotSpecified),
+                mock.call(None, Meta, configuration, NotSpecified),
+            ]
 
     describe "post_register":
         it "calls the resolver with post_register=True and other kwargs":
@@ -86,7 +83,7 @@ describe TestCase, "Addon":
         it "returns extras from the addon instead of it's results":
             resolver = mock.NonCallableMock(name="resolver")
             addon = Addon(name="a3", resolver=resolver, namespace="thing", extras=[("one", "two")])
-            self.assertEqual(list(addon.unresolved_dependencies()), [("one", "two")])
+            assert list(addon.unresolved_dependencies()) == [("one", "two")]
 
     describe "resolved_dependencies":
         it "returns extras from the resolved results":
@@ -99,9 +96,7 @@ describe TestCase, "Addon":
             resolver = mock.Mock(name="resolver", return_value=[rs1, rs2])
 
             addon = Addon(name="a3", resolver=resolver, namespace="thing", extras=[("one", "two")])
-            self.assertEqual(
-                list(addon.resolved_dependencies()), [("three", "five"), ("three", "four")]
-            )
+            assert list(addon.resolved_dependencies()) == [("three", "five"), ("three", "four")]
 
             rs1.get.assert_called_once_with("extras", [])
             rs2.get.assert_called_once_with("extras", [])
@@ -117,7 +112,7 @@ describe TestCase, "Addon":
             resolver = mock.Mock(name="resolver", return_value=[rs1, rs2])
 
             addon = Addon(name="a3", resolver=resolver, namespace="thing", extras=[("one", "two")])
-            self.assertEqual(list(addon.dependencies(mock.Mock(name="all_deps"))), [("one", "two")])
+            assert list(addon.dependencies(mock.Mock(name="all_deps"))) == [("one", "two")]
 
         it "returns all deps if we've previously resolved":
             rs1 = mock.Mock(name="rs1")
@@ -129,8 +124,9 @@ describe TestCase, "Addon":
             resolver = mock.Mock(name="resolver", return_value=[rs1, rs2])
 
             addon = Addon(name="a3", resolver=resolver, namespace="thing", extras=[("one", "two")])
-            self.assertEqual(addon.resolved, [rs1, rs2])
-            self.assertEqual(
-                list(addon.dependencies(mock.Mock(name="all_deps"))),
-                [("one", "two"), ("three", "five"), ("three", "four")],
-            )
+            assert addon.resolved == [rs1, rs2]
+            assert list(addon.dependencies(mock.Mock(name="all_deps"))) == [
+                ("one", "two"),
+                ("three", "five"),
+                ("three", "four"),
+            ]

@@ -20,34 +20,28 @@ describe TestCase, "dot_joiner":
         stuff_possibilities = [pos.replace("blah", "stuff") for pos in blah_possibilities]
 
         for pos in blah_possibilities:
-            self.assertEqual(dot_joiner([pos]), pos)
+            assert dot_joiner([pos]) == pos
 
         for blahpos, stuffpos in list(itertools.product(blah_possibilities, stuff_possibilities)):
-            self.assertEqual(dot_joiner([blahpos, stuffpos]), "{0}.{1}".format(blahpos, stuffpos))
+            assert dot_joiner([blahpos, stuffpos]) == "{0}.{1}".format(blahpos, stuffpos)
 
     it "ignores strings":
-        self.assertEqual(dot_joiner("blah"), "blah")
+        assert dot_joiner("blah") == "blah"
 
 describe TestCase, "join":
     it "Joins as lists":
-        self.assertEqual(join(Path([]), Path([])), [])
-        self.assertEqual(join(Path([""]), Path([])), [])
-        self.assertEqual(join(Path([""]), Path([""])), [])
+        assert join(Path([]), Path([])) == []
+        assert join(Path([""]), Path([])) == []
+        assert join(Path([""]), Path([""])) == []
 
-        self.assertEqual(
-            join(Path(["a", "b", "c"]), Path(["d", "e", "f"])), ["a", "b", "c", "d", "e", "f"]
-        )
-        self.assertEqual(
-            join(Path(["a", "b", "c"]), ["d", "e", "f"]), ["a", "b", "c", "d", "e", "f"]
-        )
-        self.assertEqual(
-            join(["a", "b", "c"], Path(["d", "e", "f"])), ["a", "b", "c", "d", "e", "f"]
-        )
-        self.assertEqual(join(["a", "b", "c"], ["d", "e", "f"]), ["a", "b", "c", "d", "e", "f"])
+        assert join(Path(["a", "b", "c"]), Path(["d", "e", "f"])) == ["a", "b", "c", "d", "e", "f"]
+        assert join(Path(["a", "b", "c"]), ["d", "e", "f"]) == ["a", "b", "c", "d", "e", "f"]
+        assert join(["a", "b", "c"], Path(["d", "e", "f"])) == ["a", "b", "c", "d", "e", "f"]
+        assert join(["a", "b", "c"], ["d", "e", "f"]) == ["a", "b", "c", "d", "e", "f"]
 
     it "Joins as strings":
-        self.assertEqual(join(Path(""), Path("")), [])
-        self.assertEqual(join(Path("a.b.c"), Path("d.e.f")), ["a.b.c", "d.e.f"])
-        self.assertEqual(join("a.b.c", Path("d.e.f")), ["a.b.c", "d.e.f"])
-        self.assertEqual(join("a.b.c", "d.e.f"), ["a.b.c", "d.e.f"])
-        self.assertEqual(join(Path("a.b.c"), "d.e.f"), ["a.b.c", "d.e.f"])
+        assert join(Path(""), Path("")) == []
+        assert join(Path("a.b.c"), Path("d.e.f")) == ["a.b.c", "d.e.f"]
+        assert join("a.b.c", Path("d.e.f")) == ["a.b.c", "d.e.f"]
+        assert join("a.b.c", "d.e.f") == ["a.b.c", "d.e.f"]
+        assert join(Path("a.b.c"), "d.e.f") == ["a.b.c", "d.e.f"]

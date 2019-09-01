@@ -29,7 +29,7 @@ describe TestCase, "App":
                     called.append(argv)
 
             MyApp.main(argv)
-            self.assertEqual(called, [argv])
+            assert called == [argv]
 
     describe "mainline":
         it "catches DelfickError errors and prints them nicely":
@@ -58,8 +58,7 @@ describe TestCase, "App":
 
             fle.flush()
             fle.seek(0)
-            self.assertEqual(
-                fle.read(),
+            assert fle.read() == (
                 dedent(
                     """
                 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -73,7 +72,7 @@ describe TestCase, "App":
                 \t"SubError2"\tstuff=3
                 -------
             """
-                ),
+                )
             )
 
         it "Converts KeyboardInterrupt into a UserQuit":
@@ -87,19 +86,18 @@ describe TestCase, "App":
                 MyApp().mainline([], print_errors_to=fle)
                 assert False, "This should have failed"
             except SystemExit as error:
-                self.assertEqual(error.code, 1)
+                assert error.code == 1
 
             fle.flush()
             fle.seek(0)
-            self.assertEqual(
-                fle.read(),
+            assert fle.read() == (
                 dedent(
                     """
                 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                 Something went wrong! -- UserQuit
                 \t"User Quit"
             """
-                ),
+                )
             )
 
         it "Does not catch non DelfickError exceptions":
@@ -231,7 +229,7 @@ describe TestCase, "App":
                 re.compile("{0} ERROR   blah            also captured".format(date)),
             ]
 
-            self.assertEqual(len(expect), len(logs), logs)
+            assert len(expect) == len(logs), logs
             for index, line in enumerate(expect):
                 assert line.match(logs[index].strip()), "Expected '{0}' to match '{1}'".format(
                     logs[index].strip().replace("\t", "\\t").replace(" ", "."),
@@ -259,10 +257,10 @@ describe TestCase, "App":
             app = MyApp()
             cli_parser = app.make_cli_parser()
             assert isinstance(cli_parser, CliParser)
-            self.assertIs(cli_parser.description, description)
-            self.assertIs(cli_parser.environment_defaults, environment_defaults)
-            self.assertIs(cli_parser.positional_replacements, positional_replacements)
+            assert cli_parser.description is description
+            assert cli_parser.environment_defaults is environment_defaults
+            assert cli_parser.positional_replacements is positional_replacements
 
-            self.assertEqual(called, [])
+            assert called == []
             cli_parser.specify_other_args(parser, defaults)
-            self.assertEqual(called, [(app, parser, defaults)])
+            assert called == [(app, parser, defaults)]

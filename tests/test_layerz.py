@@ -29,45 +29,47 @@ describe TestCase, "Layers":
             print("     {0} || {1}".format(did, wanted))
             print("--")
 
-        self.assertEqual(len(call_list), len(expected))
+        assert len(call_list) == len(expected)
         mock.assert_has_calls(expected)
 
     it "takes a list of deps":
         deps = mock.Mock(name="deps")
         layers = Layers(deps)
-        self.assertIs(layers.deps, deps)
+        assert layers.deps is deps
 
     it "sets all deps to the deps it received if not given one otherwise":
         deps = mock.Mock(name="deps")
         layers = Layers(deps)
-        self.assertIs(layers.all_deps, deps)
+        assert layers.all_deps is deps
 
     it "takes a dictionary for all the deps":
         deps = mock.Mock(name="deps")
         all_deps = mock.Mock(name="all_deps")
         layers = Layers(deps, all_deps=all_deps)
-        self.assertIs(layers.deps, deps)
-        self.assertIs(layers.all_deps, all_deps)
+        assert layers.deps is deps
+        assert layers.all_deps is all_deps
 
     describe "Resetting the instance":
         it "resets layered to an empty list":
             self.instance._layered = mock.Mock(name="layered")
             self.instance.reset()
-            self.assertEqual(self.instance._layered, [])
+            assert self.instance._layered == []
 
         it "resets accounted to an empty dict":
             self.instance.accounted = mock.Mock(name="accounted")
             self.instance.reset()
-            self.assertEqual(self.instance.accounted, {})
+            assert self.instance.accounted == {}
 
     describe "Getting layered":
         it "has a property for converting _layered into a list of list of tuples":
             self.instance._layered = [["one"], ["two", "three"], ["four"]]
             self.instance.deps = ["one", "two", "three", "four"]
             self.instance.all_deps = {"one": 1, "two": 2, "three": 3, "four": 4}
-            self.assertEqual(
-                self.instance.layered, [[("one", 1)], [("two", 2), ("three", 3)], [("four", 4)]]
-            )
+            assert self.instance.layered == [
+                [("one", 1)],
+                [("two", 2), ("three", 3)],
+                [("four", 4)],
+            ]
 
     describe "Adding layers":
         before_each:
@@ -99,11 +101,11 @@ describe TestCase, "Layers":
             error_msg = "Expected created layered to have {0} layers. Only has {1}".format(
                 len(expected), len(created)
             )
-            self.assertEqual(len(created), len(expected), error_msg)
+            assert len(created) == len(expected), error_msg
 
             for index, layer in enumerate(created):
                 nxt = expected[index]
-                self.assertEqual(sorted(layer) if layer else None, sorted(nxt) if nxt else None)
+                assert sorted(layer) if layer else None == sorted(nxt) if nxt else None
 
         it "has a method for adding all the deps":
             add_to_layers = mock.Mock(name="add_to_layers")
@@ -112,22 +114,22 @@ describe TestCase, "Layers":
             self.assertCallsSame(add_to_layers, sorted([mock.call(dep) for dep in self.deps]))
 
         it "does nothing if the dep is already in accounted":
-            self.assertEqual(self.instance._layered, [])
+            assert self.instance._layered == []
             self.instance.accounted["dep1"] = True
 
             self.dep1.dependencies = []
             self.instance.add_to_layers("dep1")
-            self.assertEqual(self.instance._layered, [])
-            self.assertEqual(self.instance.accounted, {"dep1": True})
+            assert self.instance._layered == []
+            assert self.instance.accounted == {"dep1": True}
 
         it "adds dep to accounted if not already there":
-            self.assertEqual(self.instance._layered, [])
-            self.assertEqual(self.instance.accounted, {})
+            assert self.instance._layered == []
+            assert self.instance.accounted == {}
 
             self.dep1.dependencies = lambda a: []
             self.instance.add_to_layers("dep1")
-            self.assertEqual(self.instance._layered, [["dep1"]])
-            self.assertEqual(self.instance.accounted, {"dep1": True})
+            assert self.instance._layered == [["dep1"]]
+            assert self.instance.accounted == {"dep1": True}
 
         it "complains about cyclic dependencies":
             self.dep1.dependencies = lambda a: ["dep2"]

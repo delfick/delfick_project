@@ -9,8 +9,8 @@ import mock
 
 describe TestCase, "option_merge_addon_hook":
     it "defaults extras to an empty dictionary and post_register to False":
-        self.assertEqual(option_merge_addon_hook().extras, [])
-        self.assertEqual(option_merge_addon_hook().post_register, False)
+        assert option_merge_addon_hook().extras == []
+        assert option_merge_addon_hook().post_register == False
 
     it "complains if you set extras and post_register at the same time":
         with self.fuzzyAssertRaisesError(
@@ -20,10 +20,10 @@ describe TestCase, "option_merge_addon_hook":
             option_merge_addon_hook(extras={"option_merge.addon": "other"}, post_register=True)
 
     it "doesn't complain if you only set post_register":
-        self.assertEqual(option_merge_addon_hook(post_register=True).post_register, True)
+        assert option_merge_addon_hook(post_register=True).post_register == True
 
     it "doesn't complain if you only set extras":
-        self.assertEqual(option_merge_addon_hook(extras=[("1", "2")]).extras, [("1", ["2"])])
+        assert option_merge_addon_hook(extras=[("1", "2")]).extras == [("1", ["2"])]
 
     it "sets extras on the func passed in":
 
@@ -33,8 +33,8 @@ describe TestCase, "option_merge_addon_hook":
         extras = [("one", ["two"])]
 
         assert not hasattr(func, "extras")
-        self.assertIs(option_merge_addon_hook(extras=extras)(func), func)
-        self.assertEqual(func.extras, [("one", ["two"])])
+        assert option_merge_addon_hook(extras=extras)(func) is func
+        assert func.extras == [("one", ["two"])]
 
     it "sets _option_merge_addon_entry to true on the func passed in":
 
@@ -45,12 +45,12 @@ describe TestCase, "option_merge_addon_hook":
 
         assert not hasattr(func, "_option_merge_addon_entry")
         option_merge_addon_hook(extras=extras)(func)
-        self.assertIs(func._option_merge_addon_entry, True)
+        assert func._option_merge_addon_entry is True
 
         func._option_merge_addon_entry = False
-        self.assertIs(func._option_merge_addon_entry, False)
-        self.assertIs(option_merge_addon_hook(post_register=True)(func), func)
-        self.assertIs(func._option_merge_addon_entry, True)
+        assert func._option_merge_addon_entry is False
+        assert option_merge_addon_hook(post_register=True)(func) is func
+        assert func._option_merge_addon_entry is True
 
     it "sets _option_merge_addon_entry_post_register to post_register on the func passed in":
 
@@ -60,5 +60,5 @@ describe TestCase, "option_merge_addon_hook":
         post_register = mock.Mock(name="post_register")
 
         assert not hasattr(func, "_option_merge_addon_entry_post_register")
-        self.assertIs(option_merge_addon_hook(post_register=post_register)(func), func)
-        self.assertIs(func._option_merge_addon_entry_post_register, post_register)
+        assert option_merge_addon_hook(post_register=post_register)(func) is func
+        assert func._option_merge_addon_entry_post_register is post_register

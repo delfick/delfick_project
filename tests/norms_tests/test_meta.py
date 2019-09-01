@@ -11,8 +11,8 @@ describe TestCase, "Meta":
         path = mock.Mock(name="path")
         everything = mock.Mock(name="everything")
         meta = Meta(everything, path)
-        self.assertIs(meta._path, path)
-        self.assertIs(meta.everything, everything)
+        assert meta._path is path
+        assert meta.everything is everything
 
     it "is equal to another meta with the same everything and path":
         assert Meta({}, [("hello", "")]) == Meta({}, []).at("hello")
@@ -22,7 +22,7 @@ describe TestCase, "Meta":
         assert not Meta({}, [("hello", "")]) == Meta({}, []).at("there")
 
     it "can generate an empty Meta":
-        self.assertEqual(Meta({}, []), Meta.empty())
+        assert Meta({}, []) == Meta.empty()
 
     describe "New path":
         before_each:
@@ -39,7 +39,7 @@ describe TestCase, "Meta":
                 new_path.return_value = with_new_path
 
                 with mock.patch.object(self.meta, "new_path", new_path):
-                    self.assertIs(self.meta.indexed_at(3), with_new_path)
+                    assert self.meta.indexed_at(3) is with_new_path
 
                 new_path.assert_called_once_with([("", "[3]")])
 
@@ -50,7 +50,7 @@ describe TestCase, "Meta":
                 new_path.return_value = with_new_path
 
                 with mock.patch.object(self.meta, "new_path", new_path):
-                    self.assertIs(self.meta.at("meh"), with_new_path)
+                    assert self.meta.at("meh") is with_new_path
 
                 new_path.assert_called_once_with([("meh", "")])
 
@@ -62,12 +62,12 @@ describe TestCase, "Meta":
                     pass
 
                 meta = MetaSub(self.everything, self.path)
-                self.assertEqual(meta._path, [(self.p1, ""), (self.p2, "")])
+                assert meta._path == [(self.p1, ""), (self.p2, "")]
 
                 new = meta.new_path([(p3, "")])
-                self.assertEqual(meta._path, [(self.p1, ""), (self.p2, "")])
-                self.assertEqual(new._path, [(self.p1, ""), (self.p2, ""), (p3, "")])
-                self.assertIs(new.everything, self.everything)
+                assert meta._path == [(self.p1, ""), (self.p2, "")]
+                assert new._path == [(self.p1, ""), (self.p2, ""), (p3, "")]
+                assert new.everything is self.everything
                 assert isinstance(new, MetaSub), type(new)
 
     describe "Joining the path":
@@ -76,13 +76,13 @@ describe TestCase, "Meta":
                 mock.Mock(name="everything"),
                 [("one", ""), ("two", "[3]"), ("", "[4]"), ("", ""), ("five", "")],
             )
-            self.assertEqual(meta.path, "one.two[3][4].five")
+            assert meta.path == "one.two[3][4].five"
 
     describe "Finding the source of something":
         it "returns unknown source_for":
             everything = mock.Mock(name="everything", spec=[])
             meta = Meta(everything, [("one", ""), ("two", "[3]")])
-            self.assertEqual(meta.source, "<unknown>")
+            assert meta.source == "<unknown>"
 
         it "asks everything for source if it has source_for":
             path = [(str(mock.Mock(name="path")), "")]
@@ -92,7 +92,7 @@ describe TestCase, "Meta":
             everything.source_for.return_value = source
 
             meta = Meta(everything, path)
-            self.assertEqual(meta.source, source)
+            assert meta.source == source
             everything.source_for.assert_called_once_with(path[0][0])
 
         it "catches KeyError from finding the source":
@@ -101,7 +101,7 @@ describe TestCase, "Meta":
             everything.source_for.side_effect = KeyError("path")
 
             meta = Meta(everything, path)
-            self.assertEqual(meta.source, "<unknown>")
+            assert meta.source == "<unknown>"
             everything.source_for.assert_called_once_with(path[0][0])
 
     describe "Formatting in a delfick error":
@@ -113,10 +113,9 @@ describe TestCase, "Meta":
             source = mock.Mock(name="source")
             everything.source_for.return_value = source
 
-            self.assertEqual(
-                meta.delfick_error_format("blah"),
-                "{{source={0}, path=one.three.five[1]}}".format(source),
-            )
+            assert meta.delfick_error_format(
+                "blah"
+            ) == "{{source={0}, path=one.three.five[1]}}".format(source)
 
         it "doesn't print out source if there is no source":
             path = mock.Mock(name="path")
@@ -125,19 +124,20 @@ describe TestCase, "Meta":
             meta = Meta(everything, [("one", ""), ("three", ""), ("five", ""), ("", [1])])
 
             everything.source_for.return_value = []
-            self.assertEqual(meta.delfick_error_format("blah"), "{path=one.three.five[1]}")
+            assert meta.delfick_error_format("blah") == "{path=one.three.five[1]}"
 
             everything.source_for.return_value = None
-            self.assertEqual(meta.delfick_error_format("blah"), "{path=one.three.five[1]}")
+            assert meta.delfick_error_format("blah") == "{path=one.three.five[1]}"
 
             everything.source_for.return_value = "<unknown>"
-            self.assertEqual(meta.delfick_error_format("blah"), "{path=one.three.five[1]}")
+            assert meta.delfick_error_format("blah") == "{path=one.three.five[1]}"
 
     describe "Getting key names":
         it "returns all the parts of the path as _key_name_i":
             path = [("one", ""), ("two", "[]"), ("three", "")]
             meta = Meta(None, path)
-            self.assertEqual(
-                meta.key_names(),
-                {"_key_name_0": "three", "_key_name_1": "two", "_key_name_2": "one"},
-            )
+            assert meta.key_names() == {
+                "_key_name_0": "three",
+                "_key_name_1": "two",
+                "_key_name_2": "one",
+            }

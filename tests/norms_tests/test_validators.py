@@ -19,7 +19,7 @@ describe TestCase, "Validator":
         assert issubclass(Validator, Spec)
 
     it "returns NotSpecified if not specified":
-        self.assertIs(Validator().normalise(self.meta, NotSpecified), NotSpecified)
+        assert Validator().normalise(self.meta, NotSpecified) is NotSpecified
 
     it "uses validate if value is specified":
         result = mock.Mock(name="result")
@@ -27,7 +27,7 @@ describe TestCase, "Validator":
         validate.return_value = result
 
         validator = type("Validator", (Validator,), {"validate": validate})()
-        self.assertIs(validator.normalise(self.meta, self.val), result)
+        assert validator.normalise(self.meta, self.val) is result
         validate.assert_called_once_with(self.meta, self.val)
 
 describe TestCase, "has_either":
@@ -37,7 +37,7 @@ describe TestCase, "has_either":
     it "takes in choices":
         choices = mock.Mock(name="choices")
         validator = va.has_either(choices)
-        self.assertIs(validator.choices, choices)
+        assert validator.choices is choices
 
     it "complains if none of the values are satisfied":
         choices = ["one", "two"]
@@ -59,7 +59,7 @@ describe TestCase, "has_either":
 
     it "Lets the val through if it has atleast one choice":
         val = {"one": 1}
-        self.assertEqual(va.has_either(["one", "two"]).normalise(self.meta, val), val)
+        assert va.has_either(["one", "two"]).normalise(self.meta, val) == val
 
 describe TestCase, "has_only_one_of":
     before_each:
@@ -68,7 +68,7 @@ describe TestCase, "has_only_one_of":
     it "takes in choices":
         choices = ["one", "two"]
         validator = va.has_only_one_of(choices)
-        self.assertIs(validator.choices, choices)
+        assert validator.choices is choices
 
     it "ensures choices is specified":
         choices = []
@@ -97,7 +97,7 @@ describe TestCase, "has_only_one_of":
 
     it "Lets the val through if it has atleast one choice":
         val = {"one": 1}
-        self.assertEqual(va.has_only_one_of(["one", "two"]).normalise(self.meta, val), val)
+        assert va.has_only_one_of(["one", "two"]).normalise(self.meta, val) == val
 
     it "complains if more than one of the values are specified":
         val = {"one": 1, "two": 2}
@@ -108,7 +108,7 @@ describe TestCase, "has_only_one_of":
             meta=self.meta,
             choices=choices,
         ):
-            self.assertEqual(va.has_only_one_of(choices).normalise(self.meta, val), val)
+            assert va.has_only_one_of(choices).normalise(self.meta, val) == val
 
 describe TestCase, "either_keys":
     before_each:
@@ -118,7 +118,7 @@ describe TestCase, "either_keys":
         choice1 = [mock.Mock(name="choice1")]
         choice2 = [mock.Mock(name="choice2")]
         validator = va.either_keys(choice1, choice2)
-        self.assertEqual(validator.choices, (choice1, choice2))
+        assert validator.choices == (choice1, choice2)
 
     it "complains if the value is not a dictionary":
         for val in (None, 0, 1, "", "a", [], [1], lambda: 1):
@@ -195,8 +195,8 @@ describe TestCase, "either_keys":
         res1 = va.either_keys(["one", "two"], ["three", "four"]).normalise(self.meta, val1)
         res2 = va.either_keys(["one", "two"], ["three", "four"]).normalise(self.meta, val2)
 
-        self.assertEqual(res1, val1)
-        self.assertEqual(res2, val2)
+        assert res1 == val1
+        assert res2 == val2
 
 describe TestCase, "no_whitesapce":
     before_each:
@@ -209,7 +209,7 @@ describe TestCase, "no_whitesapce":
         with mock.patch("re.compile", fake_compile):
             fake_compile.return_value = compiled_regex
             validator = va.no_whitespace()
-            self.assertIs(validator.regex, compiled_regex)
+            assert validator.regex is compiled_regex
 
         fake_compile.assert_called_once_with("\s+")
 
@@ -229,7 +229,7 @@ describe TestCase, "no_whitesapce":
             va.no_whitespace().normalise(self.meta, val)
 
     it "lets through values that don't have whitespace":
-        self.assertEqual(va.no_whitespace().normalise(self.meta, "asdf"), "asdf")
+        assert va.no_whitespace().normalise(self.meta, "asdf") == "asdf"
 
 describe TestCase, "no_dots":
     before_each:
@@ -237,12 +237,12 @@ describe TestCase, "no_dots":
 
     it "takes in a reason":
         reason = mock.Mock(name="reason")
-        self.assertIs(va.no_dots().reason, None)
-        self.assertIs(va.no_dots(reason=reason).reason, reason)
+        assert va.no_dots().reason is None
+        assert va.no_dots(reason=reason).reason is reason
 
     it "lets the value through if it has no dot":
         val = "no dots here"
-        self.assertEqual(va.no_dots().normalise(self.meta, val), val)
+        assert va.no_dots().normalise(self.meta, val) == val
 
     describe "When there is a dot":
         it "uses the provided reason when complaining":
@@ -283,18 +283,15 @@ describe TestCase, "regexed":
         fake_compile.side_effect = lambda reg: matched[reg]
         with mock.patch("re.compile", fake_compile):
             validator = va.regexed(regex1, regex2, regex3, regex4)
-            self.assertEqual(
-                validator.regexes,
-                [
-                    (regex1, compiled_regex1),
-                    (regex2, compiled_regex2),
-                    (regex3, compiled_regex3),
-                    (regex4, compiled_regex4),
-                ],
-            )
+            assert validator.regexes == [
+                (regex1, compiled_regex1),
+                (regex2, compiled_regex2),
+                (regex3, compiled_regex3),
+                (regex4, compiled_regex4),
+            ]
 
     it "returns the value if it matches all the regexes":
-        self.assertEqual(va.regexed("[a-z]+", "asdf", "a.+").normalise(self.meta, "asdf"), "asdf")
+        assert va.regexed("[a-z]+", "asdf", "a.+").normalise(self.meta, "asdf") == "asdf"
 
     it "complains if the value doesn't match any of the regexes":
         val = "meh"
@@ -315,8 +312,8 @@ describe TestCase, "deprecated_key":
         key = mock.Mock(name="key")
         reason = mock.Mock(name="reason")
         dk = va.deprecated_key(key, reason)
-        self.assertIs(dk.key, key)
-        self.assertIs(dk.reason, reason)
+        assert dk.key is key
+        assert dk.reason is reason
 
     it "complains if the key is in the value":
         key = mock.Mock(name="key")
@@ -351,4 +348,4 @@ describe TestCase, "choice":
             va.choice(1, 2, 3).normalise(self.meta, 4)
 
     it "returns the val if it's one of the choices":
-        self.assertIs(va.choice(1, 2, 3, 4).normalise(self.meta, 4), 4)
+        assert va.choice(1, 2, 3, 4).normalise(self.meta, 4) is 4

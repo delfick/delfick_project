@@ -41,9 +41,9 @@ describe TestCase, "Collector":
                 def setup(self):
                     called.append(1)
 
-            self.assertEqual(called, [])
+            assert called == []
             C()
-            self.assertEqual(called, [1])
+            assert called == [1]
 
     describe "register_converters":
         it "adds converters":
@@ -65,9 +65,9 @@ describe TestCase, "Collector":
             collector.register_converters(specs, Meta, configuration, NotSpecified)
             configuration.converters.activate()
 
-            self.assertEqual(configuration["one"], "ONE")
-            self.assertEqual(configuration["two"], "TWO")
-            self.assertEqual(configuration["three"], 3)
+            assert configuration["one"] == "ONE"
+            assert configuration["two"] == "TWO"
+            assert configuration["three"] == 3
 
             spec1.normalise.assert_called_once_with(meta.at("one"), NotSpecified)
             spec2.normalise.assert_called_once_with(meta.at("two"), 2)
@@ -97,7 +97,7 @@ describe TestCase, "Collector":
 
                 collector = Col()
                 collector.prepare(config_file, original_args_dict)
-                self.assertEqual(collector.configuration["args_dict"].as_dict(), original_args_dict)
+                assert collector.configuration["args_dict"].as_dict() == original_args_dict
 
             class MockCollectorKls(Col):
                 def prepare(slf, config_file, new_args_dict):
@@ -106,15 +106,12 @@ describe TestCase, "Collector":
             collector.__class__ = MockCollectorKls
 
             clone = collector.clone({"c": 3, "b": 4})
-            self.assertIs(type(clone), MockCollectorKls)
-            self.assertEqual(
-                called,
-                [
-                    (1, clone, {"a": 1, "b": 4, "c": 3}),
-                    (2, (config_file, {"a": 1, "b": 4, "c": 3})),
-                ],
-            )
-            self.assertEqual(original_args_dict, {"a": 1, "b": 2})
+            assert type(clone) is MockCollectorKls
+            assert called == [
+                (1, clone, {"a": 1, "b": 4, "c": 3}),
+                (2, (config_file, {"a": 1, "b": 4, "c": 3})),
+            ]
+            assert original_args_dict == {"a": 1, "b": 2}
 
     describe "prepare":
         it "find_missing_config, configuration, does extra_prepare, activates converters and extra_prepare_after_activation":
@@ -136,31 +133,25 @@ describe TestCase, "Collector":
 
                     def find_missing_config(slf, config):
                         called.append((1, config))
-                        self.assertEqual(
-                            config.as_dict(),
-                            {
-                                "config_root": config_root,
-                                "one": 1,
-                                "getpass": getpass,
-                                "collector": slf,
-                                "args_dict": args_dict,
-                            },
-                        )
+                        assert config.as_dict() == {
+                            "config_root": config_root,
+                            "one": 1,
+                            "getpass": getpass,
+                            "collector": slf,
+                            "args_dict": args_dict,
+                        }
                         config.converters = mock.Mock(name="converters")
 
                     def extra_prepare(slf, config, args_dict):
                         called.append((2, config, args_dict))
-                        self.assertEqual(
-                            config.as_dict(),
-                            {
-                                "config_root": config_root,
-                                "one": 1,
-                                "collector": slf,
-                                "args_dict": args_dict,
-                                "getpass": getpass,
-                            },
-                        )
-                        self.assertEqual(len(config.converters.mock_calls), 0)
+                        assert config.as_dict() == {
+                            "config_root": config_root,
+                            "one": 1,
+                            "collector": slf,
+                            "args_dict": args_dict,
+                            "getpass": getpass,
+                        }
+                        assert len(config.converters.mock_calls) == 0
 
                     def extra_prepare_after_activation(slf, config, args_dict):
                         called.append((3, config, args_dict))
@@ -168,16 +159,13 @@ describe TestCase, "Collector":
 
                 collector = Col()
 
-                self.assertEqual(called, [])
+                assert called == []
                 collector.prepare(config_file, args_dict)
-                self.assertEqual(
-                    called,
-                    [
-                        (1, collector.configuration),
-                        (2, collector.configuration, args_dict),
-                        (3, collector.configuration, args_dict),
-                    ],
-                )
+                assert called == [
+                    (1, collector.configuration),
+                    (2, collector.configuration, args_dict),
+                    (3, collector.configuration, args_dict),
+                ]
 
     describe "Collecting configuration":
         it "uses start_configuration, read_file, home_dir_configuration, config_file, add_configuration and extra_configuration_collection":
@@ -210,22 +198,19 @@ describe TestCase, "Collector":
                         return home_dir
 
                     def extra_configuration_collection(slf, config):
-                        self.assertEqual([c[0] for c in called], [1, 2, 3, 2, 3])
+                        assert [c[0] for c in called] == [1, 2, 3, 2, 3]
                         called.append((4, config))
 
                 collector = Col()
                 collector.collect_configuration(config_file, args_dict)
-                self.assertEqual(
-                    called,
-                    [
-                        (1,),
-                        (2, home_dir),
-                        (3, configuration, result_home_dir, home_dir),
-                        (2, config_file),
-                        (3, configuration, result_config_file, config_file),
-                        (4, configuration),
-                    ],
-                )
+                assert called == [
+                    (1,),
+                    (2, home_dir),
+                    (3, configuration, result_home_dir, home_dir),
+                    (2, config_file),
+                    (3, configuration, result_config_file, config_file),
+                    (4, configuration),
+                ]
 
         it "ignores home_dir if it's not specified":
             called = []
@@ -250,20 +235,17 @@ describe TestCase, "Collector":
                         called.append((3, config, result, src))
 
                     def extra_configuration_collection(slf, config):
-                        self.assertEqual([c[0] for c in called], [1, 2, 3])
+                        assert [c[0] for c in called] == [1, 2, 3]
                         called.append((4, config))
 
                 collector = Col()
                 collector.collect_configuration(config_file, args_dict)
-                self.assertEqual(
-                    called,
-                    [
-                        (1,),
-                        (2, config_file),
-                        (3, configuration, result_config_file, config_file),
-                        (4, configuration),
-                    ],
-                )
+                assert called == [
+                    (1,),
+                    (2, config_file),
+                    (3, configuration, result_config_file, config_file),
+                    (4, configuration),
+                ]
 
         it "gives a function for adding more sources to add_configuration":
             called = []
@@ -304,43 +286,36 @@ describe TestCase, "Collector":
                         called.append((3, config, result, src))
 
                     def extra_configuration_collection(slf, config):
-                        self.assertEqual([c[0] for c in called], [1, 2, 2, 2, 3, 3, 3])
+                        assert [c[0] for c in called] == [1, 2, 2, 2, 3, 3, 3]
                         called.append((4, config))
 
                 collector = Col()
                 collector.collect_configuration(config_file, args_dict)
-                self.assertEqual(
-                    called,
-                    [
-                        (1,),
-                        (2, config_file),
-                        (2, other_loc),
-                        (2, another_loc),
-                        (
-                            3,
-                            configuration,
-                            {
-                                "once": {
-                                    "twice": {"stuff": "a", "a": "b", "config_root": config_root}
-                                }
-                            },
-                            another_loc,
-                        ),
-                        (
-                            3,
-                            configuration,
-                            {"nested": another_loc, "config_root": config_root},
-                            other_loc,
-                        ),
-                        (
-                            3,
-                            configuration,
-                            {"extra": other_loc, "config_root": config_root},
-                            config_file,
-                        ),
-                        (4, configuration),
-                    ],
-                )
+                assert called == [
+                    (1,),
+                    (2, config_file),
+                    (2, other_loc),
+                    (2, another_loc),
+                    (
+                        3,
+                        configuration,
+                        {"once": {"twice": {"stuff": "a", "a": "b", "config_root": config_root}}},
+                        another_loc,
+                    ),
+                    (
+                        3,
+                        configuration,
+                        {"nested": another_loc, "config_root": config_root},
+                        other_loc,
+                    ),
+                    (
+                        3,
+                        configuration,
+                        {"extra": other_loc, "config_root": config_root},
+                        config_file,
+                    ),
+                    (4, configuration),
+                ]
 
         it "Can't create a circular loop using collect_another_source":
             called = []
@@ -363,37 +338,34 @@ describe TestCase, "Collector":
                         return results[location]
 
                     def add_configuration(slf, config, collect_another_source, done, result, src):
-                        self.assertEqual(result["config_root"], config_root)
+                        assert result["config_root"] == config_root
                         collect_another_source(result["extra"])
                         called.append((3, config, result, src))
 
                     def extra_configuration_collection(slf, config):
-                        self.assertEqual([c[0] for c in called], [1, 2, 2, 3, 3])
+                        assert [c[0] for c in called] == [1, 2, 2, 3, 3]
                         called.append((4, config))
 
                 collector = Col()
                 collector.collect_configuration(config_file, args_dict)
-                self.assertEqual(
-                    called,
-                    [
-                        (1,),
-                        (2, config_file),
-                        (2, other_loc),
-                        (
-                            3,
-                            configuration,
-                            {"extra": config_file, "config_root": config_root},
-                            other_loc,
-                        ),
-                        (
-                            3,
-                            configuration,
-                            {"extra": other_loc, "config_root": config_root},
-                            config_file,
-                        ),
-                        (4, configuration),
-                    ],
-                )
+                assert called == [
+                    (1,),
+                    (2, config_file),
+                    (2, other_loc),
+                    (
+                        3,
+                        configuration,
+                        {"extra": config_file, "config_root": config_root},
+                        other_loc,
+                    ),
+                    (
+                        3,
+                        configuration,
+                        {"extra": other_loc, "config_root": config_root},
+                        config_file,
+                    ),
+                    (4, configuration),
+                ]
 
         it "collects errors from reading files and raises a mother exception":
 
@@ -438,4 +410,4 @@ describe TestCase, "Collector":
                 ):
                     collector = Col()
                     collector.collect_configuration(config_file, args_dict)
-                self.assertEqual(called, [0, (1, home_dir), (1, config_file), 2])
+                assert called == [0, (1, home_dir), (1, config_file), 2]

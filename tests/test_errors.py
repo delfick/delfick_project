@@ -262,19 +262,19 @@ describe "Tests mixin":
             m2 = mock.Mock(name="m2")
 
             try:
-                DelfickErrorCase().assertIs(m1, m2, "blah")
+                assert m1 is m2, "blah"
                 assert False, "Expected an assertion error"
             except AssertionError as error:
                 assert str(error) == "{0} is not {1} : blah".format(m1, m2)
 
             try:
-                DelfickErrorCase().assertIs(m1, m2)
+                assert m1 is m2
                 assert False, "Expected an assertion error"
             except AssertionError as error:
                 assert str(error) == "{0} is not {1}".format(m1, m2)
 
             try:
-                DelfickErrorCase().assertIs(m1, m1)
+                assert m1 is m1
                 assert True, "Expected no assertion error"
             except AssertionError as error:
                 assert False, "Didn't expect an assertion error, got {0}".format(error)
@@ -285,19 +285,19 @@ describe "Tests mixin":
             m2 = mock.Mock(name="m2")
 
             try:
-                DelfickErrorCase().assertIsNot(m1, m1, "blah")
+                assert m1 is not m1, "blah"
                 assert False, "Expected an assertion error"
             except AssertionError as error:
                 assert str(error) == "unexpectedly identical: {0} : blah".format(m1, m1)
 
             try:
-                DelfickErrorCase().assertIsNot(m1, m1)
+                assert m1 is not m1
                 assert False, "Expected an assertion error"
             except AssertionError as error:
                 assert str(error) == "unexpectedly identical: {0}".format(m1, m1)
 
             try:
-                DelfickErrorCase().assertIsNot(m1, m2)
+                assert m1 is not m2
                 assert True, "Expected no assertion error"
             except AssertionError as error:
                 assert False, "Didn't expect an assertion error, got {0}".format(error)

@@ -18,13 +18,13 @@ describe TestCase, "Result":
 
     it "makes sure the keys of specs are tuples of int and tuple":
         res = self.spec.normalise(self.meta, {"specs": {(0, "blah"): self.with_normalise}})
-        self.assertEqual(res.specs, {(0, ("blah",)): self.with_normalise})
+        assert res.specs == {(0, ("blah",)): self.with_normalise}
 
         res = self.spec.normalise(self.meta, {"specs": {"blah": self.with_normalise}})
-        self.assertEqual(res.specs, {(0, ("blah",)): self.with_normalise})
+        assert res.specs == {(0, ("blah",)): self.with_normalise}
 
         res = self.spec.normalise(self.meta, {"specs": {("blah",): self.with_normalise}})
-        self.assertEqual(res.specs, {(0, ("blah",)): self.with_normalise})
+        assert res.specs == {(0, ("blah",)): self.with_normalise}
 
     it "makes sure the value of specs has a normalise method":
         error1 = BadSpecValue(
@@ -39,7 +39,7 @@ describe TestCase, "Result":
 
     it "makes sure extras is a list of string to tuple of strings":
         res = self.spec.normalise(self.meta, {"extras": [("one", "two")]})
-        self.assertEqual(res.extras, [("one", ("two",))])
+        assert res.extras == [("one", ("two",))]
 
         res = self.spec.normalise(self.meta, {"extras": [("three", ["four"])]})
-        self.assertEqual(res.extras, [("three", ("four",))])
+        assert res.extras == [("three", ("four",))]
