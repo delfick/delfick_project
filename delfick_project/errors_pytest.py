@@ -11,7 +11,7 @@ class RegexCompare:
         self.r = re.compile(regex)
 
     def __eq__(self, other):
-        return self.r.match(other) is not None
+        return self.r.search(other) is not None
 
     def __repr__(self):
         return f"<Regex '{self.r.pattern}'>"
