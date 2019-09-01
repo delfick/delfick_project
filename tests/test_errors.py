@@ -256,52 +256,6 @@ class DelfickErrorCase(TestCase, DelfickErrorTestMixin):
 
 
 describe "Tests mixin":
-    describe "AssertIs":
-        it "provides an implementation of assertIs that works":
-            m1 = mock.Mock(name="m1")
-            m2 = mock.Mock(name="m2")
-
-            try:
-                assert m1 is m2, "blah"
-                assert False, "Expected an assertion error"
-            except AssertionError as error:
-                assert str(error) == "{0} is not {1} : blah".format(m1, m2)
-
-            try:
-                assert m1 is m2
-                assert False, "Expected an assertion error"
-            except AssertionError as error:
-                assert str(error) == "{0} is not {1}".format(m1, m2)
-
-            try:
-                assert m1 is m1
-                assert True, "Expected no assertion error"
-            except AssertionError as error:
-                assert False, "Didn't expect an assertion error, got {0}".format(error)
-
-    describe "AssertIsNot":
-        it "provides an implementation of assertIsNot that works":
-            m1 = mock.Mock(name="m1")
-            m2 = mock.Mock(name="m2")
-
-            try:
-                assert m1 is not m1, "blah"
-                assert False, "Expected an assertion error"
-            except AssertionError as error:
-                assert str(error) == "unexpectedly identical: {0} : blah".format(m1, m1)
-
-            try:
-                assert m1 is not m1
-                assert False, "Expected an assertion error"
-            except AssertionError as error:
-                assert str(error) == "unexpectedly identical: {0}".format(m1, m1)
-
-            try:
-                assert m1 is not m2
-                assert True, "Expected no assertion error"
-            except AssertionError as error:
-                assert False, "Didn't expect an assertion error, got {0}".format(error)
-
     describe "Fuzzy assert raises":
 
         def expecting_raised_assertion(self, *args, **kwargs):
@@ -406,14 +360,14 @@ describe "Tests mixin":
             it "works on fake DelfickError class":
 
                 class Expected(Exception):
-                    def __init__(self, message, kwarg1):
-                        self.message = message
-                        self.kwarg1 = kwarg1
-                        self.kwargs = dict(kwarg1=kwarg1)
-                        self._fake_delfick_error = True
+                    def __init__(s, message, kwarg1):
+                        s.message = message
+                        s.kwarg1 = kwarg1
+                        s.kwargs = dict(kwarg1=kwarg1)
+                        s._fake_delfick_error = True
 
-                    def __str__(self):
-                        return "Expected: {0}\tkwarg1={1}".format(self.message, self.kwarg1)
+                    def __str__(s):
+                        return "Expected: {0}\tkwarg1={1}".format(s.message, s.kwarg1)
 
                 called = []
                 for iterator, (part, val) in self.expecting_raised_assertion(
@@ -542,11 +496,11 @@ describe "Tests mixin":
                     pass
 
                 class Thing(object):
-                    def __init__(self, val):
-                        self.val = val
+                    def __init__(s, val):
+                        s.val = val
 
-                    def delfick_error_format(self, key):
-                        return "{0}:{1}".format(key, self.val)
+                    def delfick_error_format(s, key):
+                        return "{0}:{1}".format(key, s.val)
 
                 class Error(DelfickError):
                     pass
