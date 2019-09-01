@@ -4,8 +4,8 @@ from delfick_project.errors import DelfickError, DelfickErrorTestMixin
 from delfick_project.errors_pytest import assertRaises
 from delfick_project.app import App, CliParser
 
-from unittest import mock, TestCase
 from textwrap import dedent
+from unittest import mock
 import datetime
 import tempfile
 import logging
@@ -14,18 +14,14 @@ import os
 import re
 
 
-class TestCase(TestCase, DelfickErrorTestMixin):
-    pass
-
-
-describe TestCase, "App":
+describe "App":
     describe "main":
         it "Instantiates the class and calls the mainline":
             called = []
             argv = mock.Mock(name="argv")
 
             class MyApp(App):
-                def mainline(self, argv=None):
+                def mainline(s, argv=None):
                     called.append(argv)
 
             MyApp.main(argv)
@@ -76,7 +72,7 @@ describe TestCase, "App":
             )
 
         it "Converts KeyboardInterrupt into a UserQuit":
-            fle = StringIO()
+            fle = io.StringIO()
 
             class MyApp(App):
                 def execute(slf, args_obj, args_dict, extra_args, handler):
@@ -107,7 +103,7 @@ describe TestCase, "App":
                 def execute(slf, args_obj, args_dict, extra_args, handler):
                     raise error
 
-            with self.fuzzyAssertRaisesError(ValueError):
+            with assertRaises(ValueError):
                 MyApp().mainline([])
 
         it "raises DelfickError exceptions if we have --debug":
@@ -116,7 +112,7 @@ describe TestCase, "App":
                 def execute(slf, args_obj, args_dict, extra_args, handler):
                     raise DelfickError("hi there", meh=2)
 
-            with self.fuzzyAssertRaisesError(DelfickError, "hi there", meh=2):
+            with assertRaises(DelfickError, "hi there", meh=2):
                 MyApp().mainline(["--debug"])
 
         it "raises the KeyboardInterrupt if we have --debug":
@@ -126,10 +122,10 @@ describe TestCase, "App":
                 def execute(slf, args_obj, args_dict, extra_args, handler):
                     raise KeyboardInterrupt()
 
-            with self.fuzzyAssertRaisesError(KeyboardInterrupt):
+            with assertRaises(KeyboardInterrupt):
                 MyApp().mainline(["--debug"])
 
-        it "parse args, sets up logging, sets boto agent and calls execute":
+        it "parse args, sets up logging, and calls execute":
             called = []
 
             cli_parser = mock.Mock(name="cli_parser")
@@ -158,9 +154,6 @@ describe TestCase, "App":
 
             setup_logging.side_effect = stp_lging
 
-            set_boto_useragent = mock.Mock(name="set_boto_useragent")
-            set_boto_useragent.side_effect = lambda *args: called.append(3)
-
             execute = mock.Mock(name="execute")
             execute.side_effect = lambda *args: called.append(4)
 
@@ -171,11 +164,7 @@ describe TestCase, "App":
             app = MyApp()
 
             with mock.patch.multiple(
-                app,
-                execute=execute,
-                set_boto_useragent=set_boto_useragent,
-                setup_logging=setup_logging,
-                cli_categories=cli_categories,
+                app, execute=execute, setup_logging=setup_logging, cli_categories=cli_categories
             ):
                 app.mainline(argv)
 
@@ -185,7 +174,7 @@ describe TestCase, "App":
 
     describe "setup_logging":
         it "works":
-            fle = StringIO()
+            fle = io.StringIO()
 
             class MyApp(App):
                 logging_handler_file = fle

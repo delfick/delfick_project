@@ -1,15 +1,16 @@
 # coding: spec
 
 from delfick_project.app import CliParser, Ignore, BadOption
+from delfick_project.errors_pytest import assertRaises
 
 from contextlib import contextmanager
-from unittest import mock, TestCase
 from itertools import combinations
+from unittest import mock
 import sys
 import re
 import os
 
-describe TestCase, "CliParser":
+describe "CliParser":
 
     @contextmanager
     def swapped_env(self, **swapped):
@@ -100,7 +101,7 @@ describe TestCase, "CliParser":
                     parser.add_argument("--task", help="specify the task", **defaults["--task"])
 
             parser = Parser("", ["--task"], {})
-            with self.fuzzyAssertRaisesError(
+            with assertRaises(
                 BadOption,
                 "Please don't specify an option as a positional argument and as a --flag",
                 argument="--task",
@@ -119,7 +120,7 @@ describe TestCase, "CliParser":
             parser.check_args([], defaults, positional_replacements)
             assert True, "That definitely should not have failed"
 
-            with self.fuzzyAssertRaisesError(
+            with assertRaises(
                 BadOption,
                 "Please don't specify an option as a positional argument and as a --flag",
                 argument="--env",
@@ -203,7 +204,7 @@ describe TestCase, "CliParser":
                     parser.add_argument("--three", **defaults["--three"])
 
             parser = Parser("", ["--one", "--two", ("--three", "dflt")], {})
-            with self.fuzzyAssertRaisesError(
+            with assertRaises(
                 BadOption,
                 "Please don't specify an option as a positional argument and as a --flag",
                 argument="--two",
@@ -443,7 +444,7 @@ describe TestCase, "CliParser":
 
             assert len(called) == 4
             regex = re.compile(
-                "nosetests: error: argument (--silent|--verbose|--debug): not allowed with argument (--silent|--verbose|--debug)"
+                "pytest: error: argument (--silent|--verbose|--debug): not allowed with argument (--silent|--verbose|--debug)"
             )
             for message in called:
                 match = regex.match(message)
