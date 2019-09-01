@@ -3,7 +3,6 @@ from delfick_project.errors import DelfickError, ProgrammerError
 from delfick_project.layerz import Layers
 
 from collections import defaultdict
-from operator import itemgetter
 import pkg_resources
 import logging
 import six

@@ -2,7 +2,6 @@ from contextlib import contextmanager
 from functools import total_ordering
 from unittest.util import safe_repr
 import traceback
-import unittest
 import sys
 import re
 

@@ -210,7 +210,7 @@ class Path(object):
             return self.path.startswith(base)
         if not self.path:
             return not bool(base)
-        if self.path_type is list and len(self.path) is 1:
+        if self.path_type is list and len(self.path) == 1:
             return self.path[0].startswith(base)
         return self.joined().startswith(base)
 
