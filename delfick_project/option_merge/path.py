@@ -9,10 +9,8 @@ It's purpose is to behave like a string regardless of whether it is a string
 or a list of strings.
 """
 
-from option_merge.joiner import dot_joiner, join
-from option_merge.not_found import NotFound
-
-import six
+from .joiner import dot_joiner, join
+from .not_found import NotFound
 
 
 class Path(object):
@@ -53,7 +51,7 @@ class Path(object):
     ):
         self.path = path
         self.path_type = type(self.path)
-        self.path_is_string = self.path_type in (str,) + six.string_types
+        self.path_is_string = self.path_type is str
 
         self._joined = joined
         self._joined_function = joined_function
@@ -148,7 +146,7 @@ class Path(object):
     def without(self, base):
         """Return a clone of this path without the base"""
         base_type = type(base)
-        if base_type not in (str,) + six.string_types:
+        if base_type is not str:
             base = dot_joiner(base, base_type)
 
         if not self.startswith(base):
@@ -170,7 +168,7 @@ class Path(object):
                         continue
 
                     part_type = type(part)
-                    if part_type in (str,) + six.string_types:
+                    if part_type is str:
                         joined_part = part
                     else:
                         joined_part = dot_joiner(part, part_type)

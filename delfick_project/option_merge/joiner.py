@@ -2,16 +2,13 @@
 Helpers for joining together things
 """
 
-import six
-
 Path = None
 list_types = (list, tuple)
-string_types = (str,) + six.string_types
 
 
 def dot_joiner(item, item_type=None):
     """Join lists of list of strings with a single dot in between each"""
-    if item_type in string_types:
+    if item_type is str:
         return item
     else:
         return dot_join_item(item, item_type or type(item))
@@ -33,7 +30,7 @@ def dot_join_item(item, item_type):
         part_type = type(part)
         global Path
         if Path is None:
-            from option_merge.path import Path
+            from .path import Path
 
         if part_type is Path:
             joined = part.joined()
@@ -58,20 +55,20 @@ def join(one, two):
     """
     global Path
     if Path is None:
-        from option_merge.path import Path
+        from .path import Path
 
     if isinstance(one, Path):
         one = one.path
     if isinstance(two, Path):
         two = two.path
 
-    if isinstance(one, six.string_types):
-        if isinstance(two, six.string_types):
+    if isinstance(one, str):
+        if isinstance(two, str):
             joined = [one] + [two]
         else:
             joined = [one] + two
     else:
-        if isinstance(two, six.string_types):
+        if isinstance(two, str):
             joined = one + [two]
         else:
             joined = one + two

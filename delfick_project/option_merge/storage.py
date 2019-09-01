@@ -8,13 +8,13 @@ which can be used to get keys and values for some path.
 It is also used to get thesource for particular paths.
 """
 
-from option_merge.versioning import versioned_iterable, versioned_value
-from option_merge.merge import MergedOptions
-from option_merge.not_found import NotFound
-from option_merge.value_at import value_at
-from option_merge.joiner import dot_joiner
-from option_merge import helper as hp
-from option_merge.path import Path
+from .versioning import versioned_iterable, versioned_value
+from .merge import MergedOptions
+from .not_found import NotFound
+from .value_at import value_at
+from .joiner import dot_joiner
+from . import helper as hp
+from .path import Path
 
 
 class DataPath(object):

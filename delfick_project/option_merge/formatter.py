@@ -34,14 +34,12 @@ formatter that can format strings using a MergedOptions object.
     assert formatted == "a.b: 3 and c=5"
 """
 
-from option_merge.merge import MergedOptions
+from .merge import MergedOptions
+
+from delfick_project.norms import sb
 
 import string
 import types
-
-
-class NotSpecified(object):
-    """The difference between None and not specified"""
 
 
 class NoFormat(object):
@@ -56,7 +54,7 @@ class MergedOptionStringFormatter(string.Formatter):
     Resolve format options into a MergedOptions dictionary
     """
 
-    def __init__(self, all_options, option_path, chain=None, value=NotSpecified):
+    def __init__(self, all_options, option_path, chain=None, value=sb.NotSpecified):
         if chain is None:
             if isinstance(option_path, list):
                 chain = [thing for thing in option_path]
@@ -71,7 +69,7 @@ class MergedOptionStringFormatter(string.Formatter):
     def format(self):
         """Format our option_path into all_options"""
         val = self.value
-        if val is NotSpecified:
+        if val is sb.NotSpecified:
             val = self.get_string(self.option_path)
 
         if isinstance(val, NoFormat):
@@ -124,7 +122,7 @@ class MergedOptionStringFormatter(string.Formatter):
     def with_option_path(self, value):
         """Clone this instance with the new value as option_path and no override value"""
         return self.__class__(
-            self.all_options, value, chain=self.chain + [value], value=NotSpecified
+            self.all_options, value, chain=self.chain + [value], value=sb.NotSpecified
         )
 
     def get_string(self, key):
@@ -218,3 +216,6 @@ class MergedOptionStringFormatter(string.Formatter):
     def no_format(self, val):
         """Return an instance that is recognised by the formatter as no more formatting required"""
         return NoFormat(val)
+
+
+__all__ = ["NoFormat", "MergedOptionStringFormatter"]

@@ -61,13 +61,13 @@ For example:
     collector.configuration["some.contrived.example"] == 4
 """
 
-from option_merge.converter import Converter
+from .converter import Converter
 
 from getpass import getpass
 import logging
 import os
 
-log = logging.getLogger("option_merge.collector")
+log = logging.getLogger("delfick_project.option_merge.collector")
 
 
 class Collector(object):

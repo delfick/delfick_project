@@ -11,16 +11,16 @@ With the ability to delete from the dictionary and the ability to convert values
 on access.
 """
 
-from option_merge.versioning import versioned_iterable, versioned_value
-from option_merge.converter import Converters, Converter
-from option_merge.not_found import NotFound
-from option_merge.joiner import dot_joiner
-from option_merge.path import Path
+from .versioning import versioned_iterable, versioned_value
+from .converter import Converters, Converter
+from .not_found import NotFound
+from .joiner import dot_joiner
+from .path import Path
 
 from collections import Mapping
 import logging
 
-log = logging.getLogger("option_merge.merge")
+log = logging.getLogger("delfick_project.option_merge.merge")
 
 
 class KeyValuePairsConverter(object):
@@ -32,7 +32,7 @@ class KeyValuePairsConverter(object):
 
     def convert(self):
         """Return us a MergedOptions from our pairs"""
-        from option_merge import helper as hp
+        from . import helper as hp
 
         return MergedOptions().using(
             *[hp.make_dict(key[0], key[1:], value) for key, value in self.pairs], source=self.source
@@ -164,7 +164,7 @@ class MergedOptions(dict, Mapping):
         self.prefix_string = dot_joiner(self.prefix_list, list)
 
         self.storage = storage
-        from option_merge.storage import Storage
+        from .storage import Storage
 
         if self.storage is None:
             self.storage = Storage()
@@ -462,7 +462,7 @@ class MergedOptions(dict, Mapping):
         if isPath:
             joined = path.joined()
         else:
-            from option_merge import helper as hp
+            from . import helper as hp
 
             if path_type in (list, tuple):
                 path, joined = hp.prefixed_path_list(path, self.prefix_list)

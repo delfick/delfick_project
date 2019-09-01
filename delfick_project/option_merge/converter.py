@@ -24,8 +24,8 @@ Note that the converters must be activated before use and subsequent calls to
 converted paths will use a cached result.
 """
 
-from option_merge.versioning import versioned_value
-from option_merge.joiner import dot_joiner
+from .versioning import versioned_value
+from .joiner import dot_joiner
 
 
 class Converter(object):
