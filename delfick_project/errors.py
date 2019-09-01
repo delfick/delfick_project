@@ -6,9 +6,11 @@ import unittest
 import sys
 import re
 
+
 @total_ordering
 class DelfickError(Exception):
     """Helpful class for creating custom exceptions"""
+
     desc = ""
 
     def __init__(self, message="", **kwargs):
@@ -22,7 +24,13 @@ class DelfickError(Exception):
     def __str__(self):
         message = self.oneline()
         if self.errors:
-            message = "{0}\nerrors:\n=======\n\n\t{1}".format(message, "\n\t".join("{0}\n-------".format('\n\t'.join(str(error).split('\n'))) for error in self.errors))
+            message = "{0}\nerrors:\n=======\n\n\t{1}".format(
+                message,
+                "\n\t".join(
+                    "{0}\n-------".format("\n\t".join(str(error).split("\n")))
+                    for error in self.errors
+                ),
+            )
         return message
 
     def as_dict(self):
@@ -44,14 +52,21 @@ class DelfickError(Exception):
         res.update(dict((k, self.formatted_val(k, v)) for k, v in self.kwargs.items()))
 
         if self.errors:
-            res["errors"] = [repr(e) if not hasattr(e, "as_dict") else e.as_dict() for e in self.errors]
+            res["errors"] = [
+                repr(e) if not hasattr(e, "as_dict") else e.as_dict() for e in self.errors
+            ]
         return res
 
     def __unicode__(self):
         return str(self).decode("utf-8")
 
     def __repr__(self):
-        return "{0}({1}, {2}, _errors={3})".format(self.__class__.__name__, self.message, ', '.join("{0}={1}".format(k, v) for k, v in self.kwargs.items()), self.errors)
+        return "{0}({1}, {2}, _errors={3})".format(
+            self.__class__.__name__,
+            self.message,
+            ", ".join("{0}={1}".format(k, v) for k, v in self.kwargs.items()),
+            self.errors,
+        )
 
     def __hash__(self):
         return hash(self.as_tuple(for_hash=True))
@@ -61,8 +76,10 @@ class DelfickError(Exception):
         desc = self.desc
         message = self.message
 
-        info = ["{0}={1}".format(k, self.formatted_val(k, v)) for k, v in sorted(self.kwargs.items())]
-        info = '\t'.join(info)
+        info = [
+            "{0}={1}".format(k, self.formatted_val(k, v)) for k, v in sorted(self.kwargs.items())
+        ]
+        info = "\t".join(info)
         if info and (message or desc):
             info = "\t{0}".format(info)
 
@@ -84,7 +101,9 @@ class DelfickError(Exception):
             try:
                 return val.delfick_error_format(key)
             except Exception as error:
-                return "<|Failed to format val for exception: val={0}, error={1}|>".format(val, error)
+                return "<|Failed to format val for exception: val={0}, error={1}|>".format(
+                    val, error
+                )
 
     def __eq__(self, error):
         """Say whether this error is like the other error"""
@@ -112,15 +131,20 @@ class DelfickError(Exception):
             kwarg_items = [(key, str(val)) for key, val in kwarg_items]
         return (self.__class__.__name__, self.message, tuple(kwarg_items), tuple(self.errors))
 
+
 class ProgrammerError(Exception):
     """For when the programmer should have prevented something happening"""
+
 
 class NotSpecified(object):
     """Used to tell the difference between None and Empty"""
 
+
 class UserQuit(DelfickError):
     """Raise this if the user quit the application"""
+
     desc = "User Quit"
+
 
 class DelfickErrorTestMixin:
     @contextmanager
@@ -138,9 +162,13 @@ class DelfickErrorTestMixin:
         except Exception as error:
             original_exc_info = sys.exc_info()
             try:
-                assert issubclass(error.__class__, expected_kls), "Expected {0}, got {1}".format(expected_kls, error.__class__)
+                assert issubclass(error.__class__, expected_kls), "Expected {0}, got {1}".format(
+                    expected_kls, error.__class__
+                )
 
-                if not issubclass(error.__class__, DelfickError) and not getattr(error, "_fake_delfick_error", False):
+                if not issubclass(error.__class__, DelfickError) and not getattr(
+                    error, "_fake_delfick_error", False
+                ):
                     # For normal exceptions we just regex against the string of the whole exception
                     if expected_msg_regex is not NotSpecified:
                         self.assertMatchingRegex(str(error), expected_msg_regex)
@@ -160,7 +188,11 @@ class DelfickErrorTestMixin:
                 exc_info = sys.exc_info()
                 try:
                     print("!" * 20)
-                    print(''.join(["Original Traceback\n"] + traceback.format_tb(original_exc_info[2])).strip())
+                    print(
+                        "".join(
+                            ["Original Traceback\n"] + traceback.format_tb(original_exc_info[2])
+                        ).strip()
+                    )
                     print(error)
                     print()
                     msg = "Expected: {0}".format(expected_kls)
@@ -174,7 +206,9 @@ class DelfickErrorTestMixin:
                     exc_info[1].__traceback__ = exc_info[2]
                     raise exc_info[1]
         else:
-            assert False, "Expected an exception to be raised\n\texpected_kls: {0}\n\texpected_msg_regex: {1}\n\thave_atleast: {2}".format(
+            assert (
+                False
+            ), "Expected an exception to be raised\n\texpected_kls: {0}\n\texpected_msg_regex: {1}\n\thave_atleast: {2}".format(
                 expected_kls, expected_msg_regex, values
             )
 
@@ -186,7 +220,9 @@ class DelfickErrorTestMixin:
             if key not in actual:
                 missing.append(safe_repr(key))
             elif value != actual[key]:
-                nxt = "{{{0}: expected={1}, got={2}}}".format(safe_repr(key), safe_repr(value), safe_repr(actual[key]))
+                nxt = "{{{0}: expected={1}, got={2}}}".format(
+                    safe_repr(key), safe_repr(value), safe_repr(actual[key])
+                )
                 mismatched.append(nxt)
 
         if not (missing or mismatched):
@@ -194,15 +230,15 @@ class DelfickErrorTestMixin:
 
         error = []
         if missing:
-            error.append("Missing: {0}".format(', '.join(sorted(missing))))
+            error.append("Missing: {0}".format(", ".join(sorted(missing))))
 
         if mismatched:
-            error.append("Mismatched: {0}".format(', '.join(sorted(mismatched))))
+            error.append("Mismatched: {0}".format(", ".join(sorted(mismatched))))
 
         if hasattr(self, "_formatMessage"):
-            self.fail(self._formatMessage(msg, '; '.join(error)))
+            self.fail(self._formatMessage(msg, "; ".join(error)))
         else:
-            self.fail(msg or '; '.join(error))
+            self.fail(msg or "; ".join(error))
 
     def assertMatchingRegex(self, text, expected_regex, msg=None):
         """Fail the test unless the text matches the regular expression."""
@@ -211,5 +247,5 @@ class DelfickErrorTestMixin:
             expected_regex = re.compile(expected_regex)
         if not expected_regex.search(text):
             msg = msg or "Regex didn't match"
-            msg = '%s: %r not found in %r' % (msg, expected_regex.pattern, text)
+            msg = "%s: %r not found in %r" % (msg, expected_regex.pattern, text)
             raise self.failureException(msg)

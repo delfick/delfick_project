@@ -6,12 +6,12 @@ from .collector import Collector
 from .not_found import NotFound
 
 __all__ = [
-      "NotFound"
-    , "Converter"
-    , "Collector"
-    , "MergedOptions"
-    , "ConverterProperty"
-    , "AttributesConverter"
-    , "KeyValuePairsConverter"
-    , "MergedOptionStringFormatter"
-    ]
+    "NotFound",
+    "Converter",
+    "Collector",
+    "MergedOptions",
+    "ConverterProperty",
+    "AttributesConverter",
+    "KeyValuePairsConverter",
+    "MergedOptionStringFormatter",
+]

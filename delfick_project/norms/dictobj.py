@@ -69,6 +69,7 @@ from namedlist import namedlist
 empty_defaults = namedlist("Defaults", [])
 cached_namedlists = {}
 
+
 class dictobj(dict):
     fields = None
     is_dict = True
@@ -248,7 +249,12 @@ class dictobj(dict):
         # Make sure we are selecting fields that exist
         missing = set(wanted) - set(name_map)
         if missing:
-            raise BadSpec("Tried to make a selection from keys that don't exist", missing=missing, available=list(name_map), wanted=wanted)
+            raise BadSpec(
+                "Tried to make a selection from keys that don't exist",
+                missing=missing,
+                available=list(name_map),
+                wanted=wanted,
+            )
 
         # The final result isn't inheriting from kls so that we can not inherit fields we don't want
         # But we still want everything else from kls to pretend it's inherited.......
@@ -270,7 +276,7 @@ class dictobj(dict):
             # We weren't selecting from dictobj.Spec, so let's just set the fields and be done
             # Normal dictobj has no normalise functionality and so no point in setting such things
             attrs["fields"] = new_fields
-            return type(kls_name, (dictobj, ), attrs)
+            return type(kls_name, (dictobj,), attrs)
 
         # Ok, so, for dictobj.Spec, we set attrs on the class rather than fields
         # So let's seed the attrs with our cloned fields
@@ -323,7 +329,13 @@ class dictobj(dict):
                 else:
                     missing.append(field_name)
             if missing:
-                raise BadSpec("Tried to wrap keys that didn't exist", wrap_as=key, missing=missing, available=list(name_map), wanted=kwargs.get(key))
+                raise BadSpec(
+                    "Tried to wrap keys that didn't exist",
+                    wrap_as=key,
+                    missing=missing,
+                    available=list(name_map),
+                    wanted=kwargs.get(key),
+                )
 
         # Ok, now we use our wrap helper for optional settings
         all_wrap("all_optional", sb.optional_spec)
@@ -338,8 +350,11 @@ class dictobj(dict):
         specific_wrap("optional", sb.optional_spec)
 
         # Finally, we return our new class!
-        return type(kls_name, (dictobj.Spec, ), attrs)
+        return type(kls_name, (dictobj.Spec,), attrs)
+
 
 class Spec(dictobj, metaclass=Field.metaclass):
     pass
+
+
 dictobj.Spec = Spec

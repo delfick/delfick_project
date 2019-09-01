@@ -7,14 +7,17 @@ from delfick_error import DelfickErrorTestMixin
 from unittest import TestCase, mock
 from itertools import zip_longest
 
-class TestCase(TestCase, DelfickErrorTestMixin): pass
+
+class TestCase(TestCase, DelfickErrorTestMixin):
+    pass
+
 
 describe TestCase, "Layers":
     before_each:
         self.dep1 = mock.Mock(name="dep1")
         self.dep2 = mock.Mock(name="dep2")
         self.dep3 = mock.Mock(name="dep3")
-        self.deps = {'dep1': self.dep1, 'dep2': self.dep2, 'dep3': self.dep3}
+        self.deps = {"dep1": self.dep1, "dep2": self.dep2, "dep3": self.dep3}
         self.instance = Layers(self.deps)
 
     def assertCallsSame(self, mock, expected):
@@ -62,7 +65,9 @@ describe TestCase, "Layers":
             self.instance._layered = [["one"], ["two", "three"], ["four"]]
             self.instance.deps = ["one", "two", "three", "four"]
             self.instance.all_deps = {"one": 1, "two": 2, "three": 3, "four": 4}
-            self.assertEqual(self.instance.layered, [[("one", 1)], [("two", 2), ("three", 3)], [("four", 4)]])
+            self.assertEqual(
+                self.instance.layered, [[("one", 1)], [("two", 2), ("three", 3)], [("four", 4)]]
+            )
 
     describe "Adding layers":
         before_each:
@@ -91,7 +96,9 @@ describe TestCase, "Layers":
                 print("    >> {0}".format(sorted(crted) if crted else None))
                 print("--")
 
-            error_msg = "Expected created layered to have {0} layers. Only has {1}".format(len(expected), len(created))
+            error_msg = "Expected created layered to have {0} layers. Only has {1}".format(
+                len(expected), len(created)
+            )
             self.assertEqual(len(created), len(expected), error_msg)
 
             for index, layer in enumerate(created):
@@ -106,12 +113,12 @@ describe TestCase, "Layers":
 
         it "does nothing if the dep is already in accounted":
             self.assertEqual(self.instance._layered, [])
-            self.instance.accounted['dep1'] = True
+            self.instance.accounted["dep1"] = True
 
             self.dep1.dependencies = []
             self.instance.add_to_layers("dep1")
             self.assertEqual(self.instance._layered, [])
-            self.assertEqual(self.instance.accounted, {'dep1': True})
+            self.assertEqual(self.instance.accounted, {"dep1": True})
 
         it "adds dep to accounted if not already there":
             self.assertEqual(self.instance._layered, [])
@@ -120,25 +127,29 @@ describe TestCase, "Layers":
             self.dep1.dependencies = lambda a: []
             self.instance.add_to_layers("dep1")
             self.assertEqual(self.instance._layered, [["dep1"]])
-            self.assertEqual(self.instance.accounted, {'dep1': True})
+            self.assertEqual(self.instance.accounted, {"dep1": True})
 
         it "complains about cyclic dependencies":
-            self.dep1.dependencies = lambda a: ['dep2']
-            self.dep2.dependencies = lambda a: ['dep1']
+            self.dep1.dependencies = lambda a: ["dep2"]
+            self.dep2.dependencies = lambda a: ["dep1"]
 
-            with self.fuzzyAssertRaisesError(Layers.DepCycle, chain=['dep1', 'dep2', 'dep1']):
+            with self.fuzzyAssertRaisesError(Layers.DepCycle, chain=["dep1", "dep2", "dep1"]):
                 self.instance.add_to_layers("dep1")
 
             self.instance.reset()
-            with self.fuzzyAssertRaisesError(Layers.DepCycle, chain=['dep2', 'dep1', 'dep2']):
+            with self.fuzzyAssertRaisesError(Layers.DepCycle, chain=["dep2", "dep1", "dep2"]):
                 self.instance.add_to_layers("dep2")
 
         describe "Dependencies":
             before_each:
                 self.fake_add_to_layers = mock.Mock(name="add_to_layers")
                 original = self.instance.add_to_layers
-                self.fake_add_to_layers.side_effect = lambda *args, **kwargs: original(*args, **kwargs)
-                self.patcher = mock.patch.object(self.instance, "add_to_layers", self.fake_add_to_layers)
+                self.fake_add_to_layers.side_effect = lambda *args, **kwargs: original(
+                    *args, **kwargs
+                )
+                self.patcher = mock.patch.object(
+                    self.instance, "add_to_layers", self.fake_add_to_layers
+                )
                 self.patcher.start()
 
             after_each:
@@ -164,7 +175,10 @@ describe TestCase, "Layers":
                     del cpy["dep3"]
                     del cpy["dep4"]
                     del cpy["dep5"]
-                    expected = [cpy.items(), [("dep3", self.dep3), ("dep4", self.dep4), ("dep5", self.dep5)]]
+                    expected = [
+                        cpy.items(),
+                        [("dep3", self.dep3), ("dep4", self.dep4), ("dep5", self.dep5)],
+                    ]
                     self.assertLayeredSame(self.instance, expected)
 
             describe "Complex dependencies":
@@ -184,38 +198,44 @@ describe TestCase, "Layers":
                     #    --1--         2     6     7     8
 
                     expected_calls = [
-                          mock.call("dep1")
-                        , mock.call("dep2")
-                        , mock.call("dep3")
-                        , mock.call("dep1", ["dep3"])
-                        , mock.call("dep4")
-                        , mock.call("dep1", ["dep4"])
-                        , mock.call("dep5")
-                        , mock.call("dep1", ["dep5"])
-                        , mock.call("dep6")
-                        , mock.call("dep7")
-                        , mock.call("dep8")
-                        , mock.call("dep9")
-                        , mock.call("dep4", ["dep9"])
-                        ]
+                        mock.call("dep1"),
+                        mock.call("dep2"),
+                        mock.call("dep3"),
+                        mock.call("dep1", ["dep3"]),
+                        mock.call("dep4"),
+                        mock.call("dep1", ["dep4"]),
+                        mock.call("dep5"),
+                        mock.call("dep1", ["dep5"]),
+                        mock.call("dep6"),
+                        mock.call("dep7"),
+                        mock.call("dep8"),
+                        mock.call("dep9"),
+                        mock.call("dep4", ["dep9"]),
+                    ]
 
                     expected = [
-                          [("dep1", self.dep1), ("dep2", self.dep2), ("dep6", self.dep6), ("dep7", self.dep7), ("dep8", self.dep8)]
-                        , [("dep3", self.dep3), ("dep4", self.dep4), ("dep5", self.dep5)]
-                        , [("dep9", self.dep9)]
-                        ]
+                        [
+                            ("dep1", self.dep1),
+                            ("dep2", self.dep2),
+                            ("dep6", self.dep6),
+                            ("dep7", self.dep7),
+                            ("dep8", self.dep8),
+                        ],
+                        [("dep3", self.dep3), ("dep4", self.dep4), ("dep5", self.dep5)],
+                        [("dep9", self.dep9)],
+                    ]
 
                     self.instance.add_all_to_layers()
                     self.assertCallsSame(self.fake_add_to_layers, expected_calls)
                     self.assertLayeredSame(self.instance, expected)
 
                 it "handles more complex dependencies":
-                    self.dep1.dependencies = lambda a: ['dep2']
-                    self.dep2.dependencies = lambda a: ['dep3', 'dep4']
-                    self.dep4.dependencies = lambda a: ['dep5']
-                    self.dep6.dependencies = lambda a: ['dep9']
-                    self.dep7.dependencies = lambda a: ['dep6']
-                    self.dep9.dependencies = lambda a: ['dep4', 'dep8']
+                    self.dep1.dependencies = lambda a: ["dep2"]
+                    self.dep2.dependencies = lambda a: ["dep3", "dep4"]
+                    self.dep4.dependencies = lambda a: ["dep5"]
+                    self.dep6.dependencies = lambda a: ["dep9"]
+                    self.dep7.dependencies = lambda a: ["dep6"]
+                    self.dep9.dependencies = lambda a: ["dep4", "dep8"]
 
                     #                     7
                     #                     |
@@ -228,44 +248,44 @@ describe TestCase, "Layers":
                     # 3       5               8
 
                     expected_calls = [
-                        mock.call("dep1")
-                        , mock.call("dep2", ["dep1"])
-                        , mock.call("dep3", ["dep1", "dep2"])
-                        , mock.call("dep4", ["dep1", "dep2"])
-                        , mock.call("dep5", ["dep1", "dep2", "dep4"])
-                        , mock.call("dep2")
-                        , mock.call("dep3")
-                        , mock.call("dep4")
-                        , mock.call("dep5")
-                        , mock.call("dep6")
-                        , mock.call("dep9", ["dep6"])
-                        , mock.call("dep4", ["dep6", "dep9"])
-                        , mock.call("dep8", ["dep6", "dep9"])
-                        , mock.call("dep7")
-                        , mock.call("dep6", ["dep7"])
-                        , mock.call("dep8")
-                        , mock.call("dep9")
-                        ]
+                        mock.call("dep1"),
+                        mock.call("dep2", ["dep1"]),
+                        mock.call("dep3", ["dep1", "dep2"]),
+                        mock.call("dep4", ["dep1", "dep2"]),
+                        mock.call("dep5", ["dep1", "dep2", "dep4"]),
+                        mock.call("dep2"),
+                        mock.call("dep3"),
+                        mock.call("dep4"),
+                        mock.call("dep5"),
+                        mock.call("dep6"),
+                        mock.call("dep9", ["dep6"]),
+                        mock.call("dep4", ["dep6", "dep9"]),
+                        mock.call("dep8", ["dep6", "dep9"]),
+                        mock.call("dep7"),
+                        mock.call("dep6", ["dep7"]),
+                        mock.call("dep8"),
+                        mock.call("dep9"),
+                    ]
 
                     expected = [
-                        [("dep3", self.dep3), ("dep5", self.dep5), ("dep8", self.dep8)]
-                        , [("dep4", self.dep4)]
-                        , [("dep2", self.dep2), ("dep9", self.dep9)]
-                        , [("dep1", self.dep1), ("dep6", self.dep6)]
-                        , [("dep7", self.dep7)]
-                        ]
+                        [("dep3", self.dep3), ("dep5", self.dep5), ("dep8", self.dep8)],
+                        [("dep4", self.dep4)],
+                        [("dep2", self.dep2), ("dep9", self.dep9)],
+                        [("dep1", self.dep1), ("dep6", self.dep6)],
+                        [("dep7", self.dep7)],
+                    ]
 
                     self.instance.add_all_to_layers()
                     self.assertCallsSame(self.fake_add_to_layers, expected_calls)
                     self.assertLayeredSame(self.instance, expected)
 
                 it "only gets layers for the deps specified":
-                    self.dep1.dependencies = lambda a: ['dep2']
-                    self.dep2.dependencies = lambda a: ['dep3', 'dep4']
-                    self.dep4.dependencies = lambda a: ['dep5']
-                    self.dep6.dependencies = lambda a: ['dep9']
-                    self.dep7.dependencies = lambda a: ['dep6']
-                    self.dep9.dependencies = lambda a: ['dep4', 'dep8']
+                    self.dep1.dependencies = lambda a: ["dep2"]
+                    self.dep2.dependencies = lambda a: ["dep3", "dep4"]
+                    self.dep4.dependencies = lambda a: ["dep5"]
+                    self.dep6.dependencies = lambda a: ["dep9"]
+                    self.dep7.dependencies = lambda a: ["dep6"]
+                    self.dep9.dependencies = lambda a: ["dep4", "dep8"]
 
                     #                     7
                     #                     |
@@ -289,21 +309,21 @@ describe TestCase, "Layers":
                     # 3       5               8
 
                     expected_calls = [
-                          mock.call("dep3")
-                        , mock.call("dep4")
-                        , mock.call("dep5", ["dep4"])
-                        , mock.call("dep6")
-                        , mock.call("dep9", ["dep6"])
-                        , mock.call("dep4", ["dep6", "dep9"])
-                        , mock.call("dep8", ["dep6", "dep9"])
-                        ]
+                        mock.call("dep3"),
+                        mock.call("dep4"),
+                        mock.call("dep5", ["dep4"]),
+                        mock.call("dep6"),
+                        mock.call("dep9", ["dep6"]),
+                        mock.call("dep4", ["dep6", "dep9"]),
+                        mock.call("dep8", ["dep6", "dep9"]),
+                    ]
 
                     expected = [
-                          [("dep3", self.dep3), ("dep5", self.dep5), ("dep8", self.dep8)]
-                        , [("dep4", self.dep4)]
-                        , [("dep9", self.dep9)]
-                        , [("dep6", self.dep6)]
-                        ]
+                        [("dep3", self.dep3), ("dep5", self.dep5), ("dep8", self.dep8)],
+                        [("dep4", self.dep4)],
+                        [("dep9", self.dep9)],
+                        [("dep6", self.dep6)],
+                    ]
 
                     self.instance.deps = ["dep3", "dep4", "dep6"]
                     self.instance.add_all_to_layers()

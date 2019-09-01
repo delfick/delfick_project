@@ -1,6 +1,7 @@
 from option_merge.merge import MergedOptions
 from option_merge.joiner import dot_joiner
 
+
 def prefixed_path_list(path, prefix=None):
     """Return the prefixed version of this path as a list"""
     res_type = type(path)
@@ -10,9 +11,10 @@ def prefixed_path_list(path, prefix=None):
         res = list(path)
     return res, dot_joiner(res, res_type)
 
+
 def prefixed_path_string(path, prefix=""):
     """Return the prefixed version of this string"""
-    while path and path[0] == '.':
+    while path and path[0] == ".":
         path = path[1:]
 
     while path and path[-1] == ".":
@@ -32,6 +34,7 @@ def prefixed_path_string(path, prefix=""):
         res = "{0}.{1}".format(prefix, path)
         return res, res
 
+
 def make_dict(first, rest, data):
     """Make a dictionary from a list of keys"""
     last = first
@@ -44,6 +47,7 @@ def make_dict(first, rest, data):
         last = part
 
     return result
+
 
 def merge_into_dict(target, source, seen=None, ignore=None):
     """Merge source into target"""

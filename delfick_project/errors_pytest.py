@@ -5,6 +5,7 @@ import traceback
 import sys
 import re
 
+
 class RegexCompare:
     def __init__(self, regex):
         self.r = re.compile(regex)
@@ -15,9 +16,11 @@ class RegexCompare:
     def __repr__(self):
         return f"<Regex '{self.r.pattern}'>"
 
+
 class Empty:
     def __repr__(self):
         return "<EMPTY>"
+
 
 class assertRaises:
     """
@@ -31,6 +34,7 @@ class assertRaises:
     This is the same as fuzzyAssertRaisesError in DelfickErrorTestMixin
     but more suitable to use in pytest.
     """
+
     def __init__(self, expected_kls, expected_msg_regex=Empty, **values):
         self.values = values
         self.expected_kls = expected_kls
@@ -49,16 +53,20 @@ class assertRaises:
         __tracebackhide__ = True
 
         if exc_type is None:
-            assert False, dedent(f"""
+            assert False, dedent(
+                f"""
                 Expected an exception to be raised
                     expected_kls: {self.expected_kls}
                     expected_msg_regex: {self.expected_msg_regex}
                     have_atleast: {self.values}
                     errors: {self.errors}
-            """).strip()
+            """
+            ).strip()
 
         try:
-            assertSameError(exc, self.expected_kls, self.expected_msg_regex, self.values, self.errors)
+            assertSameError(
+                exc, self.expected_kls, self.expected_msg_regex, self.values, self.errors
+            )
         except:
             assertion = sys.exc_info()[1]
 
@@ -88,11 +96,14 @@ class assertRaises:
 
         return True
 
+
 def assertSameError(error, expected_kls, expected_msg_regex, values, errors):
     """Assert that error is expected"""
     assert issubclass(error.__class__, expected_kls), "Error is wrong subclass"
 
-    if not issubclass(error.__class__, DelfickError) and not getattr(error, "_fake_delfick_error", False):
+    if not issubclass(error.__class__, DelfickError) and not getattr(
+        error, "_fake_delfick_error", False
+    ):
         # For normal exceptions we just regex against the string of the whole exception
         if expected_msg_regex is not Empty:
             assert expected_msg_regex == str(error), "Incorrect message"

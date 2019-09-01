@@ -16,6 +16,7 @@ from option_merge.joiner import dot_joiner
 from option_merge import helper as hp
 from option_merge.path import Path
 
+
 class DataPath(object):
     """
     Encapsulates a (path, data, source) triplet and getting keys and values from
@@ -31,7 +32,9 @@ class DataPath(object):
     def is_dict(self):
         is_dict = getattr(self, "_is_dict", None)
         if is_dict is None:
-            is_dict = self._is_dict = type(self.data) in (dict, MergedOptions) or isinstance(self.data, dict)
+            is_dict = self._is_dict = type(self.data) in (dict, MergedOptions) or isinstance(
+                self.data, dict
+            )
         return is_dict
 
     def items(self, prefix, want_one=False):
@@ -58,7 +61,7 @@ class DataPath(object):
         joined = self.path.joined()
         joined_prefix = prefix.joined()
 
-        if not prefix or joined == joined_prefix or joined.startswith(joined_prefix + '.'):
+        if not prefix or joined == joined_prefix or joined.startswith(joined_prefix + "."):
             shortened_path = self.path.without(prefix)
             if shortened_path:
                 yield list(shortened_path)[0], data, list(shortened_path)[1:]
@@ -76,7 +79,10 @@ class DataPath(object):
                 yield "", data, []
                 return
 
-            if type(data) not in (dict, MergedOptions) and getattr(data, "is_dict", False) is not True:
+            if (
+                type(data) not in (dict, MergedOptions)
+                and getattr(data, "is_dict", False) is not True
+            ):
                 raise NotFound
 
             if not prefix:
@@ -111,6 +117,7 @@ class DataPath(object):
                     return hp.make_dict(key, short_path, data)
                 else:
                     return data
+
 
 class Storage(object):
     """
@@ -211,11 +218,13 @@ class Storage(object):
         if chain is None:
             chain = []
 
-        ignore_converters = ignore_converters or getattr(path, 'ignore_converters', False)
+        ignore_converters = ignore_converters or getattr(path, "ignore_converters", False)
         path = Path.convert(path).ignoring_converters(ignore_converters)
 
         for info_path, data, source in self.data:
-            for full_path, found_path, val in self.determine_path_and_val(path, info_path, data, source):
+            for full_path, found_path, val in self.determine_path_and_val(
+                path, info_path, data, source
+            ):
                 source = self.make_source_for_function(data, found_path, chain, default=source)
                 yield DataPath(full_path, val, source)
                 yielded = True
@@ -241,7 +250,7 @@ class Storage(object):
                 yield info_path + found_path, dot_joiner(found_path, list), val
                 return
 
-            if joined_path.startswith(joined_info_path + '.'):
+            if joined_path.startswith(joined_info_path + "."):
                 get_at = Path.convert(path).without(info_path)
                 found_path, val = value_at(data, get_at, self)
                 yield info_path + found_path, dot_joiner(found_path), val
@@ -249,19 +258,23 @@ class Storage(object):
 
             # We are only part way into info_path
             path = Path.convert(path)
-            for key, data, short_path in DataPath(Path.convert(info_path), data, source).items(path, want_one=True):
+            for key, data, short_path in DataPath(Path.convert(info_path), data, source).items(
+                path, want_one=True
+            ):
                 yield path, "", hp.make_dict(key, short_path, data)
         except NotFound:
             pass
 
     def make_source_for_function(self, data, path, chain, default=None):
         """Return us a function that will get the source for some path on the specified obj"""
+
         def source_for():
             if hasattr(data, "source_for"):
                 nxt = data.source_for(data.converted_path(path), chain)
                 if nxt:
                     return nxt
             return default
+
         return source_for
 
     @versioned_iterable
@@ -318,7 +331,7 @@ class Storage(object):
             return {}
         seen[path].append(self)
 
-        for i in range(len(self.data)-1, -1, -1):
+        for i in range(len(self.data) - 1, -1, -1):
             prefix, data, _ = self.data[i]
 
             if prefix:
@@ -359,4 +372,3 @@ class Storage(object):
                     hp.merge_into_dict(result, val, seen, ignore=ignore)
 
         return result
-

@@ -22,8 +22,10 @@ import logging
 
 log = logging.getLogger("option_merge.merge")
 
+
 class KeyValuePairsConverter(object):
     """Converts a list of key,value pairs to a dictionary"""
+
     def __init__(self, pairs, source=None):
         self.pairs = pairs
         self.source = source
@@ -31,11 +33,24 @@ class KeyValuePairsConverter(object):
     def convert(self):
         """Return us a MergedOptions from our pairs"""
         from option_merge import helper as hp
-        return MergedOptions().using(*[hp.make_dict(key[0], key[1:], value) for key, value in self.pairs], source=self.source)
+
+        return MergedOptions().using(
+            *[hp.make_dict(key[0], key[1:], value) for key, value in self.pairs], source=self.source
+        )
+
 
 class AttributesConverter(object):
     """Converts an object with particular attributes to a dictionary"""
-    def __init__(self, obj, attributes=None, include_underlined=False, lift=None, ignoreable_values=None, source=None):
+
+    def __init__(
+        self,
+        obj,
+        attributes=None,
+        include_underlined=False,
+        lift=None,
+        ignoreable_values=None,
+        source=None,
+    ):
         self.obj = obj
         self.lift = lift
         self.source = source
@@ -68,13 +83,16 @@ class AttributesConverter(object):
         else:
             return options
 
+
 class ConverterProperty(object):
     """Creates a Property for accessing a converter"""
+
     def __init__(self, converter):
         self.converter = converter
 
     def __get__(self, obj=None, owner=None):
         return lambda *args, **kwargs: self.converter(*args, **kwargs).convert()
+
 
 class MergedOptions(dict, Mapping):
     """
@@ -128,7 +146,9 @@ class MergedOptions(dict, Mapping):
     Attributes = ConverterProperty(AttributesConverter)
     KeyValuePairs = ConverterProperty(KeyValuePairsConverter)
 
-    def __init__(self, prefix=None, storage=None, dont_prefix=None, converters=None, ignore_converters=False):
+    def __init__(
+        self, prefix=None, storage=None, dont_prefix=None, converters=None, ignore_converters=False
+    ):
         self.prefix_list = prefix
         self.converters = converters
         self.dont_prefix = dont_prefix
@@ -145,6 +165,7 @@ class MergedOptions(dict, Mapping):
 
         self.storage = storage
         from option_merge.storage import Storage
+
         if self.storage is None:
             self.storage = Storage()
 
@@ -168,15 +189,18 @@ class MergedOptions(dict, Mapping):
         Any kwargs given to ``using`` is passed into ``update`` for
         each provided dictionary.
         """
-        prefix = kwargs.get('prefix')
-        storage = kwargs.get('storage')
-        converters = kwargs.get('converters')
-        dont_prefix = kwargs.get('dont_prefix')
+        prefix = kwargs.get("prefix")
+        storage = kwargs.get("storage")
+        converters = kwargs.get("converters")
+        dont_prefix = kwargs.get("dont_prefix")
         ignore_converters = kwargs.get("ignore_converters")
         merged = cls(
-              prefix=prefix, storage=storage, dont_prefix=dont_prefix
-            , converters=converters, ignore_converters=ignore_converters
-            )
+            prefix=prefix,
+            storage=storage,
+            dont_prefix=dont_prefix,
+            converters=converters,
+            ignore_converters=ignore_converters,
+        )
 
         for opts in options:
             merged.update(opts, **kwargs)
@@ -192,7 +216,8 @@ class MergedOptions(dict, Mapping):
 
         The later options are added, the more influence they have.
         """
-        if options is None: return
+        if options is None:
+            return
         self.storage.add(Path(self.prefix_list), options, source=source)
 
     @versioned_value
@@ -211,7 +236,12 @@ class MergedOptions(dict, Mapping):
             m = MergedOptions.using({"a": {"b": 2}})
             assert m['a.b'] == 2
         """
-        path = self.converted_path(path, ignore_converters=ignore_converters or self.ignore_converters or getattr(path, "ignore_converters", False))
+        path = self.converted_path(
+            path,
+            ignore_converters=ignore_converters
+            or self.ignore_converters
+            or getattr(path, "ignore_converters", False),
+        )
         for val, return_as_is in self.values_for(path, ignore_converters=path.ignore_converters):
             if return_as_is:
                 return val
@@ -327,12 +357,18 @@ class MergedOptions(dict, Mapping):
 
     def __eq__(self, other):
         """Equal to another merged options if has same storage and prefix"""
-        return isinstance(other, self.__class__) and other.storage is self.storage and other.prefix_list == self.prefix_list
+        return (
+            isinstance(other, self.__class__)
+            and other.storage is self.storage
+            and other.prefix_list == self.prefix_list
+        )
 
     @versioned_iterable
     def values_for(self, path, ignore_converters=False):
         """Get all known values for some path"""
-        path = self.converted_path(path, ignore_converters=ignore_converters or getattr(path, "ignore_converters", False))
+        path = self.converted_path(
+            path, ignore_converters=ignore_converters or getattr(path, "ignore_converters", False)
+        )
         if not path.ignore_converters and not path.waiting():
             if path.converted():
                 yield path.converted_val(), True
@@ -352,22 +388,22 @@ class MergedOptions(dict, Mapping):
     def prefixed(self, path, ignore_converters=False, already_prefixed=False):
         """Return a MergedOptions prefixed to this path"""
         return self.__class__(
-              self.converted_path(path, ignore_converters=ignore_converters)
-            , storage=self.storage
-            , dont_prefix=self.dont_prefix
-            , converters=self.converters
-            , ignore_converters=ignore_converters
-            )
+            self.converted_path(path, ignore_converters=ignore_converters),
+            storage=self.storage,
+            dont_prefix=self.dont_prefix,
+            converters=self.converters,
+            ignore_converters=ignore_converters,
+        )
 
     def root(self):
         """Return a MergedOptions looking at the root of the storage"""
         return self.__class__(
-              ""
-            , storage=self.storage
-            , dont_prefix=self.dont_prefix
-            , converters=self.converters
-            , ignore_converters=self.ignore_converters
-            )
+            "",
+            storage=self.storage,
+            dont_prefix=self.dont_prefix,
+            converters=self.converters,
+            ignore_converters=self.ignore_converters,
+        )
 
     def wrapped(self):
         """
@@ -385,6 +421,7 @@ class MergedOptions(dict, Mapping):
     def keys(self, ignore_converters=False):
         """Return a de-duplicated list of the keys we know about"""
         return self.storage.keys_after(self.prefix_string, ignore_converters=ignore_converters)
+
     reversed_keys = keys
 
     def items(self, ignore_converters=False):
@@ -403,7 +440,11 @@ class MergedOptions(dict, Mapping):
 
     def path(self, path, **kwargs):
         """Return us a path instance"""
-        for key, val in (("configuration", self), ("converters", self.converters), ("ignore_converters", self.ignore_converters)):
+        for key, val in (
+            ("configuration", self),
+            ("converters", self.converters),
+            ("ignore_converters", self.ignore_converters),
+        ):
             if key not in kwargs:
                 kwargs[key] = val
         return Path(path, **kwargs)
@@ -422,12 +463,15 @@ class MergedOptions(dict, Mapping):
             joined = path.joined()
         else:
             from option_merge import helper as hp
+
             if path_type in (list, tuple):
                 path, joined = hp.prefixed_path_list(path, self.prefix_list)
             else:
                 path, joined = hp.prefixed_path_string(path, self.prefix_string)
 
-        return Path.convert(path, self, converters=converters, joined=joined).ignoring_converters(ignore_converters)
+        return Path.convert(path, self, converters=converters, joined=joined).ignoring_converters(
+            ignore_converters
+        )
 
     def add_converter(self, converter):
         """Add a converter to our collection"""
@@ -459,5 +503,6 @@ class MergedOptions(dict, Mapping):
 
     def as_dict(self, key="", ignore_converters=True, seen=None, ignore=None):
         """Collapse the storage at this prefix into a single dictionary"""
-        return self.storage.as_dict(self.converted_path(key, ignore_converters=ignore_converters), seen=seen, ignore=ignore)
-
+        return self.storage.as_dict(
+            self.converted_path(key, ignore_converters=ignore_converters), seen=seen, ignore=ignore
+        )

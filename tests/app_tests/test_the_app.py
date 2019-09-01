@@ -13,13 +13,17 @@ import io
 import os
 import re
 
-class TestCase(TestCase, DelfickErrorTestMixin): pass
+
+class TestCase(TestCase, DelfickErrorTestMixin):
+    pass
+
 
 describe TestCase, "App":
     describe "main":
         it "Instantiates the class and calls the mainline":
             called = []
-            argv = mock.Mock(name='argv')
+            argv = mock.Mock(name="argv")
+
             class MyApp(App):
                 def mainline(self, argv=None):
                     called.append(argv)
@@ -30,9 +34,17 @@ describe TestCase, "App":
     describe "mainline":
         it "catches DelfickError errors and prints them nicely":
             fle = io.StringIO()
+
             class MyApp(App):
                 def execute(slf, args_obj, args_dict, extra_args, handler):
-                    raise DelfickError("Well this should work", blah=1, _errors=[DelfickError("SubError", meh=2), DelfickError("SubError2", stuff=3)])
+                    raise DelfickError(
+                        "Well this should work",
+                        blah=1,
+                        _errors=[
+                            DelfickError("SubError", meh=2),
+                            DelfickError("SubError2", stuff=3),
+                        ],
+                    )
 
             root = logging.getLogger(None)
             oldhandlers = root.handlers
@@ -46,7 +58,10 @@ describe TestCase, "App":
 
             fle.flush()
             fle.seek(0)
-            self.assertEqual(fle.read(), dedent("""
+            self.assertEqual(
+                fle.read(),
+                dedent(
+                    """
                 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                 Something went wrong! -- DelfickError
                 \t"Well this should work"\tblah=1
@@ -57,10 +72,13 @@ describe TestCase, "App":
                 -------
                 \t"SubError2"\tstuff=3
                 -------
-            """))
+            """
+                ),
+            )
 
         it "Converts KeyboardInterrupt into a UserQuit":
             fle = StringIO()
+
             class MyApp(App):
                 def execute(slf, args_obj, args_dict, extra_args, handler):
                     raise KeyboardInterrupt()
@@ -73,14 +91,20 @@ describe TestCase, "App":
 
             fle.flush()
             fle.seek(0)
-            self.assertEqual(fle.read(), dedent("""
+            self.assertEqual(
+                fle.read(),
+                dedent(
+                    """
                 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                 Something went wrong! -- UserQuit
                 \t"User Quit"
-            """))
+            """
+                ),
+            )
 
         it "Does not catch non DelfickError exceptions":
             error = ValueError("hi")
+
             class MyApp(App):
                 def execute(slf, args_obj, args_dict, extra_args, handler):
                     raise error
@@ -89,21 +113,23 @@ describe TestCase, "App":
                 MyApp().mainline([])
 
         it "raises DelfickError exceptions if we have --debug":
+
             class MyApp(App):
                 def execute(slf, args_obj, args_dict, extra_args, handler):
                     raise DelfickError("hi there", meh=2)
 
             with self.fuzzyAssertRaisesError(DelfickError, "hi there", meh=2):
-                MyApp().mainline(['--debug'])
+                MyApp().mainline(["--debug"])
 
         it "raises the KeyboardInterrupt if we have --debug":
             error = ValueError("hi")
+
             class MyApp(App):
                 def execute(slf, args_obj, args_dict, extra_args, handler):
                     raise KeyboardInterrupt()
 
             with self.fuzzyAssertRaisesError(KeyboardInterrupt):
-                MyApp().mainline(['--debug'])
+                MyApp().mainline(["--debug"])
 
         it "parse args, sets up logging, sets boto agent and calls execute":
             called = []
@@ -119,15 +145,19 @@ describe TestCase, "App":
             syslog_address = mock.Mock(name="syslog_address")
 
             cli_parser.interpret_args = mock.Mock(name="interpret_args")
+
             def interpret_args(*a):
                 called.append(1)
                 return (args_obj, args_dict, extra_args)
+
             cli_parser.interpret_args.side_effect = interpret_args
 
             setup_logging = mock.Mock(name="setup_logging")
+
             def stp_lging(*a, **kw):
                 called.append(2)
                 return handler
+
             setup_logging.side_effect = stp_lging
 
             set_boto_useragent = mock.Mock(name="set_boto_useragent")
@@ -139,9 +169,16 @@ describe TestCase, "App":
             class MyApp(App):
                 def make_cli_parser(slf):
                     return cli_parser
+
             app = MyApp()
 
-            with mock.patch.multiple(app, execute=execute, set_boto_useragent=set_boto_useragent, setup_logging=setup_logging, cli_categories=cli_categories):
+            with mock.patch.multiple(
+                app,
+                execute=execute,
+                set_boto_useragent=set_boto_useragent,
+                setup_logging=setup_logging,
+                cli_categories=cli_categories,
+            ):
                 app.mainline(argv)
 
             cli_parser.interpret_args.assert_called_once_with(argv, cli_categories)
@@ -151,6 +188,7 @@ describe TestCase, "App":
     describe "setup_logging":
         it "works":
             fle = StringIO()
+
             class MyApp(App):
                 logging_handler_file = fle
 
@@ -168,12 +206,12 @@ describe TestCase, "App":
             log.warning("yeap")
 
             root.removeHandler(logging_handler)
-            args_obj, _, _ = app.make_cli_parser().interpret_args(['--verbose'])
+            args_obj, _, _ = app.make_cli_parser().interpret_args(["--verbose"])
             logging_handler = app.setup_logging(args_obj)
             log.debug("this one is captured")
 
             root.removeHandler(logging_handler)
-            args_obj, _, _ = app.make_cli_parser().interpret_args(['--silent'])
+            args_obj, _, _ = app.make_cli_parser().interpret_args(["--silent"])
             logging_handler = app.setup_logging(args_obj)
             log.debug("not captured")
             log.warning("not captured")
@@ -186,16 +224,19 @@ describe TestCase, "App":
             now = datetime.datetime.now()
             date = now.strftime("%Y-%m-%d [^ ]+")
             expect = [
-                  re.compile("{0} INFO    blah            hello there".format(date))
-                , re.compile("{0} ERROR   blah            hmmm".format(date))
-                , re.compile("{0} WARNING blah            yeap".format(date))
-                , re.compile("{0} DEBUG   blah            this one is captured".format(date))
-                , re.compile("{0} ERROR   blah            also captured".format(date))
-                ]
+                re.compile("{0} INFO    blah            hello there".format(date)),
+                re.compile("{0} ERROR   blah            hmmm".format(date)),
+                re.compile("{0} WARNING blah            yeap".format(date)),
+                re.compile("{0} DEBUG   blah            this one is captured".format(date)),
+                re.compile("{0} ERROR   blah            also captured".format(date)),
+            ]
 
             self.assertEqual(len(expect), len(logs), logs)
             for index, line in enumerate(expect):
-                assert line.match(logs[index].strip()), "Expected '{0}' to match '{1}'".format(logs[index].strip().replace('\t', '\\t').replace(' ', '.'), line.pattern.replace('\t', '\\t').replace(' ', '.'))
+                assert line.match(logs[index].strip()), "Expected '{0}' to match '{1}'".format(
+                    logs[index].strip().replace("\t", "\\t").replace(" ", "."),
+                    line.pattern.replace("\t", "\\t").replace(" ", "."),
+                )
 
     describe "make_cli_parser":
         it "creates a CliParser with specify_other_args grafted onto it and initialized with self.cli_ attributes":

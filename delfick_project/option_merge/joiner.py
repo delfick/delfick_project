@@ -6,7 +6,8 @@ import six
 
 Path = None
 list_types = (list, tuple)
-string_types = (str, ) + six.string_types
+string_types = (str,) + six.string_types
+
 
 def dot_joiner(item, item_type=None):
     """Join lists of list of strings with a single dot in between each"""
@@ -14,6 +15,7 @@ def dot_joiner(item, item_type=None):
         return item
     else:
         return dot_join_item(item, item_type or type(item))
+
 
 def dot_join_item(item, item_type):
     """
@@ -40,12 +42,13 @@ def dot_join_item(item, item_type):
             continue
 
         if part_type in list_types:
-            part = ''.join(part)
+            part = "".join(part)
 
         if part:
             result.append(part)
 
-    return '.'.join(str(part) for part in result)
+    return ".".join(str(part) for part in result)
+
 
 def join(one, two):
     """
@@ -74,4 +77,3 @@ def join(one, two):
             joined = one + two
 
     return [item for item in joined if item]
-

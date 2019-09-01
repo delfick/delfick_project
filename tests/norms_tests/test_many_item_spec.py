@@ -18,13 +18,15 @@ describe TestCase, "many_item_formatted_spec":
         self.spec = mock.Mock(name="spec", spec_set=["normalise", "spec"])
         self.meta = mock.Mock(name="meta", spec=Meta)
         self.original_val = mock.Mock(name="original_val", spec_set=[])
-        self.expected_type = type("expected_type", (object, ), {})
+        self.expected_type = type("expected_type", (object,), {})
         self.many_item_spec = many_item_formatted_spec()
         self.formatter = mock.MagicMock(name="formatter", spec_set=["normalise", "__call__"])
 
     it "it sets value_name to the class name if not set":
+
         class Blah(many_item_formatted_spec):
             value_name = "stuff"
+
         class Meh(many_item_formatted_spec):
             pass
 
@@ -34,6 +36,7 @@ describe TestCase, "many_item_formatted_spec":
     describe "normalise":
         it "does nothing if the value is already self.creates type":
             val = self.expected_type()
+
             class Yeap(many_item_formatted_spec):
                 creates = self.expected_type
 
@@ -49,9 +52,9 @@ describe TestCase, "many_item_formatted_spec":
             spec3 = mock.Mock(name="spec3")
             spec3.normalise.return_value = "spec3_normalised"
 
-            val1 = mock.Mock(name='val1')
-            val2 = mock.Mock(name='val2')
-            val3 = mock.Mock(name='val3')
+            val1 = mock.Mock(name="val1")
+            val2 = mock.Mock(name="val2")
+            val3 = mock.Mock(name="val3")
             result = mock.Mock(name="result")
 
             vals = [val1, val2, val3]
@@ -99,17 +102,22 @@ describe TestCase, "many_item_formatted_spec":
         it "Uses NotSpecified if vals is smaller than the index":
             vals = []
             dividers = []
-            self.many_item_spec.determine_val(self.spec, vals, dividers, self.expected_type, 1, self.meta, self.original_val)
+            self.many_item_spec.determine_val(
+                self.spec, vals, dividers, self.expected_type, 1, self.meta, self.original_val
+            )
             self.assertEqual(vals, [NotSpecified])
 
         it "appends the val to vals and dividers if vals is not big enough":
             vals = [1]
             dividers = [":"]
-            self.many_item_spec.determine_val(self.spec, vals, dividers, self.expected_type, 2, self.meta, self.original_val)
+            self.many_item_spec.determine_val(
+                self.spec, vals, dividers, self.expected_type, 2, self.meta, self.original_val
+            )
             self.assertEqual(vals[1], NotSpecified)
             self.assertEqual(vals, [1, NotSpecified])
 
         it "uses determine_<index> on the value":
+
             class Yeap(many_item_formatted_spec):
                 def determine_2(slf, val1, val2, meta, original_val):
                     self.assertIs(meta, self.meta)
@@ -118,7 +126,9 @@ describe TestCase, "many_item_formatted_spec":
 
             vals = [1]
             dividers = [":"]
-            Yeap().determine_val(self.spec, vals, dividers, self.expected_type, 2, self.meta, self.original_val)
+            Yeap().determine_val(
+                self.spec, vals, dividers, self.expected_type, 2, self.meta, self.original_val
+            )
             self.assertEqual(vals[1], (1, 2))
             self.assertEqual(vals, [1, (1, 2)])
 
@@ -127,6 +137,7 @@ describe TestCase, "many_item_formatted_spec":
             vals = [1, 2]
             dividers = [":"]
             altered_spec = mock.Mock(name="altered_spec")
+
             class Yeap(many_item_formatted_spec):
                 def spec_wrapper_2(slf, spec, val1, val2, meta, original_val, dividers):
                     self.assertIs(spec, self.spec)
@@ -134,7 +145,9 @@ describe TestCase, "many_item_formatted_spec":
                     self.assertIs(original_val, self.original_val)
                     return altered_spec
 
-            new_spec = Yeap().determine_spec(self.spec, vals, dividers, self.expected_type, 2, self.meta, self.original_val)
+            new_spec = Yeap().determine_spec(
+                self.spec, vals, dividers, self.expected_type, 2, self.meta, self.original_val
+            )
             self.assertEqual(new_spec, altered_spec)
 
     describe "alter":
@@ -147,7 +160,9 @@ describe TestCase, "many_item_formatted_spec":
 
             self.normalise_val.return_value = mock.Mock(name="normalise_val")
             with mock.patch.object(self.many_item_spec, "normalise_val", self.normalise_val):
-                self.many_item_spec.alter(self.spec, vals, [], self.expected_type, 1, self.meta, self.original_val)
+                self.many_item_spec.alter(
+                    self.spec, vals, [], self.expected_type, 1, self.meta, self.original_val
+                )
 
             self.assertEqual(vals, [val])
             self.assertEqual(len(self.normalise_val.mock_calls), 0)
@@ -159,7 +174,9 @@ describe TestCase, "many_item_formatted_spec":
 
             self.normalise_val.return_value = normalised
             with mock.patch.object(self.many_item_spec, "normalise_val", self.normalise_val):
-                self.many_item_spec.alter(self.spec, vals, [], self.expected_type, 1, self.meta, self.original_val)
+                self.many_item_spec.alter(
+                    self.spec, vals, [], self.expected_type, 1, self.meta, self.original_val
+                )
 
             self.assertEqual(vals, [normalised])
             self.normalise_val.assert_called_once_with(self.spec, self.meta, val)
@@ -182,7 +199,9 @@ describe TestCase, "many_item_formatted_spec":
 
             self.normalise_val.return_value = normalised
             with mock.patch.object(self.many_item_spec, "normalise_val", self.normalise_val):
-                self.many_item_spec.alter(self.spec, vals, [], bool, 1, self.meta, self.original_val)
+                self.many_item_spec.alter(
+                    self.spec, vals, [], bool, 1, self.meta, self.original_val
+                )
 
             self.assertEqual(vals, [normalised])
             self.normalise_val.assert_called_once_with(self.spec, self.meta, val)
@@ -250,7 +269,9 @@ describe TestCase, "many_item_formatted_spec":
             class Yeap(many_item_formatted_spec):
                 specs = [1, 2]
 
-            with self.fuzzyAssertRaisesError(BadSpecValue, "The value is a list with the wrong number of items"):
+            with self.fuzzyAssertRaisesError(
+                BadSpecValue, "The value is a list with the wrong number of items"
+            ):
                 Yeap().validate_split(vals, self.dividers, self.meta, self.val)
 
         it "complains if number of vals is greater than sum of mandatory and optional specs":
@@ -260,7 +281,9 @@ describe TestCase, "many_item_formatted_spec":
                 specs = [1, 2]
                 optional_specs = [3, 4]
 
-            with self.fuzzyAssertRaisesError(BadSpecValue, "The value is a list with the wrong number of items"):
+            with self.fuzzyAssertRaisesError(
+                BadSpecValue, "The value is a list with the wrong number of items"
+            ):
                 Yeap().validate_split(vals, self.dividers, self.meta, self.val)
 
     describe "split":
@@ -274,10 +297,10 @@ describe TestCase, "many_item_formatted_spec":
                 self.many_item_spec.split(self.meta, {})
 
             with self.fuzzyAssertRaisesError(BadSpecValue, "Value as a dict must only be one item"):
-                self.many_item_spec.split(self.meta, {1:2, 3:4})
+                self.many_item_spec.split(self.meta, {1: 2, 3: 4})
 
         it "sets vals to the first key and val and dividers to a colon if val is a one item dict":
-            result = self.many_item_spec.split(self.meta, {1:2})
+            result = self.many_item_spec.split(self.meta, {1: 2})
             self.assertEqual(result, ((1, 2), [":"]))
 
         it "sets vals to a list with the val and dividers to nothing if not a list, string or dict":
@@ -287,12 +310,14 @@ describe TestCase, "many_item_formatted_spec":
 
         describe "if val is a string":
             it "sets vals to the one val if no seperators specified":
+
                 class Yeap(many_item_formatted_spec):
                     seperators = None
 
                 self.assertEqual(Yeap().split(self.meta, "hello"), (["hello"], [None]))
 
             it "splits by the available seperators and accumulates both":
+
                 class Yeap(many_item_formatted_spec):
                     seperators = ":/="
 
@@ -300,4 +325,3 @@ describe TestCase, "many_item_formatted_spec":
                 expected_val = ["hello", "there/what_ya", "doing", "huh?"]
                 expected_dividers = [":", ":", "="]
                 self.assertEqual(Yeap().split(self.meta, val), (expected_val, expected_dividers))
-

@@ -26,7 +26,7 @@ describe TestCase, "Validator":
         validate = mock.Mock(name="validate")
         validate.return_value = result
 
-        validator = type("Validator", (Validator, ), {"validate": validate})()
+        validator = type("Validator", (Validator,), {"validate": validate})()
         self.assertIs(validator.normalise(self.meta, self.val), result)
         validate.assert_called_once_with(self.meta, self.val)
 
@@ -41,10 +41,20 @@ describe TestCase, "has_either":
 
     it "complains if none of the values are satisfied":
         choices = ["one", "two"]
-        with self.fuzzyAssertRaisesError(BadSpecValue, "Need to specify atleast one of the required keys", meta=self.meta, choices=choices):
+        with self.fuzzyAssertRaisesError(
+            BadSpecValue,
+            "Need to specify atleast one of the required keys",
+            meta=self.meta,
+            choices=choices,
+        ):
             va.has_either(choices).normalise(self.meta, {})
 
-        with self.fuzzyAssertRaisesError(BadSpecValue, "Need to specify atleast one of the required keys", meta=self.meta, choices=choices):
+        with self.fuzzyAssertRaisesError(
+            BadSpecValue,
+            "Need to specify atleast one of the required keys",
+            meta=self.meta,
+            choices=choices,
+        ):
             va.has_either(choices).normalise(self.meta, {"one": NotSpecified})
 
     it "Lets the val through if it has atleast one choice":
@@ -62,15 +72,27 @@ describe TestCase, "has_only_one_of":
 
     it "ensures choices is specified":
         choices = []
-        with self.fuzzyAssertRaisesError(BadSpecDefinition, "Must specify atleast one choice", got=choices):
+        with self.fuzzyAssertRaisesError(
+            BadSpecDefinition, "Must specify atleast one choice", got=choices
+        ):
             validator = va.has_only_one_of(choices)
 
     it "complains if none of the values are satisfied":
         choices = ["one", "two"]
-        with self.fuzzyAssertRaisesError(BadSpecValue, "Can only specify exactly one of the available choices", meta=self.meta, choices=choices):
+        with self.fuzzyAssertRaisesError(
+            BadSpecValue,
+            "Can only specify exactly one of the available choices",
+            meta=self.meta,
+            choices=choices,
+        ):
             va.has_only_one_of(choices).normalise(self.meta, {})
 
-        with self.fuzzyAssertRaisesError(BadSpecValue, "Can only specify exactly one of the available choices", meta=self.meta, choices=choices):
+        with self.fuzzyAssertRaisesError(
+            BadSpecValue,
+            "Can only specify exactly one of the available choices",
+            meta=self.meta,
+            choices=choices,
+        ):
             va.has_only_one_of(choices).normalise(self.meta, {"one": NotSpecified})
 
     it "Lets the val through if it has atleast one choice":
@@ -80,7 +102,12 @@ describe TestCase, "has_only_one_of":
     it "complains if more than one of the values are specified":
         val = {"one": 1, "two": 2}
         choices = ["one", "two"]
-        with self.fuzzyAssertRaisesError(BadSpecValue, "Can only specify exactly one of the available choices", meta=self.meta, choices=choices):
+        with self.fuzzyAssertRaisesError(
+            BadSpecValue,
+            "Can only specify exactly one of the available choices",
+            meta=self.meta,
+            choices=choices,
+        ):
             self.assertEqual(va.has_only_one_of(choices).normalise(self.meta, val), val)
 
 describe TestCase, "either_keys":
@@ -99,32 +126,67 @@ describe TestCase, "either_keys":
                 va.either_keys().normalise(self.meta, val)
 
     it "complains if any choice has a common key":
-        with self.fuzzyAssertRaisesError(BadSpecDefinition, "Found common keys in the choices", common=sorted(["two", "three"])):
+        with self.fuzzyAssertRaisesError(
+            BadSpecDefinition, "Found common keys in the choices", common=sorted(["two", "three"])
+        ):
             va.either_keys(["one", "two"], ["two", "three"], ["three", "four"])
 
     it "complains if any choice is not a list":
-        for val in (None, NotSpecified, 0, 1, "", "1", {}, {1:1}, lambda: 1):
-            with self.fuzzyAssertRaisesError(BadSpecDefinition, "Each choice must be a list", got=val):
+        for val in (None, NotSpecified, 0, 1, "", "1", {}, {1: 1}, lambda: 1):
+            with self.fuzzyAssertRaisesError(
+                BadSpecDefinition, "Each choice must be a list", got=val
+            ):
                 va.either_keys(["one", "two"], val)
 
     it "complains if some of the keys in the group aren't in the val":
-        with self.fuzzyAssertRaisesError(BadSpecValue, "Missing keys from this group", group=["one", "two"], found=["one"], missing=["two"]):
+        with self.fuzzyAssertRaisesError(
+            BadSpecValue,
+            "Missing keys from this group",
+            group=["one", "two"],
+            found=["one"],
+            missing=["two"],
+        ):
             va.either_keys(["one", "two"]).normalise(self.meta, {"one": 1})
 
     it "can associate with a group if multiple are defined and know keys are missing":
-        with self.fuzzyAssertRaisesError(BadSpecValue, "Missing keys from this group", group=["one", "two"], found=["one"], missing=["two"]):
+        with self.fuzzyAssertRaisesError(
+            BadSpecValue,
+            "Missing keys from this group",
+            group=["one", "two"],
+            found=["one"],
+            missing=["two"],
+        ):
             va.either_keys(["one", "two"], ["three", "four"]).normalise(self.meta, {"one": 1})
 
     it "can know if value associates with multiple groups":
-        with self.fuzzyAssertRaisesError(BadSpecValue, "Value associates with multiple groups", associates=[["one", "two"], ["three", "four"]], got={"three": 3, "one": 1}):
-            va.either_keys(["one", "two"], ["three", "four"]).normalise(self.meta, {"one": 1, "three": 3})
+        with self.fuzzyAssertRaisesError(
+            BadSpecValue,
+            "Value associates with multiple groups",
+            associates=[["one", "two"], ["three", "four"]],
+            got={"three": 3, "one": 1},
+        ):
+            va.either_keys(["one", "two"], ["three", "four"]).normalise(
+                self.meta, {"one": 1, "three": 3}
+            )
 
     it "can understand when it has fulfilled a group and has invalid keys":
-        with self.fuzzyAssertRaisesError(BadSpecValue, "Value associates with a group but has keys from other groups", associates_with=["three", "four"], invalid=["one"]):
-            va.either_keys(["one", "two"], ["three", "four"]).normalise(self.meta, {"one": 1, "three": 3, "four": 4})
+        with self.fuzzyAssertRaisesError(
+            BadSpecValue,
+            "Value associates with a group but has keys from other groups",
+            associates_with=["three", "four"],
+            invalid=["one"],
+        ):
+            va.either_keys(["one", "two"], ["three", "four"]).normalise(
+                self.meta, {"one": 1, "three": 3, "four": 4}
+            )
 
     it "knows when val associates with no groups":
-        with self.fuzzyAssertRaisesError(BadSpecValue, "Value associates with no groups", choices=(["one", "two"], ["three", "four"]), val={"five": 5}):
+        with self.fuzzyAssertRaisesError(
+            BadSpecValue,
+            "Value associates with no groups",
+            choices=(["one", "two"], ["three", "four"]),
+            val={"five": 5},
+        ):
             va.either_keys(["one", "two"], ["three", "four"]).normalise(self.meta, {"five": 5})
 
     it "can successfully return the val if it perfectly associates with a group and no other":
@@ -161,7 +223,9 @@ describe TestCase, "no_whitesapce":
 
     it "complains if the value has whitespace":
         val = "adf "
-        with self.fuzzyAssertRaisesError(BadSpecValue, "Expected no whitespace", meta=self.meta, val=val):
+        with self.fuzzyAssertRaisesError(
+            BadSpecValue, "Expected no whitespace", meta=self.meta, val=val
+        ):
             va.no_whitespace().normalise(self.meta, val)
 
     it "lets through values that don't have whitespace":
@@ -189,7 +253,9 @@ describe TestCase, "no_dots":
 
         it "defaults the reason when no reason is provided":
             val = "a.dot"
-            with self.fuzzyAssertRaisesError(BadSpecValue, "Expected no dots", meta=self.meta, val=val):
+            with self.fuzzyAssertRaisesError(
+                BadSpecValue, "Expected no dots", meta=self.meta, val=val
+            ):
                 va.no_dots().normalise(self.meta, val)
 
 describe TestCase, "regexed":
@@ -207,29 +273,38 @@ describe TestCase, "regexed":
         compiled_regex4 = mock.Mock(name="compiled_regex4")
 
         matched = {
-              regex1: compiled_regex1, regex2: compiled_regex2
-            , regex3: compiled_regex3, regex4: compiled_regex4
-            }
+            regex1: compiled_regex1,
+            regex2: compiled_regex2,
+            regex3: compiled_regex3,
+            regex4: compiled_regex4,
+        }
 
         fake_compile = mock.Mock(name="compile")
         fake_compile.side_effect = lambda reg: matched[reg]
         with mock.patch("re.compile", fake_compile):
             validator = va.regexed(regex1, regex2, regex3, regex4)
             self.assertEqual(
-                  validator.regexes
-                , [ (regex1, compiled_regex1)
-                  , (regex2, compiled_regex2)
-                  , (regex3, compiled_regex3)
-                  , (regex4, compiled_regex4)
-                  ]
-                )
+                validator.regexes,
+                [
+                    (regex1, compiled_regex1),
+                    (regex2, compiled_regex2),
+                    (regex3, compiled_regex3),
+                    (regex4, compiled_regex4),
+                ],
+            )
 
     it "returns the value if it matches all the regexes":
         self.assertEqual(va.regexed("[a-z]+", "asdf", "a.+").normalise(self.meta, "asdf"), "asdf")
 
     it "complains if the value doesn't match any of the regexes":
         val = "meh"
-        with self.fuzzyAssertRaisesError(BadSpecValue, "Expected value to match regex, it didn't", spec="blah", meta=self.meta, val=val):
+        with self.fuzzyAssertRaisesError(
+            BadSpecValue,
+            "Expected value to match regex, it didn't",
+            spec="blah",
+            meta=self.meta,
+            val=val,
+        ):
             va.regexed("meh", "m.+", "blah", "other").normalise(self.meta, val)
 
 describe TestCase, "deprecated_key":
@@ -266,9 +341,14 @@ describe TestCase, "choice":
         self.meta = mock.Mock(name="meta")
 
     it "complains if the val is not one of the choices":
-        with self.fuzzyAssertRaisesError(BadSpecValue, "Expected the value to be one of the valid choices", got=4, choices=(1, 2, 3), meta=self.meta):
+        with self.fuzzyAssertRaisesError(
+            BadSpecValue,
+            "Expected the value to be one of the valid choices",
+            got=4,
+            choices=(1, 2, 3),
+            meta=self.meta,
+        ):
             va.choice(1, 2, 3).normalise(self.meta, 4)
 
     it "returns the val if it's one of the choices":
         self.assertIs(va.choice(1, 2, 3, 4).normalise(self.meta, 4), 4)
-

@@ -1,6 +1,8 @@
 from namespace_black import VERSION
 from setuptools import setup
 
+# fmt: off
+
 setup(
       name = "namespace_black"
     , version = VERSION
@@ -22,3 +24,4 @@ setup(
       }
     )
 
+# fmt: on

@@ -1,6 +1,12 @@
 # coding: spec
 
-from input_algorithms.field_spec import FieldSpec, Field, NullableField, FieldSpecMixin, FieldSpecMetakls
+from input_algorithms.field_spec import (
+    FieldSpec,
+    Field,
+    NullableField,
+    FieldSpecMixin,
+    FieldSpecMetakls,
+)
 from input_algorithms.errors import BadSpec, ProgrammerError
 from input_algorithms import spec_base as sb
 from input_algorithms.dictobj import dictobj
@@ -14,6 +20,7 @@ import six
 describe TestCase, "FieldSpec":
     describe "inheritance":
         it "works":
+
             class MyKls(dictobj.Spec):
                 one = dictobj.Field(sb.string_spec())
                 two = dictobj.Field(sb.integer_spec)
@@ -29,9 +36,9 @@ describe TestCase, "FieldSpec":
                 four = dictobj.Field(sb.boolean)
                 five = dictobj.Field(sb.dictionary_spec)
 
-            child = MyChildKls.FieldSpec().normalise(Meta.empty()
-                  , {"one": "1", "two": "2", "four": False, "five": {}}
-                  )
+            child = MyChildKls.FieldSpec().normalise(
+                Meta.empty(), {"one": "1", "two": "2", "four": False, "five": {}}
+            )
             self.assertEqual(type(child), MyChildKls)
             self.assertEqual(child.one, "1")
             self.assertEqual(child.two, 2)
@@ -42,9 +49,9 @@ describe TestCase, "FieldSpec":
             class MyGrandChildKls(MyChildKls):
                 six = dictobj.Field(sb.boolean)
 
-            child = MyGrandChildKls.FieldSpec().normalise(Meta.empty()
-                  , {"one": "1", "two": "2", "four": False, "five": {}, "six": True}
-                  )
+            child = MyGrandChildKls.FieldSpec().normalise(
+                Meta.empty(), {"one": "1", "two": "2", "four": False, "five": {}, "six": True}
+            )
             self.assertEqual(type(child), MyGrandChildKls)
             self.assertEqual(child.one, "1")
             self.assertEqual(child.two, 2)
@@ -54,6 +61,7 @@ describe TestCase, "FieldSpec":
             self.assertEqual(child.six, True)
 
         it "works with mixin classes":
+
             class Mixin:
                 @property
                 def thing(self):
@@ -72,18 +80,18 @@ describe TestCase, "FieldSpec":
                 four = dictobj.Field(sb.boolean)
                 five = dictobj.Field(sb.dictionary_spec)
 
-            child = MyChildKls.FieldSpec().normalise(Meta.empty()
-                  , {"one": "1", "two": "2", "four": False, "five": {}}
-                  )
+            child = MyChildKls.FieldSpec().normalise(
+                Meta.empty(), {"one": "1", "two": "2", "four": False, "five": {}}
+            )
             self.assertEqual(type(child), MyChildKls)
             self.assertEqual(child.thing, "blah")
 
             class MyGrandChildKls(MyChildKls):
                 six = dictobj.Field(sb.boolean)
 
-            child = MyGrandChildKls.FieldSpec().normalise(Meta.empty()
-                  , {"one": "1", "two": "2", "four": False, "five": {}, "six": True}
-                  )
+            child = MyGrandChildKls.FieldSpec().normalise(
+                Meta.empty(), {"one": "1", "two": "2", "four": False, "five": {}, "six": True}
+            )
             self.assertEqual(type(child), MyGrandChildKls)
             self.assertEqual(child.thing, "blah")
 
@@ -95,14 +103,15 @@ describe TestCase, "FieldSpec":
             class MyGrandChildKls(MyChildKls, AnotherMixin):
                 six = dictobj.Field(sb.boolean)
 
-            child = MyGrandChildKls.FieldSpec().normalise(Meta.empty()
-                  , {"one": "1", "two": "2", "four": False, "five": {}, "six": True}
-                  )
+            child = MyGrandChildKls.FieldSpec().normalise(
+                Meta.empty(), {"one": "1", "two": "2", "four": False, "five": {}, "six": True}
+            )
             self.assertEqual(type(child), MyGrandChildKls)
             self.assertEqual(child.thing, "blah")
             self.assertEqual(child.other, "meh")
 
         it "can take fields from a normal dictobj with a list fields":
+
             class MyKls(dictobj):
                 fields = ["one", "two", "three"]
 
@@ -116,9 +125,9 @@ describe TestCase, "FieldSpec":
                 four = dictobj.Field(sb.boolean)
                 five = dictobj.Field(sb.dictionary_spec)
 
-            child = MyChildKls.FieldSpec().normalise(Meta.empty()
-                  , {"one": "1", "two": "2", "three": "3", "four": False, "five": {}}
-                  )
+            child = MyChildKls.FieldSpec().normalise(
+                Meta.empty(), {"one": "1", "two": "2", "three": "3", "four": False, "five": {}}
+            )
             self.assertEqual(type(child), MyChildKls)
             self.assertEqual(child.one, "1")
             self.assertEqual(child.two, "2")
@@ -127,12 +136,9 @@ describe TestCase, "FieldSpec":
             self.assertEqual(child.five, {})
 
         it "can take fields from a normal dictobj with a dict fields":
+
             class MyKls(dictobj):
-                fields = {
-                      "one": "the one"
-                    , "two": "the two"
-                    , "three": "the three"
-                    }
+                fields = {"one": "the one", "two": "the two", "three": "the three"}
 
             res = MyKls(one=1, two=2, three=3)
             self.assertEqual(type(res), MyKls)
@@ -144,9 +150,9 @@ describe TestCase, "FieldSpec":
                 four = dictobj.Field(sb.boolean)
                 five = dictobj.Field(sb.dictionary_spec)
 
-            child = MyChildKls.FieldSpec().normalise(Meta.empty()
-                  , {"one": "1", "two": "2", "three": "3", "four": False, "five": {}}
-                  )
+            child = MyChildKls.FieldSpec().normalise(
+                Meta.empty(), {"one": "1", "two": "2", "three": "3", "four": False, "five": {}}
+            )
             self.assertEqual(type(child), MyChildKls)
             self.assertEqual(child.one, "1")
             self.assertEqual(child.two, "2")
@@ -156,6 +162,7 @@ describe TestCase, "FieldSpec":
 
     describe "usage":
         it "works":
+
             class MyKls(dictobj.Spec):
                 one = dictobj.Field(sb.string_spec())
                 two = dictobj.Field(sb.integer_spec)
@@ -168,17 +175,21 @@ describe TestCase, "FieldSpec":
             self.assertEqual(res.three, None)
 
         it "works with a seperate create_kls":
+
             class MyKls(dictobj.Spec):
                 one = dictobj.Field(sb.string_spec())
                 two = dictobj.Field(sb.integer_spec())
 
             called = []
+
             class CreateKls(object):
                 def __init__(self, **kwargs):
                     called.append(kwargs)
                     self.kwargs = kwargs
 
-            res = MyKls.FieldSpec(create_kls=CreateKls).normalise(Meta.empty(), {"one": "1", "two": "2"})
+            res = MyKls.FieldSpec(create_kls=CreateKls).normalise(
+                Meta.empty(), {"one": "1", "two": "2"}
+            )
 
             self.assertEqual(res.kwargs, {"one": "1", "two": 2})
             self.assertEqual(type(res), CreateKls)
@@ -193,84 +204,66 @@ describe TestCase, "FieldSpec":
             self.meta = Meta({}, [])
 
         it "handles field that is a callable to a spec":
+
             class MyKls(dictobj):
                 fields = {"one": lambda: self.spec}
 
             spec = FieldSpec(MyKls).make_spec(self.meta)
-            self.assertEqual(
-                  spec.normalise(self.meta, {"one": self.inp})
-                , {"one": self.ret}
-                )
+            self.assertEqual(spec.normalise(self.meta, {"one": self.inp}), {"one": self.ret})
 
         it "handles field that is a callable to a Field":
+
             class MyKls(dictobj):
                 fields = {"one": lambda: Field(lambda: self.spec)}
 
             spec = FieldSpec(MyKls).make_spec(self.meta)
-            self.assertEqual(
-                  spec.normalise(self.meta, {"one": self.inp})
-                , {"one": self.ret}
-                )
+            self.assertEqual(spec.normalise(self.meta, {"one": self.inp}), {"one": self.ret})
 
         it "handles field that is a callable with a description":
+
             class MyKls(dictobj):
                 fields = {"one": ("description", lambda: Field(lambda: self.spec))}
 
             spec = FieldSpec(MyKls).make_spec(self.meta)
-            self.assertEqual(
-                  spec.normalise(self.meta, {"one": self.inp})
-                , {"one": self.ret}
-                )
+            self.assertEqual(spec.normalise(self.meta, {"one": self.inp}), {"one": self.ret})
 
             class MyKls2(dictobj):
                 fields = {"two": ("description", lambda: self.spec)}
 
             spec = FieldSpec(MyKls2).make_spec(self.meta)
-            self.assertEqual(
-                  spec.normalise(self.meta, {"two": self.inp})
-                , {"two": self.ret}
-                )
+            self.assertEqual(spec.normalise(self.meta, {"two": self.inp}), {"two": self.ret})
 
         it "handles a field that is not callable with a description":
+
             class MyKls(dictobj):
                 fields = {"one": ("description", Field(lambda: self.spec))}
 
             spec = FieldSpec(MyKls).make_spec(self.meta)
-            self.assertEqual(
-                  spec.normalise(self.meta, {"one": self.inp})
-                , {"one": self.ret}
-                )
+            self.assertEqual(spec.normalise(self.meta, {"one": self.inp}), {"one": self.ret})
 
             class MyKls2(dictobj):
                 fields = {"two": ("description", self.spec)}
 
             spec = FieldSpec(MyKls2).make_spec(self.meta)
-            self.assertEqual(
-                  spec.normalise(self.meta, {"two": self.inp})
-                , {"two": self.ret}
-                )
+            self.assertEqual(spec.normalise(self.meta, {"two": self.inp}), {"two": self.ret})
 
         it "handles a field that is not callable":
+
             class MyKls(dictobj):
                 fields = {"one": Field(lambda: self.spec)}
 
             spec = FieldSpec(MyKls).make_spec(self.meta)
-            self.assertEqual(
-                  spec.normalise(self.meta, {"one": self.inp})
-                , {"one": self.ret}
-                )
+            self.assertEqual(spec.normalise(self.meta, {"one": self.inp}), {"one": self.ret})
 
             class MyKls2(dictobj):
                 fields = {"two": self.spec}
 
             spec = FieldSpec(MyKls2).make_spec(self.meta)
-            self.assertEqual(
-                  spec.normalise(self.meta, {"two": self.inp})
-                , {"two": self.ret}
-                )
+            self.assertEqual(spec.normalise(self.meta, {"two": self.inp}), {"two": self.ret})
 
     describe "empty_normalise":
         it "just calls normalise with an empty meta":
+
             class MyKls(dictobj.Spec):
                 fields = dictobj.Field(sb.string_spec())
 
@@ -289,6 +282,7 @@ describe TestCase, "FieldSpec":
 
     describe "normalise":
         it "complains about a class that has no fields":
+
             class MyKls(object):
                 pass
 
@@ -297,8 +291,13 @@ describe TestCase, "FieldSpec":
                 spec.normalise(Meta({}, []), {})
 
         it "complains if any field has no spec":
+
             class MyKls(object):
-                fields = {"one": "one!", "two": type("blah", (object, ), {"normalise": lambda:1})(), "three": ("three!", )}
+                fields = {
+                    "one": "one!",
+                    "two": type("blah", (object,), {"normalise": lambda: 1})(),
+                    "three": ("three!",),
+                }
 
             meta = Meta({}, [])
             error1 = BadSpec("No spec found for option", meta=meta.at("one"), option="one")
@@ -309,6 +308,7 @@ describe TestCase, "FieldSpec":
                 spec.normalise(Meta({}, []), {})
 
         it "handles a class with empty fields":
+
             class MyKls(object):
                 fields = {}
 
@@ -318,6 +318,7 @@ describe TestCase, "FieldSpec":
 
 describe TestCase, "FieldSpecMixin":
     it "provides FieldSpec which passes the class to an instance of FieldSpec":
+
         class MyKls(FieldSpecMixin):
             fields = {}
 
@@ -352,9 +353,12 @@ describe TestCase, "FieldSpecMetaKls":
 
             one = "something else"
 
-        self.assertEqual(MyKls.fields, {"field1": (help1, inp_field1), "field2": (help2, inp_field2)})
+        self.assertEqual(
+            MyKls.fields, {"field1": (help1, inp_field1), "field2": (help2, inp_field2)}
+        )
 
     it "Adds FieldSpecMixin as a baseclass":
+
         class MyKls(six.with_metaclass(FieldSpecMetakls)):
             pass
 
@@ -417,11 +421,15 @@ describe TestCase, "Field":
         self.assertIs(field.formatted, True)
 
     it "complains if we have after_format, but formatted is False":
-        with self.fuzzyAssertRaisesError(ProgrammerError, "after_format was specified when formatted was false"):
+        with self.fuzzyAssertRaisesError(
+            ProgrammerError, "after_format was specified when formatted was false"
+        ):
             field = Field(sb.any_spec, formatted=False, after_format=sb.integer_spec)
 
     it "complains if neither spec or format_into is specified":
-        with self.fuzzyAssertRaisesError(ProgrammerError, "Declaring a Field must give a spec, otherwise provide format_into"):
+        with self.fuzzyAssertRaisesError(
+            ProgrammerError, "Declaring a Field must give a spec, otherwise provide format_into"
+        ):
             field = Field()
 
     describe "clone":
@@ -433,7 +441,14 @@ describe TestCase, "Field":
             default = mock.Mock(name="default")
             after_format = mock.Mock(name="after_format")
 
-            field = Field(spec, help=help, formatted=formatted, wrapper=wrapper, default=default, after_format=after_format)
+            field = Field(
+                spec,
+                help=help,
+                formatted=formatted,
+                wrapper=wrapper,
+                default=default,
+                after_format=after_format,
+            )
             clone = field.clone()
 
             self.assertIsNot(field, clone)
@@ -461,7 +476,14 @@ describe TestCase, "Field":
             after_format = mock.Mock(name="after_format")
             after_format2 = mock.Mock(name="after_format2")
 
-            field = Field(spec, help=help, formatted=formatted, wrapper=wrapper, default=default, after_format=after_format2)
+            field = Field(
+                spec,
+                help=help,
+                formatted=formatted,
+                wrapper=wrapper,
+                default=default,
+                after_format=after_format2,
+            )
             clone = field.clone(formatted=formatted2, default=default2, after_format=after_format2)
 
             self.assertIsNot(field, clone)
@@ -516,7 +538,9 @@ describe TestCase, "Field":
             self.assertEqual(spec.normalise(self.meta, inp), ("formatted", ret))
 
         it "wraps everything in wrapper if it's defined":
-            spec = Field(sb.string_or_int_as_string_spec, wrapper=sb.listof).make_spec(self.meta, self.formatter)
+            spec = Field(sb.string_or_int_as_string_spec, wrapper=sb.listof).make_spec(
+                self.meta, self.formatter
+            )
             self.assertEqual(spec.normalise(self.meta, 1), ["1"])
 
         describe "nullable=True":
@@ -525,6 +549,7 @@ describe TestCase, "Field":
                 self.assertEqual(spec.normalise(self.meta, sb.NotSpecified), None)
 
             it "allows None as a value":
+
                 class i_hate_none_spec(sb.Spec):
                     def normalise_filled(self, meta, val):
                         if val is None:
@@ -540,7 +565,9 @@ describe TestCase, "Field":
 
             it "still respects default":
                 dflt = mock.Mock(name="dflt")
-                spec = NullableField(sb.string_spec, default=dflt).make_spec(self.meta, self.formatter)
+                spec = NullableField(sb.string_spec, default=dflt).make_spec(
+                    self.meta, self.formatter
+                )
                 self.assertEqual(spec.normalise(self.meta, sb.NotSpecified), dflt)
 
             it "doesn't get formatted if not specified or specified as None":

@@ -9,10 +9,11 @@ import json
 import sys
 import os
 
+
 def make_message(instance, record, oldGetMessage, program="", provide_timestamp=False):
     def f(v):
         if inspect.istraceback(v):
-            return ' |:| '.join(traceback.format_tb(v))
+            return " |:| ".join(traceback.format_tb(v))
         if isinstance(v, dict):
             return json.dumps(v, default=f, sort_keys=True)
         elif hasattr(v, "as_dict"):
@@ -46,6 +47,7 @@ def make_message(instance, record, oldGetMessage, program="", provide_timestamp=
 
     return f(base)
 
+
 class SimpleFormatter(logging.Formatter):
     def __init__(self, *args, **kwargs):
         if "ignore_extra" in kwargs:
@@ -69,10 +71,12 @@ class SimpleFormatter(logging.Formatter):
             else:
                 return super(SimpleFormatter, self).format(record)
 
+
 class SyslogHandler(logging.handlers.SysLogHandler):
     def format(self, record):
         record.getMessage = partial(make_message, self, record, record.getMessage)
         return super(SyslogHandler, self).format(record)
+
 
 class JsonOverUDPHandler(logging.handlers.DatagramHandler):
     def __init__(self, program, host, port):
@@ -80,8 +84,16 @@ class JsonOverUDPHandler(logging.handlers.DatagramHandler):
         super(JsonOverUDPHandler, self).__init__(host, port)
 
     def makePickle(self, record):
-        record.getMessage = partial(make_message, self, record, record.getMessage, program=self.program, provide_timestamp=True)
+        record.getMessage = partial(
+            make_message,
+            self,
+            record,
+            record.getMessage,
+            program=self.program,
+            provide_timestamp=True,
+        )
         return "{0}\n".format(super(JsonOverUDPHandler, self).format(record)).encode()
+
 
 class JsonOverTCPHandler(logging.handlers.SocketHandler):
     def __init__(self, program, host, port):
@@ -89,8 +101,16 @@ class JsonOverTCPHandler(logging.handlers.SocketHandler):
         super(JsonOverTCPHandler, self).__init__(host, port)
 
     def makePickle(self, record):
-        record.getMessage = partial(make_message, self, record, record.getMessage, program=self.program, provide_timestamp=True)
+        record.getMessage = partial(
+            make_message,
+            self,
+            record,
+            record.getMessage,
+            program=self.program,
+            provide_timestamp=True,
+        )
         return "{0}\n".format(super(JsonOverTCPHandler, self).format(record)).encode()
+
 
 class JsonToConsoleHandler(logging.StreamHandler):
     def __init__(self, program, stream=None):
@@ -98,7 +118,10 @@ class JsonToConsoleHandler(logging.StreamHandler):
         super(JsonToConsoleHandler, self).__init__(stream=stream)
 
     def format(self, record):
-        return make_message(self, record, record.getMessage, program=self.program, provide_timestamp=True)
+        return make_message(
+            self, record, record.getMessage, program=self.program, provide_timestamp=True
+        )
+
 
 class RainbowHandler(RainbowLoggingHandler):
     def format(s, record):
@@ -108,6 +131,7 @@ class RainbowHandler(RainbowLoggingHandler):
             def f(v):
                 def reperer(o):
                     return repr(o)
+
                 if type(v) is dict:
                     return json.dumps(v, default=reperer, sort_keys=True)
                 elif hasattr(v, "as_dict"):
@@ -125,8 +149,10 @@ class RainbowHandler(RainbowLoggingHandler):
                 return "\t".join(s)
             else:
                 return oldGetMessage()
+
         record.getMessage = newGetMessage
         return super(RainbowHandler, s).format(record)
+
 
 class LogContext(object):
     def __init__(self, initial=None, extra=None):
@@ -151,12 +177,21 @@ class LogContext(object):
         self.context[key] = value
         return self
 
+
 lc = LogContext()
 
-def setup_logging(log=None, level=logging.INFO
-    , program="", syslog_address="", tcp_address="", udp_address=""
-    , only_message=False, json_to_console=False, logging_handler_file=sys.stderr
-    ):
+
+def setup_logging(
+    log=None,
+    level=logging.INFO,
+    program="",
+    syslog_address="",
+    tcp_address="",
+    udp_address="",
+    only_message=False,
+    json_to_console=False,
+    logging_handler_file=sys.stderr,
+):
     """
     Setup the logging handlers
 
@@ -207,11 +242,15 @@ def setup_logging(log=None, level=logging.INFO
         if not syslog_address.startswith("/") and ":" in syslog_address:
             split = address.split(":", 2)
             address = (split[0], int(split[1]))
-        handler = SyslogHandler(address = address)
+        handler = SyslogHandler(address=address)
     elif udp_address:
-        handler = JsonOverUDPHandler(program, udp_address.split(":")[0], int(udp_address.split(":")[1]))
+        handler = JsonOverUDPHandler(
+            program, udp_address.split(":")[0], int(udp_address.split(":")[1])
+        )
     elif tcp_address:
-        handler = JsonOverTCPHandler(program, tcp_address.split(":")[0], int(tcp_address.split(":")[1]))
+        handler = JsonOverTCPHandler(
+            program, tcp_address.split(":")[0], int(tcp_address.split(":")[1])
+        )
     else:
         if json_to_console:
             handler = JsonToConsoleHandler(program, logging_handler_file)
@@ -224,7 +263,9 @@ def setup_logging(log=None, level=logging.INFO
         return
 
     if syslog_address:
-        handler.setFormatter(SimpleFormatter("{0}[{1}]: %(message)s".format(program, os.getpid()), ignore_extra=True))
+        handler.setFormatter(
+            SimpleFormatter("{0}[{1}]: %(message)s".format(program, os.getpid()), ignore_extra=True)
+        )
     elif udp_address or tcp_address or json_to_console:
         handler.setFormatter(SimpleFormatter("%(message)s"))
     else:
@@ -232,17 +273,20 @@ def setup_logging(log=None, level=logging.INFO
         if only_message:
             base_format = "%(message)s"
 
-        handler._column_color['%(asctime)s'] = ('cyan', None, False)
-        handler._column_color['%(levelname)-7s'] = ('green', None, False)
-        handler._column_color['%(message)s'][logging.INFO] = ('blue', None, False)
+        handler._column_color["%(asctime)s"] = ("cyan", None, False)
+        handler._column_color["%(levelname)-7s"] = ("green", None, False)
+        handler._column_color["%(message)s"][logging.INFO] = ("blue", None, False)
         if only_message:
             handler.setFormatter(SimpleFormatter(base_format))
         else:
-            handler.setFormatter(SimpleFormatter("{0} {1}".format("%(asctime)s %(levelname)-7s", base_format)))
+            handler.setFormatter(
+                SimpleFormatter("{0} {1}".format("%(asctime)s %(levelname)-7s", base_format))
+            )
 
     log.addHandler(handler)
     log.setLevel(level)
     return handler
+
 
 def setup_logging_theme(handler, colors="light"):
     """
@@ -253,15 +297,12 @@ def setup_logging_theme(handler, colors="light"):
     """
     if colors not in ("light", "dark"):
         logging.getLogger("delfick_logging").warning(
-              lc( "Told to set colors to a theme we don't have"
-                , got=colors
-                , have=["light", "dark"]
-                )
-            )
+            lc("Told to set colors to a theme we don't have", got=colors, have=["light", "dark"])
+        )
         return
 
     # Haven't put much effort into actually working out more than just the message colour
     if colors == "light":
-        handler._column_color['%(message)s'][logging.INFO] = ('cyan', None, False)
+        handler._column_color["%(message)s"][logging.INFO] = ("cyan", None, False)
     else:
-        handler._column_color['%(message)s'][logging.INFO] = ('blue', None, False)
+        handler._column_color["%(message)s"][logging.INFO] = ("blue", None, False)

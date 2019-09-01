@@ -1,5 +1,6 @@
 class DepCycle(Exception):
     _fake_delfick_error = True
+
     def __init__(self, chain):
         self.message = ""
         self.chain = chain
@@ -7,6 +8,7 @@ class DepCycle(Exception):
 
     def __str__(self):
         return "DepCycle: chain={0}".format(self.chain)
+
 
 class Layers(object):
     DepCycle = DepCycle

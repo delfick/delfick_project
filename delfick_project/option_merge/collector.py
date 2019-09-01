@@ -69,27 +69,38 @@ import os
 
 log = logging.getLogger("option_merge.collector")
 
+
 class Collector(object):
     """
     When using the Collector, it is expected that you implement a number of hooks
     to make this class useful.
     """
+
     class BadFileErrorKls(Exception):
         _fake_delfick_error = True
+
         def __init__(self, message):
             self.message = message
             self.kwargs = {}
+
         def __str__(self):
             return "BadFile: {0}".format(self.message)
 
     class BadConfigurationErrorKls(Exception):
         _fake_delfick_error = True
+
         def __init__(self, _errors):
             self.message = ""
             self.kwargs = {}
             self.errors = _errors
+
         def __str__(self):
-            message = "errors:\n=======\n\n\t{0}".format("\n\t".join("{0}\n-------".format('\n\t'.join(str(error).split('\n'))) for error in self.errors))
+            message = "errors:\n=======\n\n\t{0}".format(
+                "\n\t".join(
+                    "{0}\n-------".format("\n\t".join(str(error).split("\n")))
+                    for error in self.errors
+                )
+            )
             return "BadConfiguration:\n{0}".format(message)
 
     def __init__(self):
@@ -169,7 +180,9 @@ class Collector(object):
         * Do self.extra_prepare_after_activation
         """
         self.configuration_file = configuration_file
-        self.configuration = self.collect_configuration(configuration_file, args_dict, extra_files=extra_files)
+        self.configuration = self.collect_configuration(
+            configuration_file, args_dict, extra_files=extra_files
+        )
 
         self.find_missing_config(self.configuration)
 
@@ -193,6 +206,7 @@ class Collector(object):
             The configuration to add the converter to
         """
         for (_, key), spec in sorted(specs.items()):
+
             def make_converter(k, s):
                 def converter(p, v):
                     log.info("Converting %s", p)
@@ -201,9 +215,11 @@ class Collector(object):
                         meta = meta.at(kk)
                     configuration.converters.started(p)
                     return s.normalise(meta, v)
+
                 configuration.add_converter(Converter(convert=converter, convert_path=k))
                 if k not in configuration:
                     configuration[k] = NotSpecified
+
             make_converter(key, spec)
 
     ########################
@@ -217,12 +233,8 @@ class Collector(object):
         configuration = self.start_configuration()
 
         configuration.update(
-              { "getpass": getpass
-              , "collector": self
-              , "args_dict": args_dict
-              }
-            , source = "<preparation>"
-            )
+            {"getpass": getpass, "collector": self, "args_dict": args_dict}, source="<preparation>"
+        )
 
         sources = []
         if configuration_file:
@@ -236,6 +248,7 @@ class Collector(object):
             sources.insert(0, home_dir_configuration)
 
         done = set()
+
         def add_configuration(src, prefix=None, extra=None):
             log.info("Adding configuration from %s", os.path.abspath(src))
             if os.path.abspath(src) in done:
@@ -274,7 +287,8 @@ class Collector(object):
         self.extra_configuration_collection(configuration)
 
         if errors:
-            raise self.BadConfigurationErrorKls("Some of the configuration was broken", _errors=errors)
+            raise self.BadConfigurationErrorKls(
+                "Some of the configuration was broken", _errors=errors
+            )
 
         return configuration
-

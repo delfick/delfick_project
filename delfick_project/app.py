@@ -7,21 +7,27 @@ import logging
 import sys
 import os
 
+
 class Ignore(object):
     pass
+
 
 class BadOption(DelfickError):
     desc = "Bad option"
 
+
 class CouldntKill(DelfickError):
     desc = "Bad process"
+
 
 class ArgumentError(DelfickError):
     desc = "Bad cli argument"
 
+
 ########################
 ###   APP
 ########################
+
 
 class App(object):
     """
@@ -223,7 +229,9 @@ class App(object):
         try:
             cli_parser = self.make_cli_parser()
             try:
-                args_obj, args_dict, extra_args = cli_parser.interpret_args(argv, self.cli_categories)
+                args_obj, args_dict, extra_args = cli_parser.interpret_args(
+                    argv, self.cli_categories
+                )
                 if args_obj.version:
                     print(self.VERSION)
                     return
@@ -240,14 +248,19 @@ class App(object):
         except DelfickError as error:
             print("", file=print_errors_to)
             print("!" * 80, file=print_errors_to)
-            print("Something went wrong! -- {0}".format(error.__class__.__name__), file=print_errors_to)
+            print(
+                "Something went wrong! -- {0}".format(error.__class__.__name__),
+                file=print_errors_to,
+            )
             print("\t{0}".format(error), file=print_errors_to)
             if cli_parser and cli_parser.parse_args(argv)[0].debug:
                 raise
             sys.exit(1)
         except Exception:
-            msg = "Something unexpected happened!! Please file a ticket in the issue tracker! {0}".format(self.issue_tracker_link)
-            print("\n\n{0}\n{1}\n".format(msg, '=' * len(msg)))
+            msg = "Something unexpected happened!! Please file a ticket in the issue tracker! {0}".format(
+                self.issue_tracker_link
+            )
+            print("\n\n{0}\n{1}\n".format(msg, "=" * len(msg)))
             raise
 
     def exception_handler(self, exc_info, args_obj, args_dict, extra_args):
@@ -260,16 +273,16 @@ class App(object):
             level = logging.ERROR
 
         handler = setup_logging(
-              log = log
-            , level = level
-            , program = args_obj.logging_program
-            , syslog_address = args_obj.syslog_address
-            , udp_address = args_obj.udp_logging_address
-            , tcp_address = args_obj.tcp_logging_address
-            , only_message = only_message
-            , logging_handler_file = self.logging_handler_file
-            , json_to_console = args_obj.json_console_logs
-            )
+            log=log,
+            level=level,
+            program=args_obj.logging_program,
+            syslog_address=args_obj.syslog_address,
+            udp_address=args_obj.udp_logging_address,
+            tcp_address=args_obj.tcp_logging_address,
+            only_message=only_message,
+            logging_handler_file=self.logging_handler_file,
+            json_to_console=args_obj.json_console_logs,
+        )
 
         self.setup_other_logging(args_obj, args_obj.verbose, args_obj.silent, args_obj.debug)
         return handler
@@ -281,15 +294,20 @@ class App(object):
     def make_cli_parser(self):
         """Return a CliParser instance"""
         properties = {"specify_other_args": self.specify_other_args}
-        kls = type("CliParser", (self.CliParserKls, ), properties)
-        return kls(self.cli_description, self.cli_positional_replacements, self.cli_environment_defaults)
+        kls = type("CliParser", (self.CliParserKls,), properties)
+        return kls(
+            self.cli_description, self.cli_positional_replacements, self.cli_environment_defaults
+        )
+
 
 ########################
 ###   CliParser
 ########################
 
+
 class CliParser(object):
     """Knows what argv looks like"""
+
     def __init__(self, description, positional_replacements=None, environment_defaults=None):
         self.description = description
         self.positional_replacements = positional_replacements
@@ -322,7 +340,7 @@ class CliParser(object):
             found = False
             for category in categories:
                 if key.startswith("{0}_".format(category)):
-                    args_dict[category][key[(len(category) + 1):]] = val
+                    args_dict[category][key[(len(category) + 1) :]] = val
                     found = True
                     break
 
@@ -360,8 +378,16 @@ class CliParser(object):
         for index, replacement in enumerate(positional_replacements):
             if type(replacement) is tuple:
                 replacement, _ = replacement
-            if index < num_positionals and "default" in defaults.get(replacement, {}) and replacement in args:
-                raise BadOption("Please don't specify an option as a positional argument and as a --flag", argument=replacement, position=index + 1)
+            if (
+                index < num_positionals
+                and "default" in defaults.get(replacement, {})
+                and replacement in args
+            ):
+                raise BadOption(
+                    "Please don't specify an option as a positional argument and as a --flag",
+                    argument=replacement,
+                    position=index + 1,
+                )
 
     def split_args(self, argv):
         """
@@ -413,7 +439,8 @@ class CliParser(object):
         """
         defaults = {}
 
-        class Ignore(object): pass
+        class Ignore(object):
+            pass
 
         for env_name, replacement in environment_defaults.items():
             default = Ignore
@@ -454,53 +481,43 @@ class CliParser(object):
         parser = argparse.ArgumentParser(description=self.description)
 
         logging = parser.add_mutually_exclusive_group()
-        logging.add_argument("--verbose"
-            , help = "Enable debug logging"
-            , action = "store_true"
-            )
+        logging.add_argument("--verbose", help="Enable debug logging", action="store_true")
 
         if "default" in defaults.get("--silent", {}):
             kwargs = defaults["--silent"]
         else:
             kwargs = {"action": "store_true"}
-        logging.add_argument("--silent"
-            , help = "Only log errors"
-            , **kwargs
-            )
+        logging.add_argument("--silent", help="Only log errors", **kwargs)
 
-        logging.add_argument("--debug"
-            , help = "Debug logs"
-            , action = "store_true"
-            )
+        logging.add_argument("--debug", help="Debug logs", action="store_true")
 
-        logging.add_argument("--logging-program"
-            , help = "The program name to use when not logging to the console"
-            )
+        logging.add_argument(
+            "--logging-program", help="The program name to use when not logging to the console"
+        )
 
-        parser.add_argument("--tcp-logging-address"
-            , help = "The address to use for giving log messages to tcp (i.e. localhost:9001)"
-            , default = ""
-            )
+        parser.add_argument(
+            "--tcp-logging-address",
+            help="The address to use for giving log messages to tcp (i.e. localhost:9001)",
+            default="",
+        )
 
-        parser.add_argument("--udp-logging-address"
-            , help = "The address to use for giving log messages to udp (i.e. localhost:9001)"
-            , default = ""
-            )
+        parser.add_argument(
+            "--udp-logging-address",
+            help="The address to use for giving log messages to udp (i.e. localhost:9001)",
+            default="",
+        )
 
-        parser.add_argument("--syslog-address"
-            , help = "The address to use for syslog (i.e. /dev/log)"
-            , default = ""
-            )
+        parser.add_argument(
+            "--syslog-address", help="The address to use for syslog (i.e. /dev/log)", default=""
+        )
 
-        parser.add_argument("--json-console-logs"
-            , help = "If we haven't set other logging arguments, this will mean we log json lines to the console"
-            , action = "store_true"
-            )
+        parser.add_argument(
+            "--json-console-logs",
+            help="If we haven't set other logging arguments, this will mean we log json lines to the console",
+            action="store_true",
+        )
 
-        parser.add_argument("--version"
-            , help = "Print out the version!"
-            , action = "store_true"
-            )
+        parser.add_argument("--version", help="Print out the version!", action="store_true")
 
         self.specify_other_args(parser, defaults)
         return parser

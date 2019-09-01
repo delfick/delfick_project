@@ -29,36 +29,45 @@ describe TestCase, "Register":
             kw2 = mock.Mock(name="kw2")
 
             info = {"count": -1, "called": []}
+
             def called(name):
                 def caller(*args, **kwargs):
                     info["count"] += 1
                     info["called"].append((args, kwargs, info["count"], name))
+
                 return caller
 
             fake_add_pairs = mock.Mock(name="add_pairs", side_effect=called("pairs"))
-            fake_recursive_import_known = mock.Mock(name="recursive_import_known", side_effect=called("import_known"))
-            fake_recursive_resolve_imported = mock.Mock(name="recursive_resolve_imported", side_effect=called("resolve"))
+            fake_recursive_import_known = mock.Mock(
+                name="recursive_import_known", side_effect=called("import_known")
+            )
+            fake_recursive_resolve_imported = mock.Mock(
+                name="recursive_resolve_imported", side_effect=called("resolve")
+            )
             fake_post_register = mock.Mock(name="post_register", side_effect=called("post"))
 
             register = Register(None, None)
 
-            with mock.patch.multiple(register
-                , add_pairs = fake_add_pairs
-                , recursive_import_known = fake_recursive_import_known
-                , recursive_resolve_imported = fake_recursive_resolve_imported
-                , post_register = fake_post_register
-                ):
+            with mock.patch.multiple(
+                register,
+                add_pairs=fake_add_pairs,
+                recursive_import_known=fake_recursive_import_known,
+                recursive_resolve_imported=fake_recursive_resolve_imported,
+                post_register=fake_post_register,
+            ):
                 self.assertEqual(info["called"], [])
                 register.register(pair1, pair2, kw1=kw1, kw2=kw2)
                 print(info["called"])
 
-            self.assertEqual(info["called"]
-                , [ ((pair1, pair2), {}, 0, "pairs")
-                  , ((), {}, 1, "import_known")
-                  , ((), {}, 2, "resolve")
-                  , ((dict(kw1=kw1, kw2=kw2), ), {}, 3, "post")
-                  ]
-                )
+            self.assertEqual(
+                info["called"],
+                [
+                    ((pair1, pair2), {}, 0, "pairs"),
+                    ((), {}, 1, "import_known"),
+                    ((), {}, 2, "resolve"),
+                    ((dict(kw1=kw1, kw2=kw2),), {}, 3, "post"),
+                ],
+            )
 
     describe "add_pairs":
         it "adds to the known list":
@@ -78,31 +87,39 @@ describe TestCase, "Register":
             self.assertEqual(register.known, [pair1, pair2, pair3])
 
         it "treats __all__ as special":
+
             def all_for(ns):
                 self.assertEqual(ns, "namespace1")
                 return [("namespace1", "one"), ("namespace1", "two")]
+
             addon_getter = mock.Mock(name="addon_getter")
             addon_getter.all_for.side_effect = all_for
 
             register = Register(addon_getter, None)
             register.add_pairs(("namespace1", "__all__"))
-            self.assertEqual(sorted(register.known), sorted([("namespace1", "one"), ("namespace1", "two")]))
+            self.assertEqual(
+                sorted(register.known), sorted([("namespace1", "one"), ("namespace1", "two")])
+            )
 
             # Doesn't duplicate in known
             register = Register(addon_getter, None)
             register.add_pairs(("namespace1", "one"), ("namespace1", "__all__"))
-            self.assertEqual(sorted(register.known), sorted([("namespace1", "one"), ("namespace1", "two")]))
+            self.assertEqual(
+                sorted(register.known), sorted([("namespace1", "one"), ("namespace1", "two")])
+            )
 
     describe "recursive_import_known":
         it "keeps calling _import_known till it says False":
             called = []
             fake_import_known = mock.Mock(name="import_known")
+
             def _import_known():
                 if len(called) == 3:
                     return False
                 else:
                     called.append(1)
                     return True
+
             fake_import_known.side_effect = _import_known
 
             register = Register(None, None)
@@ -116,12 +133,14 @@ describe TestCase, "Register":
         it "keeps calling _resolve_imported till it says False":
             called = []
             fake_resolve_imported = mock.Mock(name="resolve_imported")
+
             def _resolve_imported():
                 if len(called) == 3:
                     return False
                 else:
                     called.append(1)
                     return True
+
             fake_resolve_imported.side_effect = _resolve_imported
 
             register = Register(None, None)
@@ -143,14 +162,14 @@ describe TestCase, "Register":
             rs2.post_register.side_effect = lambda **kwargs: called.append((2, kwargs))
             rs3.post_register.side_effect = lambda **kwargs: called.append((3, kwargs))
 
-            layer1 = [(("ns1", 'rs1'), rs1)]
-            layer2 = [(("ns2", 'rs2'), rs2), (("ns1", 'rs3'), rs3)]
+            layer1 = [(("ns1", "rs1"), rs1)]
+            layer2 = [(("ns2", "rs2"), rs2), (("ns1", "rs3"), rs3)]
             layered = [layer1, layer2]
 
             extra_args = {"ns1": dict(a=1, b=2)}
 
             register = Register(None, None)
-            register.resolved = {('ns1', 'rs1'): rs1, ('ns2', 'rs2'): rs2, ('ns1', 'rs3'): rs3}
+            register.resolved = {("ns1", "rs1"): rs1, ("ns2", "rs2"): rs2, ("ns1", "rs3"): rs3}
 
             with mock.patch.multiple(register.__class__, layered=layered):
                 register.post_register(extra_args)
@@ -171,12 +190,10 @@ describe TestCase, "Register":
 
             FakeLayers.assert_called_once_with(register.imported)
             self.assertEqual(layered, [layer1, layer2])
-            self.assertEqual(layersInstance.add_to_layers.mock_calls
-                , [ mock.call(("n1", "n1"))
-                  , mock.call(("n1", "n2"))
-                  , mock.call(("n2", "n1"))
-                  ]
-                )
+            self.assertEqual(
+                layersInstance.add_to_layers.mock_calls,
+                [mock.call(("n1", "n1")), mock.call(("n1", "n2")), mock.call(("n2", "n1"))],
+            )
 
     describe "_import_known":
         before_each:
@@ -192,7 +209,7 @@ describe TestCase, "Register":
         it "uses addon_getter on anything not already imported and does nothing with the result":
             register = Register(self.addon_getter, self.collector)
             register.add_pairs((1, 3))
-            res = type("result", (object, ), {"extras": [(4, 5)]})()
+            res = type("result", (object,), {"extras": [(4, 5)]})()
             self.addon_getter.return_value = res
 
             self.assertEqual(register.imported, {})
@@ -204,7 +221,7 @@ describe TestCase, "Register":
             self.assertEqual(register.known, [(1, 3), (4, 5)])
 
             # And test it imports what it found
-            res2 = type("result2", (object, ), {"extras": []})()
+            res2 = type("result2", (object,), {"extras": []})()
             self.addon_getter.return_value = res2
             assert register._import_known()
             self.addon_getter.assert_called_once_with(4, 5, self.collector, known=[(1, 3), (4, 5)])
@@ -244,19 +261,28 @@ describe TestCase, "Register":
 
             import_known_res = mock.Mock(name="import_known_res")
             fake_recursive_import_known = mock.Mock(name="recursive_import_known")
+
             def import_known():
                 called.append(4)
                 return import_known_res
+
             fake_recursive_import_known.side_effect = import_known
 
-            with mock.patch.multiple(register.__class__, layered=layered, recursive_import_known=fake_recursive_import_known):
+            with mock.patch.multiple(
+                register.__class__,
+                layered=layered,
+                recursive_import_known=fake_recursive_import_known,
+            ):
                 self.assertEqual(called, [])
                 self.assertEqual(register.known, [(1, 3), (1, 2), (2, 4)])
                 self.assertEqual(register.resolved, {})
                 self.assertIs(register._resolve_imported(), import_known_res)
 
             self.assertEqual(called, [1, 2, 3, 4])
-            self.assertEqual(register.known, [(1, 3), (1, 2), (2, 4), ("one", "two"), ("three", "four"), ("three", "five")])
+            self.assertEqual(
+                register.known,
+                [(1, 3), (1, 2), (2, 4), ("one", "two"), ("three", "four"), ("three", "five")],
+            )
             self.assertEqual(register.imported, {(1, 3): i1, (1, 2): i2, (2, 4): i3})
             self.assertEqual(register.resolved, {(1, 3): [r1], (1, 2): [r2], (2, 4): [r3]})
 
@@ -266,6 +292,7 @@ describe TestCase, "Register":
             @option_merge_addon_hook(extras=[("one", "__all__"), ("one", "one"), ("two", "one")])
             def r1(*args, **kwargs):
                 pass
+
             i1.resolved = [r1]
 
             collector = mock.Mock(name="collector")
@@ -276,19 +303,24 @@ describe TestCase, "Register":
             layered = [layer1]
 
             import_known_res = mock.Mock(name="import_known_res")
-            fake_recursive_import_known = mock.Mock(name="recursive_import_known", return_value=import_known_res)
+            fake_recursive_import_known = mock.Mock(
+                name="recursive_import_known", return_value=import_known_res
+            )
 
             pairs_from_extra = [("one", "one"), ("one", "three"), ("one", "two")]
-            add_pairs_from_extras = mock.Mock(name="add_pairs_from_extras", return_value=pairs_from_extra)
+            add_pairs_from_extras = mock.Mock(
+                name="add_pairs_from_extras", return_value=pairs_from_extra
+            )
 
-            with mock.patch.multiple(register.__class__
-                , layered = layered
-                , recursive_import_known = fake_recursive_import_known
-                , add_pairs_from_extras = add_pairs_from_extras
-                ):
+            with mock.patch.multiple(
+                register.__class__,
+                layered=layered,
+                recursive_import_known=fake_recursive_import_known,
+                add_pairs_from_extras=add_pairs_from_extras,
+            ):
                 self.assertIs(register._resolve_imported(), import_known_res)
 
-            self.assertEqual(r1.extras, [("one", ("one", "three", "two")), ("two", ("one", ))])
+            self.assertEqual(r1.extras, [("one", ("one", "three", "two")), ("two", ("one",))])
 
     describe "add_pairs_from_extra":
         it "combines the pairs":
@@ -296,13 +328,26 @@ describe TestCase, "Register":
             register.known = [("one", "twenty"), ("six", "seven"), ("three", "five")]
             extra = [("one", "two"), ("three", "four"), ("three", "five")]
             register.add_pairs_from_extras(extra)
-            self.assertEqual(register.known, [("one", "twenty"), ("six", "seven"), ("three", "five"), ("one", "two"), ("three", "four")])
+            self.assertEqual(
+                register.known,
+                [
+                    ("one", "twenty"),
+                    ("six", "seven"),
+                    ("three", "five"),
+                    ("one", "two"),
+                    ("three", "four"),
+                ],
+            )
 
         it "returns the pairs that were found":
             register = Register(None, None)
             extra = [("one", "__all__"), ("three", "four"), ("three", "five")]
             added = []
-            ret = [[("one", "one"), ("one", "two"), ("one", "three")], [("three", "four")], [("three", "five")]]
+            ret = [
+                [("one", "one"), ("one", "two"), ("one", "three")],
+                [("three", "four")],
+                [("three", "five")],
+            ]
 
             def add_pairs(*pairs):
                 self.assertEqual(len(pairs), 1)
@@ -313,13 +358,15 @@ describe TestCase, "Register":
             with mock.patch.object(register, "add_pairs", add_pairs):
                 got = register.add_pairs_from_extras(extra)
 
-            self.assertEqual(got
-                , [ ("one", "one")
-                  , ("one", "three")
-                  , ("one", "two")
-                  , ("three", "five")
-                  , ("three", "four")
-                  ]
-                )
+            self.assertEqual(
+                got,
+                [
+                    ("one", "one"),
+                    ("one", "three"),
+                    ("one", "two"),
+                    ("three", "five"),
+                    ("three", "four"),
+                ],
+            )
 
             self.assertEqual(added, [("one", "__all__"), ("three", "four"), ("three", "five")])

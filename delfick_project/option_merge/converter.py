@@ -27,6 +27,7 @@ converted paths will use a cached result.
 from option_merge.versioning import versioned_value
 from option_merge.joiner import dot_joiner
 
+
 class Converter(object):
     """
     Encapsulates a single converter.
@@ -37,6 +38,7 @@ class Converter(object):
     It has a method "matches" that is used against each possible path and will
     check for exact matches against the ``convert_path``.
     """
+
     def __init__(self, convert, convert_path=None):
         self.convert = convert
         self.convert_path = convert_path
@@ -54,6 +56,7 @@ class Converter(object):
             joined_path = dot_joiner(path)
         return self.convert_path and joined_path == self.convert_path_joined
 
+
 class Converters(object):
     """
     Holds a group of converters.
@@ -62,6 +65,7 @@ class Converters(object):
 
     Also memoizes the results of conversion.
     """
+
     def __init__(self):
         self._waiting = {}
         self._converted = {}
@@ -101,6 +105,7 @@ class Converters(object):
                 return converter, True
 
         return None, False
+
     matches.debug = True
 
     def converted(self, path):
@@ -130,4 +135,3 @@ class Converters(object):
     def started(self, path):
         """Mark this path as waiting"""
         self._waiting[path] = True
-

@@ -10,7 +10,9 @@ import mock
 describe TestCase, "Addon":
     it "has name, a resolver and a namespace":
         resolver = mock.Mock(name="resolver")
-        addon = Addon.FieldSpec().normalise(Meta({}, []), {"name": "bob", "resolver": resolver, "namespace": "stuff"})
+        addon = Addon.FieldSpec().normalise(
+            Meta({}, []), {"name": "bob", "resolver": resolver, "namespace": "stuff"}
+        )
         self.assertEqual(addon.name, "bob")
         self.assertEqual(addon.resolver, resolver)
         self.assertEqual(addon.namespace, "stuff")
@@ -54,18 +56,20 @@ describe TestCase, "Addon":
 
             resolver = mock.Mock(name="resolver", return_value=[rs1, rs2, rs3])
 
-            configuration = mock.Mock(name='configuration')
+            configuration = mock.Mock(name="configuration")
             collector = mock.Mock(name="collector", configuration=configuration)
 
             addon = Addon(name="a2", resolver=resolver, namespace="stuff", extras=[])
             addon.process(collector)
 
-            self.assertEqual(collector.register_converters.mock_calls
-                , [ mock.call([specs1, specs2], Meta, configuration, NotSpecified)
-                  , mock.call([specs3], Meta, configuration, NotSpecified)
-                  , mock.call(None, Meta, configuration, NotSpecified)
-                  ]
-                )
+            self.assertEqual(
+                collector.register_converters.mock_calls,
+                [
+                    mock.call([specs1, specs2], Meta, configuration, NotSpecified),
+                    mock.call([specs3], Meta, configuration, NotSpecified),
+                    mock.call(None, Meta, configuration, NotSpecified),
+                ],
+            )
 
     describe "post_register":
         it "calls the resolver with post_register=True and other kwargs":
@@ -95,7 +99,9 @@ describe TestCase, "Addon":
             resolver = mock.Mock(name="resolver", return_value=[rs1, rs2])
 
             addon = Addon(name="a3", resolver=resolver, namespace="thing", extras=[("one", "two")])
-            self.assertEqual(list(addon.resolved_dependencies()), [("three", "five"), ("three", "four")])
+            self.assertEqual(
+                list(addon.resolved_dependencies()), [("three", "five"), ("three", "four")]
+            )
 
             rs1.get.assert_called_once_with("extras", [])
             rs2.get.assert_called_once_with("extras", [])
@@ -124,5 +130,7 @@ describe TestCase, "Addon":
 
             addon = Addon(name="a3", resolver=resolver, namespace="thing", extras=[("one", "two")])
             self.assertEqual(addon.resolved, [rs1, rs2])
-            self.assertEqual(list(addon.dependencies(mock.Mock(name="all_deps"))), [("one", "two"), ("three", "five"), ("three", "four")])
-
+            self.assertEqual(
+                list(addon.dependencies(mock.Mock(name="all_deps"))),
+                [("one", "two"), ("three", "five"), ("three", "four")],
+            )

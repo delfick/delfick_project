@@ -2,6 +2,8 @@
 ``Meta`` is an important object that is used to keep track of our position in
 the original ``val`` when we are normalising it.
 """
+
+
 class Meta(object):
     """
     Meta has a concept of the wider context, kept as the ``everything`` property
@@ -40,6 +42,7 @@ class Meta(object):
 
         .. automethod:: source
     """
+
     everything = None
 
     @classmethod
@@ -71,7 +74,10 @@ class Meta(object):
 
     def key_names(self):
         """Return {_key_name_<i>: <i'th part of part} for each part in the path reversed"""
-        return dict(("_key_name_{0}".format(index), val) for index, (val, _) in enumerate(reversed(self._path)))
+        return dict(
+            ("_key_name_{0}".format(index), val)
+            for index, (val, _) in enumerate(reversed(self._path))
+        )
 
     def __eq__(self, other):
         """Wortk out if we have the same ``everything`` and ``path``"""

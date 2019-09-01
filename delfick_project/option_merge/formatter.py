@@ -39,18 +39,23 @@ from option_merge.merge import MergedOptions
 import string
 import types
 
+
 class NotSpecified(object):
     """The difference between None and not specified"""
 
+
 class NoFormat(object):
     """Used to tell when to stop formatting a string"""
+
     def __init__(self, val):
         self.val = val
+
 
 class MergedOptionStringFormatter(string.Formatter):
     """
     Resolve format options into a MergedOptions dictionary
     """
+
     def __init__(self, all_options, option_path, chain=None, value=NotSpecified):
         if chain is None:
             if isinstance(option_path, list):
@@ -118,7 +123,9 @@ class MergedOptionStringFormatter(string.Formatter):
 
     def with_option_path(self, value):
         """Clone this instance with the new value as option_path and no override value"""
-        return self.__class__(self.all_options, value, chain=self.chain + [value], value=NotSpecified)
+        return self.__class__(
+            self.all_options, value, chain=self.chain + [value], value=NotSpecified
+        )
 
     def get_string(self, key):
         """
@@ -144,9 +151,18 @@ class MergedOptionStringFormatter(string.Formatter):
             return special
         else:
             is_dict = type(obj) is MergedOptions or isinstance(obj, dict)
-            is_a_mock = hasattr(obj, 'mock_calls')
-            is_special_type = any(isinstance(obj, typ) for typ in (types.LambdaType, types.FunctionType, types.MethodType, types.BuiltinFunctionType, types.BuiltinMethodType))
-            is_formattable = getattr(obj, '_merged_options_formattable', False)
+            is_a_mock = hasattr(obj, "mock_calls")
+            is_special_type = any(
+                isinstance(obj, typ)
+                for typ in (
+                    types.LambdaType,
+                    types.FunctionType,
+                    types.MethodType,
+                    types.BuiltinFunctionType,
+                    types.BuiltinMethodType,
+                )
+            )
+            is_formattable = getattr(obj, "_merged_options_formattable", False)
 
             if is_dict or is_special_type or is_a_mock or is_formattable:
                 return obj
@@ -163,7 +179,7 @@ class MergedOptionStringFormatter(string.Formatter):
     def _vformat(self, format_string, args, kwargs, used_args, recursion_depth):
         """I really want to know what the format_string is so I'm taking from standard library string and modifying slightly"""
         if recursion_depth < 0:
-            raise ValueError('Max string recursion exceeded')
+            raise ValueError("Max string recursion exceeded")
 
         result = []
 
@@ -188,15 +204,16 @@ class MergedOptionStringFormatter(string.Formatter):
                 obj = self.convert_field(obj, conversion)
 
                 # expand the format spec, if needed
-                format_spec = self._vformat(format_spec, args, kwargs,
-                                            used_args, recursion_depth-1)
+                format_spec = self._vformat(
+                    format_spec, args, kwargs, used_args, recursion_depth - 1
+                )
 
                 # format the object and append to the result
                 result.append(self.format_field(obj, format_spec))
 
         if len(result) == 1:
             return result[0]
-        return ''.join(str(obj) for obj in result)
+        return "".join(str(obj) for obj in result)
 
     def no_format(self, val):
         """Return an instance that is recognised by the formatter as no more formatting required"""

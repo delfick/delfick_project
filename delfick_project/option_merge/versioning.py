@@ -1,14 +1,19 @@
 import random
 import time
 
+
 class versioned_value(object):
     """
     A property that holds a cache of {prefix: {ignore_converters: value}}
 
     Where the entire cache is revoked if instance.version changes number
     """
-    class NotYet(object): pass
-    class First(object): pass
+
+    class NotYet(object):
+        pass
+
+    class First(object):
+        pass
 
     def __init__(self, func):
         self.func = func
@@ -30,7 +35,10 @@ class versioned_value(object):
             # kwarg to the function
             # property on the path
             # property on the instance
-            ignore_converters = kwargs.get('ignore_converters', getattr(prefix, 'ignore_converters', getattr(instance, 'ignore_converters', False)))
+            ignore_converters = kwargs.get(
+                "ignore_converters",
+                getattr(prefix, "ignore_converters", getattr(instance, "ignore_converters", False)),
+            )
 
             cached = getattr(instance, self.cached_key, {})
             expected_version = getattr(instance, self.expected_version_key, self.First)
@@ -49,7 +57,10 @@ class versioned_value(object):
                 if prefix not in cached:
                     cached[prefix] = {}
                 try:
-                    cached[prefix][ignore_converters] = (self.func(instance, *args, **kwargs), False)
+                    cached[prefix][ignore_converters] = (
+                        self.func(instance, *args, **kwargs),
+                        False,
+                    )
                 except KeyError as error:
                     cached[prefix][ignore_converters] = (error, True)
 
@@ -58,7 +69,9 @@ class versioned_value(object):
                 raise val
             else:
                 return val
+
         return returned
+
 
 class versioned_iterable(object):
     """
@@ -66,9 +79,15 @@ class versioned_iterable(object):
 
     Where the entire cache is revoked if instance.version changes number
     """
-    class First(object): pass
-    class NotYet(object): pass
-    class Finished(object): pass
+
+    class First(object):
+        pass
+
+    class NotYet(object):
+        pass
+
+    class Finished(object):
+        pass
 
     def __init__(self, func):
         self.func = func
@@ -112,7 +131,10 @@ class versioned_iterable(object):
             # kwarg to the function
             # property on the path
             # property on the instance
-            ignore_converters = kwargs.get('ignore_converters', getattr(prefix, 'ignore_converters', getattr(instance, 'ignore_converters', False)))
+            ignore_converters = kwargs.get(
+                "ignore_converters",
+                getattr(prefix, "ignore_converters", getattr(instance, "ignore_converters", False)),
+            )
 
             cached = getattr(instance, self.cached_key, {})
             value_cache = getattr(instance, self.value_cache_key, {})
@@ -144,4 +166,5 @@ class versioned_iterable(object):
                 else:
                     cached[prefix][ignore_converters] = ret
             return self.iterator_for(instance, prefix, ignore_converters, cached, value_cache)
+
         return returned

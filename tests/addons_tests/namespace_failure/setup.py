@@ -1,6 +1,8 @@
 from namespace_failure import VERSION
 from setuptools import setup
 
+# fmt: off
+
 setup(
       name = "namespace_failure"
     , version = VERSION
@@ -21,3 +23,4 @@ setup(
       }
     )
 
+# fmt: on

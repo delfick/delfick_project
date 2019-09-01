@@ -2,6 +2,7 @@ from option_merge.merge import MergedOptions
 from option_merge.not_found import NotFound
 from option_merge.path import Path
 
+
 def value_at(data, path, called_from=None, chain=None):
     """
     Return the value at this path
@@ -54,12 +55,11 @@ def value_at(data, path, called_from=None, chain=None):
 
                 prefix = path.without(key)
                 if not prefix:
-                    return chain+[key], nxt
+                    return chain + [key], nxt
 
                 prefix = Path.convert(prefix).ignoring_converters(path.ignore_converters)
-                return value_at(nxt, prefix, called_from, chain=chain+[key])
+                return value_at(nxt, prefix, called_from, chain=chain + [key])
             except NotFound:
                 pass
 
     raise NotFound
-

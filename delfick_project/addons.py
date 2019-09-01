@@ -10,6 +10,7 @@ import six
 
 log = logging.getLogger("delfick_project.addons")
 
+
 class addon_hook(object):
     def __init__(self, extras=sb.NotSpecified, post_register=False):
         self.post_register = post_register
@@ -25,6 +26,7 @@ class addon_hook(object):
         func._delfick_project_addon_entry_post_register = self.post_register
         return func
 
+
 class spec_key_spec(sb.Spec):
     """
     Turns value into (int, (str1, str2, ..., strn))
@@ -37,9 +39,10 @@ class spec_key_spec(sb.Spec):
 
     if value is already correct, then return as is
     """
+
     def normalise_filled(self, meta, val):
         if isinstance(val, six.string_types):
-            return (0, (val, ))
+            return (0, (val,))
         else:
             if isinstance(val, list) or isinstance(val, tuple) and len(val) > 0:
                 is_int = type(val[0]) is int
@@ -50,6 +53,7 @@ class spec_key_spec(sb.Spec):
             spec = sb.tuple_spec(sb.integer_spec(), sb.tupleof(sb.string_spec()))
             return spec.normalise(meta, val)
 
+
 class no_such_key_spec(sb.Spec):
     def setup(self, reason):
         self.reason = reason
@@ -57,10 +61,12 @@ class no_such_key_spec(sb.Spec):
     def normalise_filled(self, meta, val):
         raise BadSpecValue(self.reason, meta=meta)
 
+
 class Result(dictobj.Spec):
     specs = dictobj.Field(sb.dictof(spec_key_spec(), sb.has("normalise")))
     extra = dictobj.Field(no_such_key_spec("Use extras instead (notice the s!)"))
     extras = dictobj.Field(sb.listof(sb.tuple_spec(sb.string_spec(), sb.tupleof(sb.string_spec()))))
+
 
 class Addon(dictobj.Spec):
     name = dictobj.Field(sb.string_spec)
@@ -78,7 +84,14 @@ class Addon(dictobj.Spec):
             try:
                 self._resolved = list(self.resolver())
             except Exception as error:
-                errors.append(self.BadHook("Failed to resolve a hook", name=self.name, namespace=self.namespace, error=str(error)))
+                errors.append(
+                    self.BadHook(
+                        "Failed to resolve a hook",
+                        name=self.name,
+                        namespace=self.namespace,
+                        error=str(error),
+                    )
+                )
 
         if errors:
             raise self.BadHook(_errors=errors)
@@ -89,9 +102,8 @@ class Addon(dictobj.Spec):
         for result in self.resolved:
             if collector is not None:
                 collector.register_converters(
-                      result.get("specs", {})
-                    , Meta, collector.configuration, sb.NotSpecified
-                    )
+                    result.get("specs", {}), Meta, collector.configuration, sb.NotSpecified
+                )
 
     def post_register(self, **kwargs):
         list(self.resolver(post_register=True, **kwargs))
@@ -104,7 +116,7 @@ class Addon(dictobj.Spec):
         for result in self.resolved:
             for namespace, names in result.get("extras", []):
                 if not isinstance(names, (tuple, list)):
-                    names = (names, )
+                    names = (names,)
                 for name in names:
                     yield (namespace, name)
 
@@ -115,11 +127,14 @@ class Addon(dictobj.Spec):
             for dep in self.resolved_dependencies():
                 yield dep
 
+
 class AddonGetter(object):
     class NoSuchAddon(DelfickError):
         desc = "No such addon"
+
     class BadImport(DelfickError):
         desc = "Bad import"
+
     class BadAddon(DelfickError):
         desc = "Bad addon"
 
@@ -129,7 +144,10 @@ class AddonGetter(object):
         self.add_namespace("delfick_project.addons")
 
     def add_namespace(self, namespace, result_spec=None, addon_spec=None):
-        self.namespaces[namespace] = (result_spec or Result.FieldSpec(), addon_spec or Addon.FieldSpec())
+        self.namespaces[namespace] = (
+            result_spec or Result.FieldSpec(),
+            addon_spec or Addon.FieldSpec(),
+        )
         self.entry_points[namespace] = defaultdict(list)
         for e in pkg_resources.iter_entry_points(namespace):
             self.entry_points[namespace][e.name].append(e)
@@ -144,42 +162,47 @@ class AddonGetter(object):
 
     def __call__(self, namespace, entry_point_name, collector, known=None):
         if namespace not in self.namespaces:
-            log.warning("Unknown plugin namespace\tnamespace=%s\tentry_point=%s\tavailable=%s"
-                , namespace, entry_point_name, sorted(self.namespaces.keys())
-                )
+            log.warning(
+                "Unknown plugin namespace\tnamespace=%s\tentry_point=%s\tavailable=%s",
+                namespace,
+                entry_point_name,
+                sorted(self.namespaces.keys()),
+            )
             return
 
         entry_point_full_name = "{0}.{1}".format(namespace, entry_point_name)
 
-        entry_points = self.find_entry_points(
-              namespace, entry_point_name, entry_point_full_name
-            )
+        entry_points = self.find_entry_points(namespace, entry_point_name, entry_point_full_name)
 
         def result_maker(**data):
             return self.namespaces[namespace][0].normalise(Meta(data, []), data)
 
         resolver, extras = self.resolve_entry_points(
-                namespace, entry_point_name, collector
-              , result_maker, entry_points, entry_point_full_name
-              , known
-              )
+            namespace,
+            entry_point_name,
+            collector,
+            result_maker,
+            entry_points,
+            entry_point_full_name,
+            known,
+        )
 
-        return self.namespaces[namespace][1].normalise(Meta({}, [])
-            , { "namespace": namespace
-              , "name": entry_point_name
-              , "resolver": resolver
-              , "extras": extras
-              }
-            )
+        return self.namespaces[namespace][1].normalise(
+            Meta({}, []),
+            {
+                "namespace": namespace,
+                "name": entry_point_name,
+                "resolver": resolver,
+                "extras": extras,
+            },
+        )
 
     def find_entry_points(self, namespace, entry_point_name, entry_point_full_name):
         it = self.entry_points[namespace][entry_point_name]
         entry_points = list(it)
 
         if len(entry_points) > 1:
-            log.warning("Found multiple entry_points for {0}".format(
-              entry_point_full_name
-            ))
+            log.warning("Found multiple entry_points for {0}".format(entry_point_full_name))
         elif len(entry_points) == 0:
             raise self.NoSuchAddon(addon=entry_point_full_name)
         else:
@@ -187,28 +210,32 @@ class AddonGetter(object):
 
         return entry_points
 
-    def resolve_entry_points(self
-        , namespace, entry_point_name, collector
-        , result_maker, entry_points, entry_point_full_name
-        , known
-        ):
+    def resolve_entry_points(
+        self,
+        namespace,
+        entry_point_name,
+        collector,
+        result_maker,
+        entry_points,
+        entry_point_full_name,
+        known,
+    ):
         errors = []
         modules = []
         for entry_point in entry_points:
             try:
                 modules.append(entry_point.resolve())
             except ImportError as error:
-                err = self.BadImport("Error whilst resolving entry_point"
-                    , importing=entry_point_full_name
-                    , module=entry_point.module_name
-                    , error=str(error)
-                    )
+                err = self.BadImport(
+                    "Error whilst resolving entry_point",
+                    importing=entry_point_full_name,
+                    module=entry_point.module_name,
+                    error=str(error),
+                )
                 errors.append(err)
 
         if errors:
-            raise self.BadImport("Failed to import some entry points"
-                , _errors=errors
-                )
+            raise self.BadImport("Failed to import some entry points", _errors=errors)
 
         hooks, extras = self.get_hooks_and_extras(modules, known)
         resolver = self.get_resolver(collector, result_maker, hooks)
@@ -226,7 +253,9 @@ class AddonGetter(object):
                         for name in names:
                             pairs = [(namespace, name)]
                             if name == "__all__":
-                                pairs = sorted([pair for pair in self.all_for(namespace) if pair not in known])
+                                pairs = sorted(
+                                    [pair for pair in self.all_for(namespace) if pair not in known]
+                                )
                             for pair in pairs:
                                 if pair not in extras:
                                     extras.append(pair)
@@ -235,8 +264,12 @@ class AddonGetter(object):
     def get_resolver(self, collector, result_maker, hooks):
         def resolve(post_register=False, **kwargs):
             for hook in hooks:
-                is_post_register = getattr(hook, "_delfick_project_addon_entry_post_register", False)
-                if (post_register and not is_post_register) or (is_post_register and not post_register):
+                is_post_register = getattr(
+                    hook, "_delfick_project_addon_entry_post_register", False
+                )
+                if (post_register and not is_post_register) or (
+                    is_post_register and not post_register
+                ):
                     continue
 
                 if post_register:
@@ -247,6 +280,7 @@ class AddonGetter(object):
                         yield r
 
         return resolve
+
 
 class Register(object):
     """
@@ -296,6 +330,7 @@ class Register(object):
 
         # This will ensure the same resolution path as the manual approach
     """
+
     def __init__(self, addon_getter, collector):
         self.known = []
         self.imported = {}
@@ -376,7 +411,9 @@ class Register(object):
         for pair in list(self.known):
             namespace, name = pair
             if pair not in self.imported:
-                imported = self.addon_getter(namespace, name, self.collector, known=list(self.known))
+                imported = self.addon_getter(
+                    namespace, name, self.collector, known=list(self.known)
+                )
                 if imported is None:
                     self.known.pop(self.known.index(pair))
                 else:
@@ -404,10 +441,12 @@ class Register(object):
                             for namespace, name in found:
                                 want[namespace].append(name)
 
-                            result.extras = sorted([
-                                (namespace, tuple(sorted(set(names))))
-                                for namespace, names in sorted(want.items())
-                            ])
+                            result.extras = sorted(
+                                [
+                                    (namespace, tuple(sorted(set(names))))
+                                    for namespace, names in sorted(want.items())
+                                ]
+                            )
 
         return self.recursive_import_known()
 
@@ -416,7 +455,7 @@ class Register(object):
         for pair in extras:
             namespace, names = pair
             if not isinstance(names, (tuple, list)):
-                names = (names, )
+                names = (names,)
 
             for name in names:
                 found.extend(self.add_pairs((namespace, name)))

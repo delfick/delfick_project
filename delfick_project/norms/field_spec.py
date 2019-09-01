@@ -36,11 +36,13 @@ from . import spec_base as sb
 from .errors import BadSpec
 from .meta import Meta
 
+
 class FieldSpec(object):
     """
     Responsible for defining the Spec object used to convert a
     dictionary into an instance of the kls.
     """
+
     def __init__(self, kls, formatter=None, create_kls=None):
         self.kls = kls
         self.create_kls = create_kls or kls
@@ -109,6 +111,7 @@ class FieldSpec(object):
         """Normalise val with the spec from self.make_spec"""
         return self.normalise(Meta.empty(), kwargs)
 
+
 class FieldSpecMixin(object):
     """
     Mixin to give FieldSpec to an object
@@ -120,7 +123,9 @@ class FieldSpecMixin(object):
     create a Spec object that normalises a dictionary into an instance
     of this class
     """
+
     FieldSpec = classmethod(FieldSpec)
+
 
 class FieldSpecMetakls(type):
     """
@@ -135,6 +140,7 @@ class FieldSpecMetakls(type):
       * Ensure FieldSpecMixin is one of the base classes
       * There is a fields dictionary containing all the defined Fields
     """
+
     def __new__(metaname, classname, baseclasses, attrs):
         fields = {}
         for kls in baseclasses:
@@ -156,12 +162,13 @@ class FieldSpecMetakls(type):
                 else:
                     fields[name] = options
 
-        attrs['fields'] = fields
+        attrs["fields"] = fields
 
         if Field.mixin not in baseclasses:
-            baseclasses = baseclasses + (Field.mixin, )
+            baseclasses = baseclasses + (Field.mixin,)
 
         return type.__new__(metaname, classname, baseclasses, attrs)
+
 
 class Field(object):
     """
@@ -175,23 +182,27 @@ class Field(object):
       * has a default
       * Is wrapped by some other spec class
     """
+
     mixin = FieldSpecMixin
     metaclass = FieldSpecMetakls
     is_dictobj_field = True
 
-    def __init__(self
-        , spec=sb.NotSpecified
-        , help=None
-        , formatted=False
-        , wrapper=sb.NotSpecified
-        , default=sb.NotSpecified
-        , nullable=False
-        , format_into=sb.NotSpecified
-        , after_format=sb.NotSpecified
-        ):
+    def __init__(
+        self,
+        spec=sb.NotSpecified,
+        help=None,
+        formatted=False,
+        wrapper=sb.NotSpecified,
+        default=sb.NotSpecified,
+        nullable=False,
+        format_into=sb.NotSpecified,
+        after_format=sb.NotSpecified,
+    ):
 
         if spec is sb.NotSpecified and format_into is sb.NotSpecified:
-            raise ProgrammerError("Declaring a Field must give a spec, otherwise provide format_into")
+            raise ProgrammerError(
+                "Declaring a Field must give a spec, otherwise provide format_into"
+            )
 
         self.spec = spec
         self.help = help
@@ -211,14 +222,15 @@ class Field(object):
             raise ProgrammerError("after_format was specified when formatted was false")
 
     def clone(self, **overrides):
-        return self.__class__(self.spec
-            , help = overrides.get("help", self.help)
-            , formatted = overrides.get("formatted", self.formatted)
-            , wrapper = overrides.get("wrapper", self.wrapper)
-            , default = overrides.get("default", self.default)
-            , nullable = overrides.get("nullable", self.nullable)
-            , after_format = overrides.get("after_format", self.after_format)
-            )
+        return self.__class__(
+            self.spec,
+            help=overrides.get("help", self.help),
+            formatted=overrides.get("formatted", self.formatted),
+            wrapper=overrides.get("wrapper", self.wrapper),
+            default=overrides.get("default", self.default),
+            nullable=overrides.get("nullable", self.nullable),
+            after_format=overrides.get("after_format", self.after_format),
+        )
 
     def make_spec(self, meta, formatter):
         """
@@ -265,6 +277,7 @@ class Field(object):
             spec = self.wrapper(spec)
 
         return spec
+
 
 class NullableField(Field):
     is_dictobj_field = True
