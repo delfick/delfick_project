@@ -1,20 +1,13 @@
 # coding: spec
 
-from option_merge.joiner import dot_joiner, join
-from option_merge.path import Path
+from delfick_project.option_merge.joiner import dot_joiner, join
+from delfick_project.option_merge.path import Path
 
+from unittest import mock
 import itertools
 
-from delfick_error import DelfickErrorTestMixin
-import unittest
-import mock
 
-
-class TestCase(unittest.TestCase, DelfickErrorTestMixin):
-    pass
-
-
-describe TestCase, "dot_joiner":
+describe "dot_joiner":
     it "joins keeping all dots in between":
         blah_possibilities = ["blah", ".blah", "blah.", ".blah.", "blah..", "..blah", "..blah.."]
         stuff_possibilities = [pos.replace("blah", "stuff") for pos in blah_possibilities]
@@ -28,7 +21,7 @@ describe TestCase, "dot_joiner":
     it "ignores strings":
         assert dot_joiner("blah") == "blah"
 
-describe TestCase, "join":
+describe "join":
     it "Joins as lists":
         assert join(Path([]), Path([])) == []
         assert join(Path([""]), Path([])) == []

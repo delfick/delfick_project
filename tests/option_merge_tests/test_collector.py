@@ -1,24 +1,20 @@
 # coding: spec
 
-from option_merge.collector import Collector
-from option_merge import MergedOptions
+from delfick_project.option_merge import Collector, MergedOptions
 
-from delfick_error import DelfickErrorTestMixin, DelfickError
+from delfick_project.errors_pytest import assertRaises
+from delfick_project.errors import DelfickError
+
 from contextlib import contextmanager
 from getpass import getpass
+from unittest import mock
 import tempfile
-import unittest
 import shutil
-import mock
 import json
 import os
 
 
-class TestCase(unittest.TestCase, DelfickErrorTestMixin):
-    pass
-
-
-describe TestCase, "Collector":
+describe "Collector":
 
     @contextmanager
     def fake_config(self, body="\n{}"):
@@ -38,7 +34,7 @@ describe TestCase, "Collector":
             called = []
 
             class C(Collector):
-                def setup(self):
+                def setup(s):
                     called.append(1)
 
             assert called == []
@@ -79,14 +75,14 @@ describe TestCase, "Collector":
             with self.fake_config() as (config_root, config_file):
 
                 class Col(Collector):
-                    def start_configuration(self):
+                    def start_configuration(s):
                         return MergedOptions.using({})
 
-                    def read_file(self, location):
+                    def read_file(s, location):
                         return json.load(open(location))
 
                     def add_configuration(
-                        self, configuration, collect_another_source, done, result, src
+                        s, configuration, collect_another_source, done, result, src
                     ):
                         configuration.update(result)
 
@@ -120,14 +116,14 @@ describe TestCase, "Collector":
             with self.fake_config('{"one": 1}') as (config_root, config_file):
 
                 class Col(Collector):
-                    def start_configuration(self):
+                    def start_configuration(s):
                         return MergedOptions.using({})
 
-                    def read_file(self, location):
+                    def read_file(s, location):
                         return json.load(open(location))
 
                     def add_configuration(
-                        self, configuration, collect_another_source, done, result, src
+                        s, configuration, collect_another_source, done, result, src
                     ):
                         configuration.update(result)
 
@@ -403,7 +399,7 @@ describe TestCase, "Collector":
                     def home_dir_configuration_location(slf):
                         return home_dir
 
-                with self.fuzzyAssertRaisesError(
+                with assertRaises(
                     BadConfiguration,
                     "Some of the configuration was broken",
                     _errors=[BadJson(location=home_dir), BadJson(location=config_file)],

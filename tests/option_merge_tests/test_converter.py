@@ -1,19 +1,12 @@
 # coding: spec
 
-from option_merge.converter import Converter, Converters
-from option_merge.path import Path
+from delfick_project.option_merge import Converter, Converters
+from delfick_project.option_merge.path import Path
 
-from noseOfYeti.tokeniser.support import noy_sup_setUp
-from delfick_error import DelfickErrorTestMixin
-import unittest
-import mock
+from unittest import mock
 
 
-class TestCase(unittest.TestCase, DelfickErrorTestMixin):
-    pass
-
-
-describe TestCase, "Converter":
+describe "Converter":
     it "takes in conversion logic and convert_path":
         convert = mock.Mock(name="convert")
         convert_path = mock.Mock(name="convert_path")
@@ -67,7 +60,7 @@ describe TestCase, "Converter":
             assert Converter(None, ["a", "b", "c", "d"]).matches(["a", "b", "c", "d"])
             assert not Converter(None, ["a", "c", "d"]).matches(["a", "b", "c", "d"])
 
-describe TestCase, "Converters":
+describe "Converters":
     it "defaults activated to False":
         assert Converters().activated == False
 

@@ -1,22 +1,15 @@
 # coding: spec
 
-from option_merge.not_found import NotFound
-from option_merge.value_at import value_at
-from option_merge import MergedOptions
-from option_merge.path import Path
+from delfick_project.option_merge import NotFound, MergedOptions
+from delfick_project.option_merge.value_at import value_at
+from delfick_project.option_merge.path import Path
 
-import itertools
+from delfick_project.errors_pytest import assertRaises
 
-from delfick_error import DelfickErrorTestMixin
-import unittest
-import mock
+from unittest import mock
 
 
-class TestCase(unittest.TestCase, DelfickErrorTestMixin):
-    pass
-
-
-describe TestCase, "value_at":
+describe "value_at":
     it "returns as is if no path":
         data = mock.Mock(name="data")
         chain = mock.Mock(name="chain")
@@ -24,7 +17,7 @@ describe TestCase, "value_at":
         assert value_at(data, None, chain=chain) == (chain, data)
 
     it "raises NotFound if no more path left and still at a dictionary":
-        with self.fuzzyAssertRaisesError(NotFound):
+        with assertRaises(NotFound):
             value_at({1: 2}, Path("somewhere"))
 
     it "returns data at path if it's in data":

@@ -1,29 +1,27 @@
 # coding: spec
 
-from option_merge import (
+from delfick_project.option_merge import (
+    NotFound,
+    Converter,
     MergedOptions,
     ConverterProperty,
-    KeyValuePairsConverter,
     AttributesConverter,
+    KeyValuePairsConverter,
 )
-from option_merge.converter import Converter
-from option_merge.not_found import NotFound
-from option_merge.storage import Storage
+from delfick_project.option_merge.storage import Storage
 
-from noseOfYeti.tokeniser.support import noy_sup_setUp
-from delfick_error import DelfickErrorTestMixin
-import unittest
-import mock
+from delfick_project.errors_pytest import assertRaises
+
+from unittest import mock
+import pytest
 
 
-class TestCase(unittest.TestCase, DelfickErrorTestMixin):
-    pass
+@pytest.fixture()
+def merged():
+    return MergedOptions()
 
 
-describe TestCase, "MergedOptions":
-    before_each:
-        self.merged = MergedOptions()
-
+describe "MergedOptions":
     it "has prefix and storage":
         storage = mock.Mock(name="storage")
         dot_joiner = mock.Mock(name="dot_joiner")
@@ -31,7 +29,7 @@ describe TestCase, "MergedOptions":
         prefix_string = mock.Mock(name="prefix_string")
 
         dot_joiner.return_value = prefix_string
-        with mock.patch("option_merge.merge.dot_joiner", dot_joiner):
+        with mock.patch("delfick_project.option_merge.merge.dot_joiner", dot_joiner):
             merged = MergedOptions(prefix=prefix_list, storage=storage)
 
         assert merged.storage is storage
@@ -190,26 +188,26 @@ describe TestCase, "MergedOptions":
             assert len(convert.mock_calls) == 1
 
     describe "Getting an item":
-        it "raises a KeyError if the key doesn't exist":
-            with self.fuzzyAssertRaisesError(KeyError, "blah"):
-                self.merged["blah"]
+        it "raises a KeyError if the key doesn't exist", merged:
+            with assertRaises(KeyError, "blah"):
+                merged["blah"]
 
-        it "gets the first value for that key if it exists":
+        it "gets the first value for that key if it exists", merged:
             val1 = mock.Mock(name="val1")
             val2 = mock.Mock(name="val2")
             fake_values_for = mock.Mock(name="values_for")
             fake_values_for.return_value = [(val1, False), (val2, False)]
-            with mock.patch.object(self.merged, "values_for", fake_values_for):
-                assert self.merged["blah"] is val1
+            with mock.patch.object(merged, "values_for", fake_values_for):
+                assert merged["blah"] is val1
             fake_values_for.assert_called_once_with("blah", ignore_converters=False)
 
-        it "works with the get method":
+        it "works with the get method", merged:
             val1 = mock.Mock(name="val1")
             val2 = mock.Mock(name="val2")
             fake_values_for = mock.Mock(name="values_for")
             fake_values_for.return_value = [(val1, False), (val2, False)]
-            with mock.patch.object(self.merged, "values_for", fake_values_for):
-                assert self.merged.get("blah") is val1
+            with mock.patch.object(merged, "values_for", fake_values_for):
+                assert merged.get("blah") is val1
             fake_values_for.assert_called_once_with("blah", ignore_converters=False)
 
         it "works if we get one subtree from a different subtree":
@@ -311,137 +309,137 @@ describe TestCase, "MergedOptions":
             assert final["images.thing"] is converted_val
 
     describe "Setting an item":
-        it "adds to data":
-            self.merged["a"] = 1
-            self.merged["a"] = {"a": "b"}
+        it "adds to data", merged:
+            merged["a"] = 1
+            merged["a"] = {"a": "b"}
 
-            assert list(self.merged["a"].items()) == [("a", "b")]
+            assert list(merged["a"].items()) == [("a", "b")]
 
-            self.merged["a"] = 4
-            assert self.merged["a"] == 4
+            merged["a"] = 4
+            assert merged["a"] == 4
 
-            del self.merged["a"]
-            del self.merged["a"]
-            assert self.merged["a"] == 1
+            del merged["a"]
+            del merged["a"]
+            assert merged["a"] == 1
 
     describe "Deleting an item":
-        it "only deletes once":
-            self.merged.update({"a": 1})
-            self.merged.update({"a": 2})
-            self.merged["a"] = 3
-            assert self.merged["a"] == 3
+        it "only deletes once", merged:
+            merged.update({"a": 1})
+            merged.update({"a": 2})
+            merged["a"] = 3
+            assert merged["a"] == 3
 
-            del self.merged["a"]
-            assert self.merged["a"] == 2
+            del merged["a"]
+            assert merged["a"] == 2
 
-            del self.merged["a"]
-            assert self.merged["a"] == 1
+            del merged["a"]
+            assert merged["a"] == 1
 
-        it "complains if there is nothing to delete":
-            self.merged["a"] = 3
-            assert self.merged["a"] == 3
+        it "complains if there is nothing to delete", merged:
+            merged["a"] = 3
+            assert merged["a"] == 3
 
-            del self.merged["a"]
-            with self.fuzzyAssertRaisesError(KeyError, "a"):
-                self.merged["a"]
-            with self.fuzzyAssertRaisesError(KeyError, "a"):
-                del self.merged["a"]
+            del merged["a"]
+            with assertRaises(KeyError, "a"):
+                merged["a"]
+            with assertRaises(KeyError, "a"):
+                del merged["a"]
 
-            self.merged.update({"b": 1})
-            assert self.merged["b"] == 1
-            del self.merged["b"]
-            with self.fuzzyAssertRaisesError(KeyError, "b"):
-                del self.merged["b"]
+            merged.update({"b": 1})
+            assert merged["b"] == 1
+            del merged["b"]
+            with assertRaises(KeyError, "b"):
+                del merged["b"]
 
-        it "can delete from a nested dict":
-            self.merged.update({"a": 1, "b": {"c": 5}})
-            self.merged.update({"a": {"c": 4}, "b": {"c": 6, "d": 8}})
-            self.merged["a"] = {"c": 5}
+        it "can delete from a nested dict", merged:
+            merged.update({"a": 1, "b": {"c": 5}})
+            merged.update({"a": {"c": 4}, "b": {"c": 6, "d": 8}})
+            merged["a"] = {"c": 5}
 
-            values = list(self.merged.values_for("b"))
+            values = list(merged.values_for("b"))
             assert values == [({"c": 6, "d": 8}, False), ({"c": 5}, False)]
 
-            del self.merged["b"]["c"]
-            values = list(self.merged.values_for("b"))
+            del merged["b"]["c"]
+            values = list(merged.values_for("b"))
             assert values == [({"d": 8}, False), ({"c": 5}, False)]
 
-            del self.merged["b"]["c"]
-            values = list(self.merged.values_for("b"))
+            del merged["b"]["c"]
+            values = list(merged.values_for("b"))
             assert values == [({"d": 8}, False), ({}, False)]
 
-        it "can delete dot seperated values":
-            self.merged.update({"a": 1, "b": {"c": 5}})
-            self.merged.update({"a": {"c": 4}, "b": {"c": 6, "d": 8}})
-            self.merged["a"] = {"c": 5}
+        it "can delete dot seperated values", merged:
+            merged.update({"a": 1, "b": {"c": 5}})
+            merged.update({"a": {"c": 4}, "b": {"c": 6, "d": 8}})
+            merged["a"] = {"c": 5}
 
-            values = list(self.merged.values_for("b"))
+            values = list(merged.values_for("b"))
             assert values == [({"c": 6, "d": 8}, False), ({"c": 5}, False)]
 
-            del self.merged["b.c"]
-            values = list(self.merged.values_for("b"))
+            del merged["b.c"]
+            values = list(merged.values_for("b"))
             assert values == [({"d": 8}, False), ({"c": 5}, False)]
 
-            del self.merged["b.c"]
-            values = list(self.merged.values_for("b"))
+            del merged["b.c"]
+            values = list(merged.values_for("b"))
             assert values == [({"d": 8}, False), ({}, False)]
 
-        it "can delete lists":
-            self.merged.update({"a": 1, "b": {"c": 5}})
-            self.merged.update({"a": {"c": 4}, "b": {"c": 6, "d": 8}})
-            self.merged["a"] = {"c": 5}
+        it "can delete lists", merged:
+            merged.update({"a": 1, "b": {"c": 5}})
+            merged.update({"a": {"c": 4}, "b": {"c": 6, "d": 8}})
+            merged["a"] = {"c": 5}
 
-            values = list(self.merged.values_for("b"))
+            values = list(merged.values_for("b"))
             assert values == [({"c": 6, "d": 8}, False), ({"c": 5}, False)]
 
-            del self.merged[["b", "c"]]
-            values = list(self.merged.values_for("b"))
+            del merged[["b", "c"]]
+            values = list(merged.values_for("b"))
             assert values == [({"d": 8}, False), ({"c": 5}, False)]
 
-            del self.merged[["b", "c"]]
-            values = list(self.merged.values_for("b"))
+            del merged[["b", "c"]]
+            values = list(merged.values_for("b"))
             assert values == [({"d": 8}, False), ({}, False)]
 
     describe "Getting all values for a key":
-        it "finds all the values":
-            self.merged.update({"a": 1, "b": {"c": 5}})
-            self.merged.update({"a": {"c": 4}, "b": 4})
-            self.merged["a"] = {"c": 5}
-            values = list(self.merged.values_for("a"))
+        it "finds all the values", merged:
+            merged.update({"a": 1, "b": {"c": 5}})
+            merged.update({"a": {"c": 4}, "b": 4})
+            merged["a"] = {"c": 5}
+            values = list(merged.values_for("a"))
             assert values == [({"c": 5}, False), ({"c": 4}, False), (1, False)]
 
-            self.merged["a"] = 400
-            values = list(self.merged.values_for("a"))
+            merged["a"] = 400
+            values = list(merged.values_for("a"))
             assert values == [(400, False), ({"c": 5}, False), ({"c": 4}, False), (1, False)]
 
     describe "Getting keys":
         describe "Getting keys on a mergedOptions":
-            it "returns one level of keys":
-                self.merged.update({"a": {"b": {"c": 1}, "d": 5}, "t": 6, "u": {}})
-                assert sorted(self.merged.keys()) == sorted(["a", "t", "u"])
+            it "returns one level of keys", merged:
+                merged.update({"a": {"b": {"c": 1}, "d": 5}, "t": 6, "u": {}})
+                assert sorted(merged.keys()) == sorted(["a", "t", "u"])
 
-                self.merged.update({"a": 3, "e": 7})
-                assert sorted(self.merged.keys()) == sorted(["a", "t", "u", "e"])
+                merged.update({"a": 3, "e": 7})
+                assert sorted(merged.keys()) == sorted(["a", "t", "u", "e"])
 
-                self.merged["h"] = 10
-                assert sorted(self.merged.keys()) == sorted(["a", "t", "u", "e", "h"])
+                merged["h"] = 10
+                assert sorted(merged.keys()) == sorted(["a", "t", "u", "e", "h"])
 
-            it "returns one level of keys from prefix":
-                prefixed = self.merged.prefixed("a")
-                self.merged.update({"a": {"b": {"c": 1}, "d": 5}, "t": 6, "u": {}})
+            it "returns one level of keys from prefix", merged:
+                prefixed = merged.prefixed("a")
+                merged.update({"a": {"b": {"c": 1}, "d": 5}, "t": 6, "u": {}})
                 assert sorted(prefixed.keys()) == sorted(["b", "d"])
 
-                self.merged.update({"a": {"g": 6}, "e": 7})
+                merged.update({"a": {"g": 6}, "e": 7})
                 assert sorted(prefixed.keys()) == sorted(["g", "b", "d"])
 
-                self.merged["a"] = {"h": 9}
+                merged["a"] = {"h": 9}
                 assert sorted(prefixed.keys()) == sorted(["h", "g", "b", "d"])
 
-            it "returns keys one level from multi dictionary MergedOptions":
-                self.merged.update({"a": 1, "b": {"c": 9}})
-                self.merged.update({"a": {"c": 4}, "b": 4})
-                self.merged["a"] = {"c": 5, "d": 8}
-                self.merged["a"]["c"] = {"c": 5, "d": 9}
-                assert sorted(self.merged.keys()) == sorted(["a", "b"])
+            it "returns keys one level from multi dictionary MergedOptions", merged:
+                merged.update({"a": 1, "b": {"c": 9}})
+                merged.update({"a": {"c": 4}, "b": 4})
+                merged["a"] = {"c": 5, "d": 8}
+                merged["a"]["c"] = {"c": 5, "d": 9}
+                assert sorted(merged.keys()) == sorted(["a", "b"])
 
             it "returns empty if there are no keys":
                 opts = MergedOptions()
@@ -451,48 +449,46 @@ describe TestCase, "MergedOptions":
                 assert list(opts["items"].keys()) == []
 
     describe "Iteration":
-        it "just goes through the keys":
+        it "just goes through the keys", merged:
             fake_keys = mock.Mock(name="keys")
             fake_keys.side_effect = lambda: iter([1, 2, 3])
-            with mock.patch.object(self.merged, "keys", fake_keys):
-                assert list(self.merged) == [1, 2, 3]
+            with mock.patch.object(merged, "keys", fake_keys):
+                assert list(merged) == [1, 2, 3]
 
     describe "Length":
-        it "Counts the number of keys":
+        it "Counts the number of keys", merged:
             keys = []
             fake_keys = mock.Mock(name="keys")
             fake_keys.side_effect = lambda: iter(keys)
-            with mock.patch.object(self.merged, "keys", fake_keys):
-                assert len(self.merged) == 0
+            with mock.patch.object(merged, "keys", fake_keys):
+                assert len(merged) == 0
 
                 keys.append(1)
-                assert len(self.merged) == 1
+                assert len(merged) == 1
 
                 keys.extend([2, 3, 4])
-                assert len(self.merged) == 4
+                assert len(merged) == 4
 
     describe "Getting items":
-        it "combines everything into one key,value list":
-            self.merged.update({"a": 1, "b": {"c": 9}})
-            self.merged.update({"a": {"c": 4}, "b": 4})
-            self.merged["a"] = {"c": 5, "d": 8}
-            assert sorted(self.merged.items()) == sorted(
-                {"b": 4, "a": self.merged.prefixed("a")}.items()
-            )
+        it "combines everything into one key,value list", merged:
+            merged.update({"a": 1, "b": {"c": 9}})
+            merged.update({"a": {"c": 4}, "b": 4})
+            merged["a"] = {"c": 5, "d": 8}
+            assert sorted(merged.items()) == sorted({"b": 4, "a": merged.prefixed("a")}.items())
 
-            del self.merged["b"]
-            assert sorted(self.merged.items()) == (
-                sorted({"b": self.merged.prefixed("b"), "a": self.merged.prefixed("a")}.items())
+            del merged["b"]
+            assert sorted(merged.items()) == (
+                sorted({"b": merged.prefixed("b"), "a": merged.prefixed("a")}.items())
             )
-            assert sorted((k, dict(v.items())) for k, v in self.merged.items()) == sorted(
+            assert sorted((k, dict(v.items())) for k, v in merged.items()) == sorted(
                 {"b": {"c": 9}, "a": {"c": 5, "d": 8}}.items()
             )
 
-            del self.merged["a.c"]
-            assert sorted(self.merged.items()) == (
-                sorted({"b": self.merged.prefixed("b"), "a": self.merged.prefixed("a")}.items())
+            del merged["a.c"]
+            assert sorted(merged.items()) == (
+                sorted({"b": merged.prefixed("b"), "a": merged.prefixed("a")}.items())
             )
-            assert sorted((k, dict(v.items())) for k, v in self.merged.items()) == sorted(
+            assert sorted((k, dict(v.items())) for k, v in merged.items()) == sorted(
                 {"b": {"c": 9}, "a": {"c": 4, "d": 8}}.items()
             )
 
@@ -503,7 +499,7 @@ describe TestCase, "MergedOptions":
             opts = MergedOptions.using({"items": MergedOptions()})
             assert list(opts["items"].items()) == []
 
-describe TestCase, "Converters":
+describe "Converters":
     it "has a KeyValuePairs converter on MergedOptions":
         result = MergedOptions.KeyValuePairs([(["one"], "two"), (["three", "four"], "five")])
         assert dict(result.items()) == {"one": "two", "three": result.prefixed("three")}

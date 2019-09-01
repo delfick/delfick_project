@@ -1,21 +1,16 @@
 # coding: spec
 
-from option_merge.converter import Converters
-from option_merge.not_found import NotFound
-from option_merge.joiner import dot_joiner
-from option_merge.path import Path
+from delfick_project.option_merge import Converters, NotFound
+from delfick_project.option_merge.joiner import dot_joiner
+from delfick_project.option_merge.path import Path
 
-from noseOfYeti.tokeniser.support import noy_sup_setUp
-from delfick_error import DelfickErrorTestMixin
-import unittest
-import mock
+from delfick_project.errors_pytest import assertRaises
 
-
-class TestCase(unittest.TestCase, DelfickErrorTestMixin):
-    pass
+from unittest import mock
+import pytest
 
 
-describe TestCase, "Path":
+describe "Path":
     it "takes in path, configuration, converters and ignore_converters":
         path = mock.Mock(name="path")
         converters = mock.Mock(name="converters")
@@ -76,10 +71,7 @@ describe TestCase, "Path":
             assert Path(["asdf", "adsf", "1"]) == Path(["asdf", "adsf", "1"])
 
         it "converts dot_joined of paths to determine inequality":
-            with self.fuzzyAssertRaisesError(
-                AssertionError, "<Path\(asdf.adsf.1\)> == 'asdf.adsf.1'"
-            ):
-                assert Path("asdf.adsf.1") != "asdf.adsf.1"
+            assert Path("asdf.adsf.1") == "asdf.adsf.1"
 
             assert Path("asdf.adsf.2") != "asdf.adsf.1"
             assert Path(["asdf", "adsf", "3"]) != "asdf.adsf.1"
@@ -100,7 +92,7 @@ describe TestCase, "Path":
             using = mock.Mock(name="using", return_value=clone)
 
             path_obj = Path(path)
-            with mock.patch("option_merge.path.join", join):
+            with mock.patch("delfick_project.option_merge.path.join", join):
                 with mock.patch.multiple(path_obj, using=using):
                     assert path_obj + other is clone
 
@@ -124,10 +116,10 @@ describe TestCase, "Path":
             assert Path(["1", "2", "3"]).without(Path("1.2")) == Path("3")
 
         it "raises NotFound if the prefix is not in the path":
-            with self.fuzzyAssertRaisesError(NotFound):
+            with assertRaises(NotFound):
                 Path(["1", "2", "3"]).without("1.2.3.4")
 
-            with self.fuzzyAssertRaisesError(NotFound):
+            with assertRaises(NotFound):
                 Path(["1", "2", "3"]).without("5.2")
 
         it "returns the path if base is empty":
@@ -150,7 +142,7 @@ describe TestCase, "Path":
             using = mock.Mock(name="using", return_value=clone)
 
             path_obj = Path(path)
-            with mock.patch("option_merge.path.join", join):
+            with mock.patch("delfick_project.option_merge.path.join", join):
                 with mock.patch.multiple(path_obj, using=using):
                     assert path_obj.prefixed(prefix) is clone
 
@@ -296,42 +288,54 @@ describe TestCase, "Path":
             converted.post_setup.assert_called_once_with()
 
     describe "finding a converter":
-        before_each:
-            self.p1 = mock.Mock(name="p1")
-            self.converter1 = mock.Mock(name="converter1")
-            self.converter2 = mock.Mock(name="converter2")
-            self.converter3 = mock.Mock(name="converter3")
-            self.converters = Converters()
-            self.converters.append(self.converter1)
-            self.converters.append(self.converter2)
-            self.converters.append(self.converter3)
 
-            self.converters.activate()
-            self.path = Path(self.p1, converters=self.converters)
+        @pytest.fixture()
+        def convm(self):
+            class ConverterMocks:
+                converter1 = mock.Mock(name="converter1")
+                converter2 = mock.Mock(name="converter2")
+                converter3 = mock.Mock(name="converter3")
 
-        it "returns None if set to ignore_converters":
-            assert self.path.ignoring_converters().find_converter() == (None, False)
+            return ConverterMocks
 
-        it "returns the first converter that has no matches attribute":
-            assert self.path.find_converter() == (self.converter1, True)
+        @pytest.fixture()
+        def converters(self, convm):
+            converters = Converters()
+            converters.append(convm.converter1)
+            converters.append(convm.converter2)
+            converters.append(convm.converter3)
 
-        it "returns the first converter that matches the path":
-            self.converter1.matches.return_value = False
-            self.converter2.matches.return_value = True
-            assert self.path.find_converter() == (self.converter2, True)
+            converters.activate()
+            return converters
 
-            self.converter1.matches.assert_called_once_with(self.path)
-            self.converter2.matches.assert_called_once_with(self.path)
+        @pytest.fixture()
+        def path(self, converters):
+            p1 = mock.Mock(name="p1")
+            return Path(p1, converters=converters)
 
-        it "returns None if no converter matches":
-            self.converter1.matches.return_value = False
-            self.converter2.matches.return_value = False
-            self.converter3.matches.return_value = False
-            assert self.path.find_converter() == (None, False)
+        it "returns None if set to ignore_converters", path:
+            assert path.ignoring_converters().find_converter() == (None, False)
 
-            self.converter1.matches.assert_called_once_with(self.path)
-            self.converter2.matches.assert_called_once_with(self.path)
-            self.converter3.matches.assert_called_once_with(self.path)
+        it "returns the first converter that has no matches attribute", convm, path:
+            assert path.find_converter() == (convm.converter1, True)
+
+        it "returns the first converter that matches the path", convm, path:
+            convm.converter1.matches.return_value = False
+            convm.converter2.matches.return_value = True
+            assert path.find_converter() == (convm.converter2, True)
+
+            convm.converter1.matches.assert_called_once_with(path)
+            convm.converter2.matches.assert_called_once_with(path)
+
+        it "returns None if no converter matches", convm, path:
+            convm.converter1.matches.return_value = False
+            convm.converter2.matches.return_value = False
+            convm.converter3.matches.return_value = False
+            assert path.find_converter() == (None, False)
+
+            convm.converter1.matches.assert_called_once_with(path)
+            convm.converter2.matches.assert_called_once_with(path)
+            convm.converter3.matches.assert_called_once_with(path)
 
     describe "Finding converted value":
         it "returns False if there are no converters":

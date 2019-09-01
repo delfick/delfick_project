@@ -1,25 +1,14 @@
 # coding: spec
 
-from option_merge import MergedOptions
-from option_merge import helper as hp
-from option_merge.path import Path
+from delfick_project.option_merge import MergedOptions
+from delfick_project.option_merge import helper as hp
+from delfick_project.option_merge.path import Path
 
+from unittest import mock
 import itertools
 
-from noseOfYeti.tokeniser.support import noy_sup_setUp
-from delfick_error import DelfickErrorTestMixin
-import unittest
-import mock
 
-
-class TestCase(unittest.TestCase, DelfickErrorTestMixin):
-    pass
-
-
-describe TestCase, "prefixed_path_list":
-    before_each:
-        self.path = mock.Mock(name="path")
-
+describe "prefixed_path_list":
     it "returns a clone if there is no prefix":
         path = [1, 2, 3]
         cloned, joined = hp.prefixed_path_list(path)
@@ -41,7 +30,7 @@ describe TestCase, "prefixed_path_list":
         assert prefixed == [4, 5, 6, 1, 2, 3, 4]
         assert path == [1, 2, 3]
 
-describe TestCase, "prefixed_path_string":
+describe "prefixed_path_string":
     it "removes superfluous dots":
         for blah in ("blah", ".blah", "blah.", ".blah.", "..blah.", ".blah..", "..blah.."):
             assert hp.prefixed_path_string(blah) == ("blah", "blah")
@@ -59,7 +48,7 @@ describe TestCase, "prefixed_path_string":
                 "stuff.blah",
             )  #
 
-describe TestCase, "make_dict":
+describe "make_dict":
     it "returns just with first and data if no rest":
         data = mock.Mock(name="data")
         first = mock.Mock(name="first")
@@ -73,7 +62,7 @@ describe TestCase, "make_dict":
         first = mock.Mock(name="first")
         assert hp.make_dict(first, [r1, r2, r3], data) == {first: {r1: {r2: {r3: data}}}}
 
-describe TestCase, "merge_into_dict":
+describe "merge_into_dict":
     describe "with normal dictionaries":
         it "merges empty dicts into another empty dict":
             target = {}
