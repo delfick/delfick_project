@@ -1,23 +1,27 @@
 # coding: spec
 
-from input_algorithms.field_spec import (
+from delfick_project.norms import sb, dictobj, Meta, BadSpec
+
+from delfick_project.norms.field_spec import (
     FieldSpec,
     Field,
     NullableField,
     FieldSpecMixin,
     FieldSpecMetakls,
 )
-from input_algorithms.errors import BadSpec, ProgrammerError
-from input_algorithms import spec_base as sb
-from input_algorithms.dictobj import dictobj
-from input_algorithms.meta import Meta
+from delfick_project.errors_pytest import assertRaises
+from delfick_project.errors import ProgrammerError
 
-from noseOfYeti.tokeniser.support import noy_sup_setUp
-from tests.helpers import TestCase
-import mock
-import six
+from unittest import mock
+import pytest
 
-describe TestCase, "FieldSpec":
+
+@pytest.fixture()
+def meta():
+    return Meta.empty()
+
+
+describe "FieldSpec":
     describe "inheritance":
         it "works":
 
@@ -64,7 +68,7 @@ describe TestCase, "FieldSpec":
 
             class Mixin:
                 @property
-                def thing(self):
+                def thing(s):
                     return "blah"
 
             class MyKls(dictobj.Spec, Mixin):
@@ -97,7 +101,7 @@ describe TestCase, "FieldSpec":
 
             class AnotherMixin:
                 @property
-                def other(self):
+                def other(s):
                     return "meh"
 
             class MyGrandChildKls(MyChildKls, AnotherMixin):
@@ -121,7 +125,7 @@ describe TestCase, "FieldSpec":
             assert res.two == 2
             assert res.three == 3
 
-            class MyChildKls(six.with_metaclass(FieldSpecMetakls, MyKls)):
+            class MyChildKls(MyKls, metaclass=FieldSpecMetakls):
                 four = dictobj.Field(sb.boolean)
                 five = dictobj.Field(sb.dictionary_spec)
 
@@ -146,7 +150,7 @@ describe TestCase, "FieldSpec":
             assert res.two == 2
             assert res.three == 3
 
-            class MyChildKls(six.with_metaclass(FieldSpecMetakls, MyKls)):
+            class MyChildKls(MyKls, metaclass=FieldSpecMetakls):
                 four = dictobj.Field(sb.boolean)
                 five = dictobj.Field(sb.dictionary_spec)
 
@@ -183,9 +187,9 @@ describe TestCase, "FieldSpec":
             called = []
 
             class CreateKls(object):
-                def __init__(self, **kwargs):
+                def __init__(s, **kwargs):
                     called.append(kwargs)
-                    self.kwargs = kwargs
+                    s.kwargs = kwargs
 
             res = MyKls.FieldSpec(create_kls=CreateKls).normalise(
                 Meta.empty(), {"one": "1", "two": "2"}
@@ -196,70 +200,74 @@ describe TestCase, "FieldSpec":
             assert called == [{"one": "1", "two": 2}]
 
     describe "make_spec":
-        before_each:
-            self.ret = mock.Mock(name="spec")
-            self.inp = mock.Mock(name="inp")
-            self.spec = mock.NonCallableMock(name="spec")
-            self.spec.normalise.return_value = self.ret
-            self.meta = Meta({}, [])
 
-        it "handles field that is a callable to a spec":
+        @pytest.fixture()
+        def ms(self):
+            class Mocks:
+                ret = mock.Mock(name="spec")
+                inp = mock.Mock(name="inp")
+                spec = mock.NonCallableMock(name="spec")
 
-            class MyKls(dictobj):
-                fields = {"one": lambda: self.spec}
+            Mocks.spec.normalise.return_value = Mocks.ret
+            return Mocks
 
-            spec = FieldSpec(MyKls).make_spec(self.meta)
-            assert spec.normalise(self.meta, {"one": self.inp}) == {"one": self.ret}
-
-        it "handles field that is a callable to a Field":
+        it "handles field that is a callable to a spec", meta, ms:
 
             class MyKls(dictobj):
-                fields = {"one": lambda: Field(lambda: self.spec)}
+                fields = {"one": lambda: ms.spec}
 
-            spec = FieldSpec(MyKls).make_spec(self.meta)
-            assert spec.normalise(self.meta, {"one": self.inp}) == {"one": self.ret}
+            spec = FieldSpec(MyKls).make_spec(meta)
+            assert spec.normalise(meta, {"one": ms.inp}) == {"one": ms.ret}
 
-        it "handles field that is a callable with a description":
+        it "handles field that is a callable to a Field", meta, ms:
 
             class MyKls(dictobj):
-                fields = {"one": ("description", lambda: Field(lambda: self.spec))}
+                fields = {"one": lambda: Field(lambda: ms.spec)}
 
-            spec = FieldSpec(MyKls).make_spec(self.meta)
-            assert spec.normalise(self.meta, {"one": self.inp}) == {"one": self.ret}
+            spec = FieldSpec(MyKls).make_spec(meta)
+            assert spec.normalise(meta, {"one": ms.inp}) == {"one": ms.ret}
+
+        it "handles field that is a callable with a description", meta, ms:
+
+            class MyKls(dictobj):
+                fields = {"one": ("description", lambda: Field(lambda: ms.spec))}
+
+            spec = FieldSpec(MyKls).make_spec(meta)
+            assert spec.normalise(meta, {"one": ms.inp}) == {"one": ms.ret}
 
             class MyKls2(dictobj):
-                fields = {"two": ("description", lambda: self.spec)}
+                fields = {"two": ("description", lambda: ms.spec)}
 
-            spec = FieldSpec(MyKls2).make_spec(self.meta)
-            assert spec.normalise(self.meta, {"two": self.inp}) == {"two": self.ret}
+            spec = FieldSpec(MyKls2).make_spec(meta)
+            assert spec.normalise(meta, {"two": ms.inp}) == {"two": ms.ret}
 
-        it "handles a field that is not callable with a description":
-
-            class MyKls(dictobj):
-                fields = {"one": ("description", Field(lambda: self.spec))}
-
-            spec = FieldSpec(MyKls).make_spec(self.meta)
-            assert spec.normalise(self.meta, {"one": self.inp}) == {"one": self.ret}
-
-            class MyKls2(dictobj):
-                fields = {"two": ("description", self.spec)}
-
-            spec = FieldSpec(MyKls2).make_spec(self.meta)
-            assert spec.normalise(self.meta, {"two": self.inp}) == {"two": self.ret}
-
-        it "handles a field that is not callable":
+        it "handles a field that is not callable with a description", meta, ms:
 
             class MyKls(dictobj):
-                fields = {"one": Field(lambda: self.spec)}
+                fields = {"one": ("description", Field(lambda: ms.spec))}
 
-            spec = FieldSpec(MyKls).make_spec(self.meta)
-            assert spec.normalise(self.meta, {"one": self.inp}) == {"one": self.ret}
+            spec = FieldSpec(MyKls).make_spec(meta)
+            assert spec.normalise(meta, {"one": ms.inp}) == {"one": ms.ret}
 
             class MyKls2(dictobj):
-                fields = {"two": self.spec}
+                fields = {"two": ("description", ms.spec)}
 
-            spec = FieldSpec(MyKls2).make_spec(self.meta)
-            assert spec.normalise(self.meta, {"two": self.inp}) == {"two": self.ret}
+            spec = FieldSpec(MyKls2).make_spec(meta)
+            assert spec.normalise(meta, {"two": ms.inp}) == {"two": ms.ret}
+
+        it "handles a field that is not callable", meta, ms:
+
+            class MyKls(dictobj):
+                fields = {"one": Field(lambda: ms.spec)}
+
+            spec = FieldSpec(MyKls).make_spec(meta)
+            assert spec.normalise(meta, {"one": ms.inp}) == {"one": ms.ret}
+
+            class MyKls2(dictobj):
+                fields = {"two": ms.spec}
+
+            spec = FieldSpec(MyKls2).make_spec(meta)
+            assert spec.normalise(meta, {"two": ms.inp}) == {"two": ms.ret}
 
     describe "empty_normalise":
         it "just calls normalise with an empty meta":
@@ -274,7 +282,7 @@ describe TestCase, "FieldSpec":
             fakeMeta.empty.return_value = fake_empty
 
             spec = MyKls.FieldSpec()
-            with mock.patch("input_algorithms.field_spec.Meta", fakeMeta):
+            with mock.patch("delfick_project.norms.field_spec.Meta", fakeMeta):
                 with mock.patch.object(spec, "normalise", fake_normalise):
                     assert spec.empty_normalise(one="one", two="two") is res
 
@@ -287,7 +295,7 @@ describe TestCase, "FieldSpec":
                 pass
 
             spec = FieldSpec(MyKls)
-            with self.fuzzyAssertRaisesError(BadSpec, "No fields on the class!", kls=MyKls):
+            with assertRaises(BadSpec, "No fields on the class!", kls=MyKls):
                 spec.normalise(Meta({}, []), {})
 
         it "complains if any field has no spec":
@@ -304,7 +312,7 @@ describe TestCase, "FieldSpec":
             error2 = BadSpec("No spec found for option", meta=meta.at("three"), option="three")
 
             spec = FieldSpec(MyKls)
-            with self.fuzzyAssertRaisesError(BadSpec, _errors=[error1, error2]):
+            with assertRaises(BadSpec, _errors=[error1, error2]):
                 spec.normalise(Meta({}, []), {})
 
         it "handles a class with empty fields":
@@ -316,7 +324,7 @@ describe TestCase, "FieldSpec":
             instance = spec.normalise(Meta({}, []), {})
             assert type(instance) == MyKls
 
-describe TestCase, "FieldSpecMixin":
+describe "FieldSpecMixin":
     it "provides FieldSpec which passes the class to an instance of FieldSpec":
 
         class MyKls(FieldSpecMixin):
@@ -328,12 +336,12 @@ describe TestCase, "FieldSpecMixin":
         assert spec.kls is MyKls
         assert spec.formatter is formatter
 
-describe TestCase, "FieldSpecMetaKls":
+describe "FieldSpecMetaKls":
     it "convert fields into a fields dictionary":
-        inp_field1 = mock.Mock(name="inp_field1", is_input_algorithms_field=True, help="")
-        inp_field2 = mock.Mock(name="inp_field2", is_input_algorithms_field=True, help="")
+        inp_field1 = mock.Mock(name="inp_field1", is_dictobj_field=True, help="")
+        inp_field2 = mock.Mock(name="inp_field2", is_dictobj_field=True, help="")
 
-        class MyKls(six.with_metaclass(FieldSpecMetakls)):
+        class MyKls(metaclass=FieldSpecMetakls):
             field1 = inp_field1
             field2 = inp_field2
 
@@ -344,10 +352,10 @@ describe TestCase, "FieldSpecMetaKls":
     it "convert fields into a fields dictionary with tuple of help and field":
         help1 = mock.Mock(name="help1")
         help2 = mock.Mock(name="help2")
-        inp_field1 = mock.Mock(name="inp_field1", is_input_algorithms_field=True, help=help1)
-        inp_field2 = mock.Mock(name="inp_field2", is_input_algorithms_field=True, help=help2)
+        inp_field1 = mock.Mock(name="inp_field1", is_dictobj_field=True, help=help1)
+        inp_field2 = mock.Mock(name="inp_field2", is_dictobj_field=True, help=help2)
 
-        class MyKls(six.with_metaclass(FieldSpecMetakls)):
+        class MyKls(metaclass=FieldSpecMetakls):
             field1 = inp_field1
             field2 = inp_field2
 
@@ -357,12 +365,12 @@ describe TestCase, "FieldSpecMetaKls":
 
     it "Adds FieldSpecMixin as a baseclass":
 
-        class MyKls(six.with_metaclass(FieldSpecMetakls)):
+        class MyKls(metaclass=FieldSpecMetakls):
             pass
 
         assert hasattr(MyKls, "FieldSpec")
 
-describe TestCase, "NullableField":
+describe "NullableField":
     it "is Field but with nullable=True":
         spec = mock.Mock(name="spec")
         field = NullableField(spec, default=False)
@@ -377,14 +385,14 @@ describe TestCase, "NullableField":
         assert field.nullable == True
         assert field.default == False
 
-describe TestCase, "Field":
+describe "Field":
     it "references mixin and metaclass":
         assert Field.mixin is FieldSpecMixin
         assert Field.metaclass is FieldSpecMetakls
 
-    it "has is_input_algorithms_field set to True":
-        assert Field.is_input_algorithms_field == True
-        assert Field(lambda: 1).is_input_algorithms_field == True
+    it "has is_dictobj_field set to True":
+        assert Field.is_dictobj_field == True
+        assert Field(lambda: 1).is_dictobj_field == True
 
     it "takes in several things like spec, help, formatted, wrapper and default":
         spec = mock.Mock(name="spec")
@@ -419,13 +427,11 @@ describe TestCase, "Field":
         assert field.formatted is True
 
     it "complains if we have after_format, but formatted is False":
-        with self.fuzzyAssertRaisesError(
-            ProgrammerError, "after_format was specified when formatted was false"
-        ):
+        with assertRaises(ProgrammerError, "after_format was specified when formatted was false"):
             field = Field(sb.any_spec, formatted=False, after_format=sb.integer_spec)
 
     it "complains if neither spec or format_into is specified":
-        with self.fuzzyAssertRaisesError(
+        with assertRaises(
             ProgrammerError, "Declaring a Field must give a spec, otherwise provide format_into"
         ):
             field = Field()
@@ -494,83 +500,82 @@ describe TestCase, "Field":
             assert clone.after_format is after_format2
 
     describe "make_spec":
-        before_each:
-            self.meta = Meta({}, [])
-            self.formatter = mock.Mock(name="formatter")
 
-        it "calls the spec if callable":
+        @pytest.fixture()
+        def formatter(self):
+            return mock.Mock(name="formatter")
+
+        it "calls the spec if callable", meta, formatter:
             instance = mock.Mock(name="instance")
             spec = mock.Mock(name="spec", return_value=instance)
-            assert Field(spec).make_spec(self.meta, self.formatter) is instance
+            assert Field(spec).make_spec(meta, formatter) is instance
 
-        it "wraps spec in a defaulted if default is specified":
+        it "wraps spec in a defaulted if default is specified", meta, formatter:
             ret = mock.Mock(name="ret")
             inp = mock.Mock(name="inp")
             dflt = mock.Mock(name="dflt")
             instance = mock.Mock(name="instance")
             instance.normalise.return_value = ret
             spec = mock.Mock(name="spec", return_value=instance)
-            spec = Field(spec, default=dflt).make_spec(self.meta, self.formatter)
+            spec = Field(spec, default=dflt).make_spec(meta, formatter)
 
-            assert spec.normalise(self.meta, sb.NotSpecified) is dflt
-            assert spec.normalise(self.meta, inp) is ret
+            assert spec.normalise(meta, sb.NotSpecified) is dflt
+            assert spec.normalise(meta, inp) is ret
 
-        it "wraps default in a formatted if default and formatted are defined":
+        it "wraps default in a formatted if default and formatted are defined", meta:
             ret = mock.Mock(name="ret")
             inp = mock.Mock(name="inp")
             dflt = mock.Mock(name="dflt")
 
             class Formatter(object):
-                def __init__(self, options, path, value):
-                    self.value = value
+                def __init__(s, options, path, value):
+                    s.value = value
 
-                def format(self):
-                    return ("formatted", self.value)
+                def format(s):
+                    return ("formatted", s.value)
 
             instance = mock.Mock(name="instance")
             instance.normalise.return_value = ret
             spec = mock.Mock(name="spec", return_value=instance)
-            spec = Field(spec, default=dflt, formatted=True).make_spec(self.meta, Formatter)
+            spec = Field(spec, default=dflt, formatted=True).make_spec(meta, Formatter)
 
-            assert spec.normalise(self.meta, sb.NotSpecified) == ("formatted", dflt)
-            assert spec.normalise(self.meta, inp) == ("formatted", ret)
+            assert spec.normalise(meta, sb.NotSpecified) == ("formatted", dflt)
+            assert spec.normalise(meta, inp) == ("formatted", ret)
 
-        it "wraps everything in wrapper if it's defined":
+        it "wraps everything in wrapper if it's defined", meta, formatter:
             spec = Field(sb.string_or_int_as_string_spec, wrapper=sb.listof).make_spec(
-                self.meta, self.formatter
+                meta, formatter
             )
-            assert spec.normalise(self.meta, 1) == ["1"]
+            assert spec.normalise(meta, 1) == ["1"]
 
         describe "nullable=True":
-            it "defaults to None":
-                spec = NullableField(sb.string_spec).make_spec(self.meta, self.formatter)
-                assert spec.normalise(self.meta, sb.NotSpecified) == None
+            it "defaults to None", meta, formatter:
+                spec = NullableField(sb.string_spec).make_spec(meta, formatter)
+                assert spec.normalise(meta, sb.NotSpecified) == None
 
-            it "allows None as a value":
+            it "allows None as a value", meta, formatter:
 
                 class i_hate_none_spec(sb.Spec):
-                    def normalise_filled(self, meta, val):
+                    def normalise_filled(s, meta, val):
                         if val is None:
                             raise Exception("I hate None", got=val, meta=meta)
                         return None
 
-                spec = NullableField(i_hate_none_spec).make_spec(self.meta, self.formatter)
-                assert spec.normalise(self.meta, sb.NotSpecified) == None
+                spec = NullableField(i_hate_none_spec).make_spec(meta, formatter)
+                assert spec.normalise(meta, sb.NotSpecified) == None
 
-            it "calls the spec for you":
-                spec = NullableField(sb.integer_spec).make_spec(self.meta, self.formatter)
-                assert spec.normalise(self.meta, "1") == 1
+            it "calls the spec for you", meta, formatter:
+                spec = NullableField(sb.integer_spec).make_spec(meta, formatter)
+                assert spec.normalise(meta, "1") == 1
 
-            it "still respects default":
+            it "still respects default", meta, formatter:
                 dflt = mock.Mock(name="dflt")
-                spec = NullableField(sb.string_spec, default=dflt).make_spec(
-                    self.meta, self.formatter
-                )
-                assert spec.normalise(self.meta, sb.NotSpecified) == dflt
+                spec = NullableField(sb.string_spec, default=dflt).make_spec(meta, formatter)
+                assert spec.normalise(meta, sb.NotSpecified) == dflt
 
-            it "doesn't get formatted if not specified or specified as None":
+            it "doesn't get formatted if not specified or specified as None", meta:
                 formatter = mock.NonCallableMock(name="formatter", spec=[])
-                spec = NullableField(format_into=sb.integer_spec).make_spec(self.meta, formatter)
+                spec = NullableField(format_into=sb.integer_spec).make_spec(meta, formatter)
 
-                assert spec.normalise(self.meta, sb.NotSpecified) == None
-                assert spec.normalise(self.meta, None) == None
+                assert spec.normalise(meta, sb.NotSpecified) == None
+                assert spec.normalise(meta, None) == None

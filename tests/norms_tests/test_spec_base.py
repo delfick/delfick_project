@@ -1,23 +1,33 @@
 # coding: spec
 
-from input_algorithms.spec_base import Spec, NotSpecified, pass_through_spec, always_same_spec
-from input_algorithms.errors import BadSpec, BadSpecValue, BadDirectory, BadFilename
-from input_algorithms import spec_base as sb
-from input_algorithms.meta import Meta
+from delfick_project.norms import BadSpec, BadSpecValue, BadDirectory, BadFilename
+from delfick_project.norms import sb, Meta
 
-from tests.helpers import TestCase
+from delfick_project.errors_pytest import assertRaises
 
-from noseOfYeti.tokeniser.support import noy_sup_setUp
 from namedlist import namedlist
-import mock
+from unittest import mock
+import pytest
+import uuid
 
-describe TestCase, "Spec":
+
+@pytest.fixture()
+def meta():
+    return Meta.empty()
+
+
+@pytest.fixture()
+def meta_mock():
+    return mock.Mock(name="meta", spec_set=Meta)
+
+
+describe "Spec":
     it "takes in positional arguments and keyword arguments":
         m1 = mock.Mock("m1")
         m2 = mock.Mock("m2")
         m3 = mock.Mock("m3")
         m4 = mock.Mock("m4")
-        spec = Spec(m1, m2, a=m3, b=m4)
+        spec = sb.Spec(m1, m2, a=m3, b=m4)
         assert spec.pargs == (m1, m2)
         assert spec.kwargs == dict(a=m3, b=m4)
 
@@ -28,7 +38,7 @@ describe TestCase, "Spec":
         m3 = mock.Mock("m3")
         m4 = mock.Mock("m4")
 
-        class Specd(Spec):
+        class Specd(sb.Spec):
             def setup(sp, *pargs, **kwargs):
                 assert pargs == (m1, m2)
                 assert sp.pargs == (m1, m2)
@@ -41,88 +51,78 @@ describe TestCase, "Spec":
         assert called == [spec]
 
     describe "fake_filled":
-        before_each:
-            self.meta = mock.Mock(name="meta", spec=Meta)
-
-        it "returns self.fake if it exists":
+        it "returns self.fake if it exists", meta:
             res = mock.Mock(name="res")
             called = []
             with_non_defaulted_value = mock.Mock(name="with_non_defaulted_value")
 
-            class Specd(Spec):
-                def fake(specd, meta, with_non_defaulted):
-                    assert meta is self.meta
+            class Specd(sb.Spec):
+                def fake(specd, m, with_non_defaulted):
+                    assert m is meta
                     assert with_non_defaulted is with_non_defaulted_value
                     called.append(1)
                     return res
 
-            assert (
-                Specd().fake_filled(self.meta, with_non_defaulted=with_non_defaulted_value)
-            ) is res
+            assert (Specd().fake_filled(meta, with_non_defaulted=with_non_defaulted_value)) is res
             assert called == [1]
 
-        it "returns default if there is no fake defined":
+        it "returns default if there is no fake defined", meta:
             res = mock.Mock(name="res")
             called = []
             with_non_defaulted_value = mock.Mock(name="with_non_defaulted_value")
 
-            class Specd(Spec):
-                def default(specd, meta):
-                    assert meta is self.meta
+            class Specd(sb.Spec):
+                def default(specd, m):
+                    assert m is meta
                     called.append(1)
                     return res
 
-            assert (
-                Specd().fake_filled(self.meta, with_non_defaulted=with_non_defaulted_value)
-            ) is res
+            assert (Specd().fake_filled(meta, with_non_defaulted=with_non_defaulted_value)) is res
             assert called == [1]
 
-        it "returns NotSpecified if no fake or default specified":
+        it "returns sb.NotSpecified if no fake or default specified", meta:
             with_non_defaulted_value = mock.Mock(name="with_non_defaulted_value")
             assert (
-                Spec().fake_filled(self.meta, with_non_defaulted=with_non_defaulted_value)
-            ) is NotSpecified
+                sb.Spec().fake_filled(meta, with_non_defaulted=with_non_defaulted_value)
+            ) is sb.NotSpecified
 
     describe "normalise":
         describe "When normalise_either is defined":
-            it "uses it's value if it returns a non NotSpecified value":
+            it "uses it's value if it returns a non sb.NotSpecified value", meta:
                 val = mock.Mock(name="val")
-                meta = mock.Mock(name="meta")
                 result = mock.Mock(name="result")
                 normalise_either = mock.Mock(name="normalise_either", return_value=result)
 
-                Specd = type("Specd", (Spec,), {"normalise_either": normalise_either})
+                Specd = type("Specd", (sb.Spec,), {"normalise_either": normalise_either})
                 assert Specd().normalise(meta, val) is result
                 normalise_either.assert_called_once_with(meta, val)
 
-        describe "When normalise_either returns NotSpecified":
+        describe "When normalise_either returns sb.NotSpecified":
 
-            it "uses normalise_filled if the value is not NotSpecified":
+            it "uses normalise_filled if the value is not sb.NotSpecified", meta:
                 val = mock.Mock(name="val")
-                meta = mock.Mock(name="meta")
                 result = mock.Mock(name="result")
-                normalise_either = mock.Mock(name="normalise_either", return_value=NotSpecified)
+                normalise_either = mock.Mock(name="normalise_either", return_value=sb.NotSpecified)
                 normalise_filled = mock.Mock(name="normalise_either", return_value=result)
 
                 Specd = type(
                     "Specd",
-                    (Spec,),
+                    (sb.Spec,),
                     {"normalise_either": normalise_either, "normalise_filled": normalise_filled},
                 )
                 assert Specd().normalise(meta, val) is result
                 normalise_either.assert_called_once_with(meta, val)
                 normalise_filled.assert_called_once_with(meta, val)
 
-            it "uses normalise_empty if val is NotSpecified":
-                val = NotSpecified
-                meta = mock.Mock(name="meta")
+            it "uses normalise_empty if val is sb.NotSpecified", meta:
+                val = sb.NotSpecified
                 result = mock.Mock(name="result")
-                normalise_either = mock.Mock(name="normalise_either", return_value=NotSpecified)
+                normalise_either = mock.Mock(name="normalise_either", return_value=sb.NotSpecified)
                 normalise_empty = mock.Mock(name="normalise_empty", return_value=result)
 
                 Specd = type(
                     "Specd",
-                    (Spec,),
+                    (sb.Spec,),
                     {"normalise_either": normalise_either, "normalise_empty": normalise_empty},
                 )
                 assert Specd().normalise(meta, val) is result
@@ -130,76 +130,66 @@ describe TestCase, "Spec":
                 normalise_empty.assert_called_once_with(meta)
 
         describe "When no normalise_either":
-            describe "When value is NotSpecified":
-                it "Uses normalise_empty if defined":
-                    val = NotSpecified
-                    meta = mock.Mock(name="meta")
+            describe "When value is sb.NotSpecified":
+                it "Uses normalise_empty if defined", meta:
+                    val = sb.NotSpecified
                     result = mock.Mock(name="result")
                     normalise_empty = mock.Mock(name="normalise_empty", return_value=result)
 
-                    Specd = type("Specd", (Spec,), {"normalise_empty": normalise_empty})
+                    Specd = type("Specd", (sb.Spec,), {"normalise_empty": normalise_empty})
                     assert Specd().normalise(meta, val) is result
                     normalise_empty.assert_called_once_with(meta)
 
-                it "uses default if defined and no normalise_empty":
-                    val = NotSpecified
-                    meta = mock.Mock(name="meta")
+                it "uses default if defined and no normalise_empty", meta:
+                    val = sb.NotSpecified
                     default = mock.Mock(name="default")
                     default_method = mock.Mock(name="default_method", return_value=default)
 
-                    Specd = type("Specd", (Spec,), {"default": default_method})
+                    Specd = type("Specd", (sb.Spec,), {"default": default_method})
                     assert Specd().normalise(meta, val) is default
                     default_method.assert_called_once_with(meta)
 
-                it "returns NotSpecified otherwise":
-                    val = NotSpecified
-                    meta = mock.Mock(name="meta")
-                    Specd = type("Specd", (Spec,), {})
-                    assert Specd().normalise(meta, val) is NotSpecified
+                it "returns sb.NotSpecified otherwise", meta:
+                    val = sb.NotSpecified
+                    Specd = type("Specd", (sb.Spec,), {})
+                    assert Specd().normalise(meta, val) is sb.NotSpecified
 
-            describe "When value is not NotSpecified":
-                it "Uses normalise_filled if defined":
+            describe "When value is not sb.NotSpecified":
+                it "Uses normalise_filled if defined", meta:
                     val = mock.Mock(name="val")
-                    meta = mock.Mock(name="meta")
                     result = mock.Mock(name="result")
                     normalise_filled = mock.Mock(name="normalise_filled", return_value=result)
 
-                    Specd = type("Specd", (Spec,), {"normalise_filled": normalise_filled})
+                    Specd = type("Specd", (sb.Spec,), {"normalise_filled": normalise_filled})
                     assert Specd().normalise(meta, val) is result
                     normalise_filled.assert_called_once_with(meta, val)
 
-                it "complains if no normalise_filled":
+                it "complains if no normalise_filled", meta:
                     val = mock.Mock(name="val")
-                    meta = mock.Mock(name="meta")
-                    Specd = type("Specd", (Spec,), {})
-                    with self.fuzzyAssertRaisesError(
+                    Specd = type("Specd", (sb.Spec,), {})
+                    with assertRaises(
                         BadSpec, "Spec doesn't know how to deal with this value", meta=meta, val=val
                     ):
                         Specd().normalise(meta, val)
 
-describe TestCase, "pass_through_spec":
-    it "just returns whatever it is given":
+describe "sb.pass_through_spec":
+    it "just returns whatever it is given", meta:
         val = mock.Mock(name="val")
-        meta = mock.Mock(name="meta")
 
-        spec = pass_through_spec()
+        spec = sb.pass_through_spec()
         assert spec.normalise(meta, val) is val
-        assert spec.normalise(meta, NotSpecified) is NotSpecified
+        assert spec.normalise(meta, sb.NotSpecified) is sb.NotSpecified
 
-describe TestCase, "dictionary specs":
+describe "dictionary specs":
     __only_run_tests_in_children__ = True
 
     def make_spec(self):
         raise NotImplementedError()
 
-    before_each:
-        self.meta = mock.Mock(name="meta")
+    it "has a default value of an empty dictionary", meta:
+        assert self.make_spec().default(meta) == {}
 
-    it "has a default value of an empty dictionary":
-        assert self.make_spec().default(self.meta) == {}
-
-    it "complains if the value being normalised is not a dict":
-        meta = mock.Mock(name="meta")
+    it "complains if the value being normalised is not a dict", meta:
         for opt in (
             None,
             0,
@@ -213,13 +203,10 @@ describe TestCase, "dictionary specs":
             "asdf",
             type("blah", (object,), {})(),
         ):
-            with self.fuzzyAssertRaisesError(
-                BadSpecValue, "Expected a dictionary", meta=meta, got=type(opt)
-            ):
+            with assertRaises(BadSpecValue, "Expected a dictionary", meta=meta, got=type(opt)):
                 self.make_spec().normalise(meta, opt)
 
-    it "works with a dict":
-        meta = mock.Mock(name="meta")
+    it "works with a dict", meta:
         dictoptions = {"a": 1, "b": 2}
         assert self.make_spec().normalise(meta, dictoptions) == dictoptions
 
@@ -228,9 +215,9 @@ describe TestCase, "dictionary specs":
 
     describe "dictof":
 
-        def make_spec(self, name_spec=NotSpecified, value_spec=NotSpecified, nested=False):
-            name_spec = pass_through_spec() if name_spec is NotSpecified else name_spec
-            value_spec = pass_through_spec() if value_spec is NotSpecified else value_spec
+        def make_spec(self, name_spec=sb.NotSpecified, value_spec=sb.NotSpecified, nested=False):
+            name_spec = sb.pass_through_spec() if name_spec is sb.NotSpecified else name_spec
+            value_spec = sb.pass_through_spec() if value_spec is sb.NotSpecified else value_spec
             return sb.dictof(name_spec, value_spec, nested=nested)
 
         it "takes in a name_spec and a value_spec":
@@ -241,8 +228,7 @@ describe TestCase, "dictionary specs":
             assert do.value_spec == value_spec
             assert do.nested == False
 
-        it "complains if a key doesn't match the name_spec":
-            meta = mock.Mock(name="meta")
+        it "complains if a key doesn't match the name_spec", meta_mock:
             at_one = mock.Mock(name="at_one")
             at_two = mock.Mock(name="at_two")
             at_three = mock.Mock(name="at_three")
@@ -257,7 +243,7 @@ describe TestCase, "dictionary specs":
                 else:
                     assert False, "Unexpected value into at: {0}".format(val)
 
-            meta.at.side_effect = at
+            meta_mock.at.side_effect = at
 
             name_spec = mock.Mock(name="name_spec")
             error_one = BadSpecValue("one")
@@ -274,13 +260,10 @@ describe TestCase, "dictionary specs":
             name_spec.normalise.side_effect = normalise
 
             spec = self.make_spec(name_spec=name_spec)
-            with self.fuzzyAssertRaisesError(
-                BadSpecValue, meta=meta, _errors=[error_one, error_three]
-            ):
-                spec.normalise(meta, {"one": 1, "two": 2, "three": 3})
+            with assertRaises(BadSpecValue, meta=meta_mock, _errors=[error_one, error_three]):
+                spec.normalise(meta_mock, {"one": 1, "two": 2, "three": 3})
 
-        it "complains if a value doesn't match the value_spec":
-            meta = mock.Mock(name="meta")
+        it "complains if a value doesn't match the value_spec", meta:
             value_spec = mock.Mock(name="value_spec")
             error_two = BadSpecValue("two")
             error_four = BadSpecValue("four")
@@ -296,32 +279,33 @@ describe TestCase, "dictionary specs":
             value_spec.normalise.side_effect = normalise
 
             spec = self.make_spec(value_spec=value_spec)
-            with self.fuzzyAssertRaisesError(
-                BadSpecValue, meta=meta, _errors=[error_two, error_four]
-            ):
+            with assertRaises(BadSpecValue, meta=meta, _errors=[error_two, error_four]):
                 spec.normalise(meta, {"one": 1, "two": 2, "three": 3, "four": 4})
 
-        it "can worked on nested values":
-            meta = mock.Mock(name="meta")
+        it "can worked on nested values", meta:
             val = {"one": {"two": "3"}, "four": "4", "five": 5}
             spec = self.make_spec(value_spec=sb.integer_spec(), nested=True)
             assert spec.normalise(meta, val) == {"one": {"two": 3}, "four": 4, "five": 5}
 
-describe TestCase, "tupleof":
-    before_each:
-        self.meta = mock.Mock(name="meta", spec_set=Meta)
-        self.spec = pass_through_spec()
-        self.to = sb.tupleof(self.spec)
+describe "tupleof":
+
+    @pytest.fixture()
+    def spec(self):
+        return sb.pass_through_spec()
+
+    @pytest.fixture()
+    def to(self, spec):
+        return sb.tupleof(spec)
 
     it "takes in a spec":
         spec = mock.Mock(name="spec")
         lo = sb.tupleof(spec)
         assert lo.spec == spec
 
-    it "has a default value of an empty tupe":
-        assert self.to.default(self.meta) == ()
+    it "has a default value of an empty tupe", meta, to:
+        assert to.default(meta) == ()
 
-    it "turns the value into a tuple if not already a list":
+    it "turns the value into a tuple if not already a list", meta, to:
         for opt in (
             0,
             1,
@@ -334,17 +318,16 @@ describe TestCase, "tupleof":
             "asdf",
             type("blah", (object,), {})(),
         ):
-            assert self.to.normalise(self.meta, opt) == (opt,)
+            assert to.normalise(meta, opt) == (opt,)
 
-    it "turns lists into tuples of those items":
-        assert self.to.normalise(self.meta, [1, 2, 3]) == (1, 2, 3)
+    it "turns lists into tuples of those items", meta, to:
+        assert to.normalise(meta, [1, 2, 3]) == (1, 2, 3)
 
-    it "doesn't turn a tuple into a tuple of itself":
-        assert self.to.normalise(self.meta, ()) == ()
-        assert self.to.normalise(self.meta, (1, 2)) == (1, 2)
+    it "doesn't turn a tuple into a tuple of itself", meta, to:
+        assert to.normalise(meta, ()) == ()
+        assert to.normalise(meta, (1, 2)) == (1, 2)
 
-    it "complains about values that don't match the spec":
-        meta = mock.Mock(name="meta")
+    it "complains about values that don't match the spec", meta, to:
         spec = mock.Mock(name="spec")
         error_two = BadSpecValue("two")
         error_four = BadSpecValue("four")
@@ -359,15 +342,19 @@ describe TestCase, "tupleof":
 
         spec.normalise.side_effect = normalise
 
-        self.to.spec = spec
-        with self.fuzzyAssertRaisesError(BadSpecValue, meta=meta, _errors=[error_two, error_four]):
-            self.to.normalise(meta, [1, 2, 3, 4])
+        to.spec = spec
+        with assertRaises(BadSpecValue, meta=meta, _errors=[error_two, error_four]):
+            to.normalise(meta, [1, 2, 3, 4])
 
-describe TestCase, "listof":
-    before_each:
-        self.meta = mock.Mock(name="meta", spec_set=Meta)
-        self.spec = pass_through_spec()
-        self.lo = sb.listof(self.spec)
+describe "listof":
+
+    @pytest.fixture()
+    def spec(self):
+        return sb.pass_through_spec()
+
+    @pytest.fixture()
+    def lo(self, spec):
+        return sb.listof(spec)
 
     it "takes in a spec and possible expect":
         spec = mock.Mock(name="spec")
@@ -378,12 +365,12 @@ describe TestCase, "listof":
 
         lo = sb.listof(spec)
         assert lo.spec == spec
-        assert lo.expect == NotSpecified
+        assert lo.expect == sb.NotSpecified
 
-    it "has a default value of an empty list":
-        assert self.lo.default(self.meta) == []
+    it "has a default value of an empty list", meta, lo:
+        assert lo.default(meta) == []
 
-    it "turns the value into a list if not already a list":
+    it "turns the value into a list if not already a list", meta, lo:
         for opt in (
             0,
             1,
@@ -396,27 +383,27 @@ describe TestCase, "listof":
             "asdf",
             type("blah", (object,), {})(),
         ):
-            assert self.lo.normalise(self.meta, opt) == [opt]
+            assert lo.normalise(meta, opt) == [opt]
 
-    it "doesn't turn a list into a list of itself":
-        assert self.lo.normalise(self.meta, []) == []
-        assert self.lo.normalise(self.meta, [1, 2]) == [1, 2]
+    it "doesn't turn a list into a list of itself", meta, lo:
+        assert lo.normalise(meta, []) == []
+        assert lo.normalise(meta, [1, 2]) == [1, 2]
 
-    it "returns the value if already the type specified by expect":
+    it "returns the value if already the type specified by expect", meta, spec:
 
         class Value(object):
             pass
 
         val = Value()
-        assert sb.listof(self.spec, expect=Value).normalise(self.meta, val) == [val]
+        assert sb.listof(spec, expect=Value).normalise(meta, val) == [val]
 
-    it "only normalises values not already the expected type":
+    it "only normalises values not already the expected type", meta_mock:
 
         class Value(object):
             pass
 
         val_same = Value()
-        spec = always_same_spec(val_same)
+        spec = sb.always_same_spec(val_same)
         proxied_spec = mock.Mock(name="spec", spec_set=["normalise"])
         proxied_spec.normalise.side_effect = spec.normalise
 
@@ -431,12 +418,12 @@ describe TestCase, "listof":
             else:
                 assert False, "Unexpected value into indexed_at: {0}".format(val)
 
-        self.meta.indexed_at.side_effect = indexed_at
+        meta_mock.indexed_at.side_effect = indexed_at
 
         val1 = Value()
         val2 = Value()
         result = sb.listof(proxied_spec, expect=Value).normalise(
-            self.meta, [val1, "stuff", val2, "blah"]
+            meta_mock, [val1, "stuff", val2, "blah"]
         )
         assert proxied_spec.normalise.mock_calls == [
             mock.call(indexed_one, "stuff"),
@@ -444,8 +431,7 @@ describe TestCase, "listof":
         ]
         assert result == [val1, val_same, val2, val_same]
 
-    it "complains about values that don't match the spec":
-        meta = mock.Mock(name="meta")
+    it "complains about values that don't match the spec", meta, lo:
         spec = mock.Mock(name="spec")
         error_two = BadSpecValue("two")
         error_four = BadSpecValue("four")
@@ -460,11 +446,11 @@ describe TestCase, "listof":
 
         spec.normalise.side_effect = normalise
 
-        self.lo.spec = spec
-        with self.fuzzyAssertRaisesError(BadSpecValue, meta=meta, _errors=[error_two, error_four]):
-            self.lo.normalise(meta, [1, 2, 3, 4])
+        lo.spec = spec
+        with assertRaises(BadSpecValue, meta=meta, _errors=[error_two, error_four]):
+            lo.normalise(meta, [1, 2, 3, 4])
 
-    it "complains about values that aren't instances of expect":
+    it "complains about values that aren't instances of expect", meta_mock, lo:
         spec = mock.Mock(name="spec")
         meta_indexed_0 = mock.Mock(name="meta_indexed_0")
         meta_indexed_1 = mock.Mock(name="meta_indexed_1")
@@ -483,16 +469,16 @@ describe TestCase, "listof":
             else:
                 assert False, "Don't expect indexed_at with value {0}".format(val)
 
-        self.meta.indexed_at.side_effect = indexed_at
+        meta_mock.indexed_at.side_effect = indexed_at
 
         class Value(object):
             pass
 
         class Other(object):
-            def __eq__(self, other):
+            def __eq__(s, other):
                 return False
 
-            def __lt__(self, other):
+            def __lt__(s, other):
                 return False
 
         other_2 = Other()
@@ -520,17 +506,16 @@ describe TestCase, "listof":
 
         spec.normalise.side_effect = normalise
 
-        self.lo.spec = spec
-        self.lo.expect = Value
-        with self.fuzzyAssertRaisesError(
-            BadSpecValue, meta=self.meta, _errors=[error_two, error_four]
-        ):
-            self.lo.normalise(self.meta, [1, 2, 3, 4])
+        lo.spec = spec
+        lo.expect = Value
+        with assertRaises(BadSpecValue, meta=meta_mock, _errors=[error_two, error_four]):
+            lo.normalise(meta_mock, [1, 2, 3, 4])
 
-describe TestCase, "set_options":
-    before_each:
-        self.meta = mock.Mock(name="meta", spec_set=Meta)
-        self.so = sb.set_options()
+describe "set_options":
+
+    @pytest.fixture()
+    def so(self):
+        return sb.set_options()
 
     it "takes in the options":
         m1 = mock.Mock("m1")
@@ -538,11 +523,10 @@ describe TestCase, "set_options":
         spec = sb.set_options(a=m1, b=m2)
         assert spec.options == dict(a=m1, b=m2)
 
-    it "defaults to an empty dictionary":
-        assert self.so.default(self.meta) == {}
+    it "defaults to an empty dictionary", meta, so:
+        assert so.default(meta) == {}
 
-    it "complains if the value being normalised is not a dict":
-        meta = mock.Mock(name="meta")
+    it "complains if the value being normalised is not a dict", meta, so:
         for opt in (
             0,
             1,
@@ -555,23 +539,20 @@ describe TestCase, "set_options":
             "asdf",
             type("blah", (object,), {})(),
         ):
-            with self.fuzzyAssertRaisesError(
-                BadSpecValue, "Expected a dictionary", meta=meta, got=type(opt)
-            ):
-                self.so.normalise(meta, opt)
+            with assertRaises(BadSpecValue, "Expected a dictionary", meta=meta, got=type(opt)):
+                so.normalise(meta, opt)
 
-    it "Ignores options that aren't specified":
-        meta = mock.Mock(name="meta")
+    it "Ignores options that aren't specified", meta, so:
         dictoptions = {"a": "1", "b": "2"}
-        assert self.so.normalise(meta, dictoptions) == {}
+        assert so.normalise(meta, dictoptions) == {}
 
-        self.so.options = {"a": sb.string_spec()}
-        assert self.so.normalise(meta, dictoptions) == {"a": "1"}
+        so.options = {"a": sb.string_spec()}
+        assert so.normalise(meta, dictoptions) == {"a": "1"}
 
-        self.so.options = {"a": sb.string_spec(), "b": sb.string_spec()}
-        assert self.so.normalise(meta, dictoptions) == {"a": "1", "b": "2"}
+        so.options = {"a": sb.string_spec(), "b": sb.string_spec()}
+        assert so.normalise(meta, dictoptions) == {"a": "1", "b": "2"}
 
-    it "checks the value of our known options":
+    it "checks the value of our known options", meta, so:
         one_spec_result = mock.Mock(name="one_spec_result")
         one_spec = mock.Mock(name="one_spec", spec_set=["normalise"])
         one_spec.normalise.return_value = one_spec_result
@@ -580,13 +561,13 @@ describe TestCase, "set_options":
         two_spec = mock.Mock(name="two_spec", spec_set=["normalise"])
         two_spec.normalise.return_value = two_spec_result
 
-        self.so.options = {"one": one_spec, "two": two_spec}
-        assert self.so.normalise(self.meta, {"one": 1, "two": 2}) == {
+        so.options = {"one": one_spec, "two": two_spec}
+        assert so.normalise(meta, {"one": 1, "two": 2}) == {
             "one": one_spec_result,
             "two": two_spec_result,
         }
 
-    it "collects errors":
+    it "collects errors", meta, so:
         one_spec_error = BadSpecValue("Bad one")
         one_spec = mock.Mock(name="one_spec", spec_set=["normalise"])
         one_spec.normalise.side_effect = one_spec_error
@@ -595,15 +576,13 @@ describe TestCase, "set_options":
         two_spec = mock.Mock(name="two_spec", spec_set=["normalise"])
         two_spec.normalise.side_effect = two_spec_error
 
-        self.so.options = {"one": one_spec, "two": two_spec}
-        with self.fuzzyAssertRaisesError(
-            BadSpecValue, meta=self.meta, _errors=[one_spec_error, two_spec_error]
-        ):
-            self.so.normalise(self.meta, {"one": 1, "two": 2, "three": 3})
+        so.options = {"one": one_spec, "two": two_spec}
+        with assertRaises(BadSpecValue, meta=meta, _errors=[one_spec_error, two_spec_error]):
+            so.normalise(meta, {"one": 1, "two": 2, "three": 3})
 
     describe "fake_filled":
 
-        it "creates a fake from it's options":
+        it "creates a fake from it's options", meta, so:
             one_spec_fake = mock.Mock(name="one_spec_fake")
             one_spec = mock.Mock(name="one_spec", spec_set=["fake_filled"])
             one_spec.fake_filled.return_value = one_spec_fake
@@ -612,93 +591,96 @@ describe TestCase, "set_options":
             two_spec = mock.Mock(name="two_spec", spec_set=["fake_filled"])
             two_spec.fake_filled.return_value = two_spec_fake
 
-            self.so.options = {"one": one_spec, "two": two_spec}
-            assert self.so.fake_filled(self.meta) == {"one": one_spec_fake, "two": two_spec_fake}
+            so.options = {"one": one_spec, "two": two_spec}
+            assert so.fake_filled(meta) == {"one": one_spec_fake, "two": two_spec_fake}
 
-        it "ignores NotSpecified fakes":
+        it "ignores sb.NotSpecified fakes", meta, so:
             one_spec_fake = mock.Mock(name="one_spec_fake")
             one_spec = mock.Mock(name="one_spec", spec_set=["fake_filled"])
             one_spec.fake_filled.return_value = one_spec_fake
 
             two_spec = mock.Mock(name="two_spec", spec_set=["fake_filled"])
-            two_spec.fake_filled.return_value = NotSpecified
+            two_spec.fake_filled.return_value = sb.NotSpecified
 
-            self.so.options = {"one": one_spec, "two": two_spec}
-            assert self.so.fake_filled(self.meta) == {"one": one_spec_fake}
+            so.options = {"one": one_spec, "two": two_spec}
+            assert so.fake_filled(meta) == {"one": one_spec_fake}
 
-        it "includes NotSpecified fakes if with_non_defaulted":
+        it "includes sb.NotSpecified fakes if with_non_defaulted", meta, so:
             one_spec_fake = mock.Mock(name="one_spec_fake")
             one_spec = mock.Mock(name="one_spec", spec_set=["fake_filled"])
             one_spec.fake_filled.return_value = one_spec_fake
 
             two_spec = mock.Mock(name="two_spec", spec_set=["fake_filled"])
-            two_spec.fake_filled.return_value = NotSpecified
+            two_spec.fake_filled.return_value = sb.NotSpecified
 
-            self.so.options = {"one": one_spec, "two": two_spec}
-            assert self.so.fake_filled(self.meta, with_non_defaulted=True) == {
+            so.options = {"one": one_spec, "two": two_spec}
+            assert so.fake_filled(meta, with_non_defaulted=True) == {
                 "one": one_spec_fake,
-                "two": NotSpecified,
+                "two": sb.NotSpecified,
             }
 
-describe TestCase, "defaulted":
-    before_each:
-        self.meta = mock.Mock(name="meta", spec_set=Meta)
-        self.spec = mock.Mock(name="spec", spec_set=["normalise"])
-        self.dflt = mock.Mock(name="dflt")
-        self.dfltd = sb.defaulted(self.spec, self.dflt)
+describe "defaulted":
 
-    it "takes in a spec and a default":
+    @pytest.fixture()
+    def ms(self):
+        class Mocks:
+            spec = mock.Mock(name="spec", spec_set=["normalise"])
+            dflt = mock.Mock(name="dflt")
+
+        Mocks.dfltd = sb.defaulted(Mocks.spec, Mocks.dflt)
+        return Mocks
+
+    it "takes in a spec and a default", meta:
         dflt = mock.Mock(name="dflt")
         spec = mock.Mock(name="spec")
         dfltd = sb.defaulted(spec, dflt)
         assert dfltd.spec == spec
-        assert dfltd.default(self.meta) == dflt
+        assert dfltd.default(meta) == dflt
 
-    it "defaults to the dflt":
-        assert self.dfltd.default(self.meta) is self.dflt
-        assert self.dfltd.normalise(self.meta, NotSpecified) is self.dflt
+    it "defaults to the dflt", meta, ms:
+        assert ms.dfltd.default(meta) is ms.dflt
+        assert ms.dfltd.normalise(meta, sb.NotSpecified) is ms.dflt
 
-    it "proxies the spec if a value is provided":
+    it "proxies the spec if a value is provided", meta, ms:
         val = mock.Mock(name="val")
         result = mock.Mock(name="result")
-        self.spec.normalise.return_value = result
-        assert self.dfltd.normalise(self.meta, val) is result
-        self.spec.normalise.assert_called_once_with(self.meta, val)
+        ms.spec.normalise.return_value = result
+        assert ms.dfltd.normalise(meta, val) is result
+        ms.spec.normalise.assert_called_once_with(meta, val)
 
-describe TestCase, "required":
-    before_each:
-        self.meta = mock.Mock(name="meta", spec_set=Meta)
-        self.spec = mock.Mock(name="spec", spec_set=["normalise", "fake_filled"])
-        self.rqrd = sb.required(self.spec)
+describe "required":
+
+    @pytest.fixture()
+    def spec(self):
+        return mock.Mock(name="spec", spec_set=["normalise", "fake_filled"])
+
+    @pytest.fixture()
+    def rqrd(self, spec):
+        return sb.required(spec)
 
     it "takes in a spec":
         spec = mock.Mock(name="spec")
         rqrd = sb.required(spec)
         assert rqrd.spec == spec
 
-    it "Complains if there is no value":
-        with self.fuzzyAssertRaisesError(
-            BadSpecValue, "Expected a value but got none", meta=self.meta
-        ):
-            self.rqrd.normalise(self.meta, NotSpecified)
+    it "Complains if there is no value", meta, rqrd:
+        with assertRaises(BadSpecValue, "Expected a value but got none", meta=meta):
+            rqrd.normalise(meta, sb.NotSpecified)
 
-    it "proxies the spec if a value is provided":
+    it "proxies the spec if a value is provided", meta, spec, rqrd:
         val = mock.Mock(name="val")
         result = mock.Mock(name="result")
-        self.spec.normalise.return_value = result
-        assert self.rqrd.normalise(self.meta, val) is result
-        self.spec.normalise.assert_called_once_with(self.meta, val)
+        spec.normalise.return_value = result
+        assert rqrd.normalise(meta, val) is result
+        spec.normalise.assert_called_once_with(meta, val)
 
-    it "proxies self.spec for fake_filled":
+    it "proxies self.spec for fake_filled", meta, spec, rqrd:
         res = mock.Mock(name="res")
-        self.spec.fake_filled.return_value = res
-        assert self.rqrd.fake_filled(self.meta) is res
+        spec.fake_filled.return_value = res
+        assert rqrd.fake_filled(meta) is res
 
-describe TestCase, "boolean":
-    before_each:
-        self.meta = mock.Mock(name="meta", spec_set=Meta)
-
-    it "complains if the value is not a boolean":
+describe "boolean":
+    it "complains if the value is not a boolean", meta:
         for opt in (
             0,
             1,
@@ -711,20 +693,15 @@ describe TestCase, "boolean":
             "asdf",
             type("blah", (object,), {})(),
         ):
-            with self.fuzzyAssertRaisesError(
-                BadSpecValue, "Expected a boolean", meta=self.meta, got=type(opt)
-            ):
-                sb.boolean().normalise(self.meta, opt)
+            with assertRaises(BadSpecValue, "Expected a boolean", meta=meta, got=type(opt)):
+                sb.boolean().normalise(meta, opt)
 
-    it "returns value as is if a boolean":
-        assert sb.boolean().normalise(self.meta, True) is True
-        assert sb.boolean().normalise(self.meta, False) is False
+    it "returns value as is if a boolean", meta:
+        assert sb.boolean().normalise(meta, True) is True
+        assert sb.boolean().normalise(meta, False) is False
 
-describe TestCase, "directory_spec":
-    before_each:
-        self.meta = mock.Mock(name="meta", spec_set=Meta)
-
-    it "complains if the value is not a string":
+describe "directory_spec":
+    it "complains if the value is not a string", meta:
         for opt in (
             0,
             1,
@@ -737,43 +714,35 @@ describe TestCase, "directory_spec":
             lambda: 1,
             type("blah", (object,), {})(),
         ):
-            with self.fuzzyAssertRaisesError(
-                BadDirectory, "Didn't even get a string", meta=self.meta, got=type(opt)
-            ):
-                sb.directory_spec(sb.any_spec()).normalise(self.meta, opt)
+            with assertRaises(BadDirectory, "Didn't even get a string", meta=meta, got=type(opt)):
+                sb.directory_spec(sb.any_spec()).normalise(meta, opt)
 
-    it "complains if the meta doesn't exist":
-        with self.a_temp_dir(removed=True) as directory:
-            with self.fuzzyAssertRaisesError(
-                BadDirectory, "Got something that didn't exist", meta=self.meta, directory=directory
-            ):
-                sb.directory_spec().normalise(self.meta, directory)
+    it "complains if the meta doesn't exist", meta, removed_temp_dir:
+        with assertRaises(
+            BadDirectory, "Got something that didn't exist", meta=meta, directory=removed_temp_dir
+        ):
+            sb.directory_spec().normalise(meta, removed_temp_dir)
 
-    it "complains if the meta isn't a directory":
-        with self.a_temp_file() as filename:
-            with self.fuzzyAssertRaisesError(
-                BadDirectory,
-                "Got something that exists but isn't a directory",
-                meta=self.meta,
-                directory=filename,
-            ):
-                sb.directory_spec().normalise(self.meta, filename)
+    it "complains if the meta isn't a directory", meta, temp_file:
+        with assertRaises(
+            BadDirectory,
+            "Got something that exists but isn't a directory",
+            meta=meta,
+            directory=temp_file,
+        ):
+            sb.directory_spec().normalise(meta, temp_file)
 
-    it "returns directory as is if is a directory":
-        with self.a_temp_dir() as directory:
-            assert sb.directory_spec().normalise(self.meta, directory) == directory
+    it "returns directory as is if is a directory", meta, temp_dir:
+        assert sb.directory_spec().normalise(meta, temp_dir) == temp_dir
 
-    it "proxies self.spec for fake_filled":
+    it "proxies self.spec for fake_filled", meta:
         res = mock.Mock(name="res")
         spec = mock.Mock(name="spec", spec_set=["fake_filled"])
         spec.fake_filled.return_value = res
-        assert sb.directory_spec(spec).fake_filled(self.meta) is res
+        assert sb.directory_spec(spec).fake_filled(meta) is res
 
-describe TestCase, "filename_spec":
-    before_each:
-        self.meta = mock.Mock(name="meta", spec_set=Meta)
-
-    it "complains if the value is not a string":
+describe "filename_spec":
+    it "complains if the value is not a string", meta:
         for opt in (
             0,
             1,
@@ -786,41 +755,32 @@ describe TestCase, "filename_spec":
             lambda: 1,
             type("blah", (object,), {})(),
         ):
-            with self.fuzzyAssertRaisesError(
-                BadFilename, "Didn't even get a string", meta=self.meta, got=type(opt)
-            ):
-                sb.filename_spec().normalise(self.meta, opt)
+            with assertRaises(BadFilename, "Didn't even get a string", meta=meta, got=type(opt)):
+                sb.filename_spec().normalise(meta, opt)
 
-    it "complains if the value doesn't exist":
-        with self.a_temp_file(removed=True) as filename:
-            with self.fuzzyAssertRaisesError(
-                BadFilename, "Got something that didn't exist", meta=self.meta, filename=filename
-            ):
-                sb.filename_spec().normalise(self.meta, filename)
+    it "complains if the value doesn't exist", meta, removed_temp_file:
+        with assertRaises(
+            BadFilename, "Got something that didn't exist", meta=meta, filename=removed_temp_file
+        ):
+            sb.filename_spec().normalise(meta, removed_temp_file)
 
-    it "doesn't complain if the value doesn't exist if may_not_exist is True":
-        with self.a_temp_file(removed=True) as filename:
-            assert sb.filename_spec(may_not_exist=True).normalise(self.meta, filename) == filename
+    it "doesn't complain if the value doesn't exist if may_not_exist is True", meta, removed_temp_file:
+        assert (
+            sb.filename_spec(may_not_exist=True).normalise(meta, removed_temp_file)
+            == removed_temp_file
+        )
 
-    it "complains if the value isn't a file":
-        with self.a_temp_dir() as directory:
-            with self.fuzzyAssertRaisesError(
-                BadFilename,
-                "Got something that exists but isn't a file",
-                meta=self.meta,
-                filename=directory,
-            ):
-                sb.filename_spec().normalise(self.meta, directory)
+    it "complains if the value isn't a file", meta, temp_dir:
+        with assertRaises(
+            BadFilename, "Got something that exists but isn't a file", meta=meta, filename=temp_dir
+        ):
+            sb.filename_spec().normalise(meta, temp_dir)
 
-    it "returns filename as is if is a filename":
-        with self.a_temp_file() as filename:
-            assert sb.filename_spec().normalise(self.meta, filename) == filename
+    it "returns filename as is if is a filename", meta, temp_file:
+        assert sb.filename_spec().normalise(meta, temp_file) == temp_file
 
-describe TestCase, "file_spec":
-    before_each:
-        self.meta = mock.Mock(name="meta", spec_set=Meta)
-
-    it "complains if the object is not a file":
+describe "file_spec":
+    it "complains if the object is not a file", meta:
         for opt in (
             "",
             "asdf",
@@ -835,29 +795,23 @@ describe TestCase, "file_spec":
             lambda: 1,
             type("blah", (object,), {})(),
         ):
-            with self.fuzzyAssertRaisesError(
-                BadSpecValue, "Didn't get a file object", meta=self.meta, got=opt
-            ):
-                sb.file_spec().normalise(self.meta, opt)
+            with assertRaises(BadSpecValue, "Didn't get a file object", meta=meta, got=opt):
+                sb.file_spec().normalise(meta, opt)
 
-    it "lets through a file object":
-        with self.a_temp_file() as fle:
-            with open(fle) as opened:
-                assert sb.file_spec().normalise(self.meta, opened) is opened
+    it "lets through a file object", meta, temp_file:
+        with open(temp_file) as opened:
+            assert sb.file_spec().normalise(meta, opened) is opened
 
-describe TestCase, "string_specs":
+describe "string_specs":
     __only_run_tests_in_children__ = True
-
-    before_each:
-        self.meta = mock.Mock(name="meta", spec_set=Meta)
 
     def make_spec(self):
         raise NotImplementedError()
 
-    it "defaults to an empty string":
-        assert sb.string_spec().default(self.meta) == ""
+    it "defaults to an empty string", meta:
+        assert sb.string_spec().default(meta) == ""
 
-    it "complains if the value isn't a string":
+    it "complains if the value isn't a string", meta:
         for opt in (
             0,
             1,
@@ -870,14 +824,12 @@ describe TestCase, "string_specs":
             lambda: 1,
             type("blah", (object,), {})(),
         ):
-            with self.fuzzyAssertRaisesError(
-                BadSpecValue, "Expected a string", meta=self.meta, got=type(opt)
-            ):
-                self.make_spec().normalise(self.meta, opt)
+            with assertRaises(BadSpecValue, "Expected a string", meta=meta, got=type(opt)):
+                self.make_spec().normalise(meta, opt)
 
-    it "returns string as is if it is a string":
+    it "returns string as is if it is a string", meta:
         for opt in ("", "asdf", u"adsf"):
-            assert self.make_spec().normalise(self.meta, opt) == opt
+            assert self.make_spec().normalise(meta, opt) == opt
 
     describe "string_spec":
         make_spec = sb.string_spec
@@ -891,7 +843,7 @@ describe TestCase, "string_specs":
             spec = self.make_spec(validator1, validator2)
             assert spec.validators == (validator1, validator2)
 
-        it "uses each validator to get the final value":
+        it "uses each validator to get the final value", meta:
             result1 = mock.Mock(name="result1")
             result2 = mock.Mock(name="result2")
 
@@ -900,14 +852,14 @@ describe TestCase, "string_specs":
             validator2 = mock.Mock(name="validator2", spec_set=["normalise"])
             validator2.normalise.return_value = result2
 
-            assert self.make_spec(validator1, validator2).normalise(self.meta, "blah") is result2
-            validator1.normalise.assert_called_once_with(self.meta, "blah")
-            validator2.normalise.assert_called_once_with(self.meta, result1)
+            assert self.make_spec(validator1, validator2).normalise(meta, "blah") is result2
+            validator1.normalise.assert_called_once_with(meta, "blah")
+            validator2.normalise.assert_called_once_with(meta, result1)
 
     describe "string_choice_spec":
 
-        def make_spec(self, choices=NotSpecified, reason=NotSpecified):
-            choices = ["", "adsf", "asdf"] if choices is NotSpecified else choices
+        def make_spec(self, choices=sb.NotSpecified, reason=sb.NotSpecified):
+            choices = ["", "adsf", "asdf"] if choices is sb.NotSpecified else choices
             return sb.string_choice_spec(choices, reason=reason)
 
         it "takes in a list of choices and a reason":
@@ -921,31 +873,25 @@ describe TestCase, "string_specs":
         it "defaults reason":
             assert self.make_spec([]).reason == "Expected one of the available choices"
 
-        it "complains if the value isn't one of the choices":
+        it "complains if the value isn't one of the choices", meta:
             choices = ["one", "two", "three"]
-            reason = mock.Mock(name="reason")
-            with self.fuzzyAssertRaisesError(
-                BadSpecValue, reason, available=choices, got="blah", meta=self.meta
-            ):
-                self.make_spec(choices, reason=reason).normalise(self.meta, "blah")
+            reason = str(uuid.uuid1())
+            with assertRaises(BadSpecValue, reason, available=choices, got="blah", meta=meta):
+                self.make_spec(choices, reason=reason).normalise(meta, "blah")
 
-describe TestCase, "integer_spec":
-    it "converts string integers into integers":
-        meta = mock.Mock(name="meta")
+describe "integer_spec":
+    it "converts string integers into integers", meta:
         assert sb.integer_spec().normalise(meta, "1333") == 1333
 
-    it "complains if it can't convert the value into an integer":
-        meta = mock.Mock(name="meta")
+    it "complains if it can't convert the value into an integer", meta:
         val = mock.Mock(name="val")
-        with self.fuzzyAssertRaisesError(BadSpecValue, "Couldn't transform value into an integer"):
+        with assertRaises(BadSpecValue, "Couldn't transform value into an integer"):
             sb.integer_spec().normalise(meta, val)
 
-    it "keeps integers as integers":
-        meta = mock.Mock(name="meta")
+    it "keeps integers as integers", meta:
         assert sb.integer_spec().normalise(meta, 1337) == 1337
 
-    it "complains about values that aren't integers":
-        meta = mock.Mock(name="meta")
+    it "complains about values that aren't integers", meta:
         for val, typ in (
             ("", str),
             ("asdf", str),
@@ -959,15 +905,13 @@ describe TestCase, "integer_spec":
             ([1], list),
             ((1,), tuple),
         ):
-            with self.fuzzyAssertRaisesError(
-                BadSpecValue, "Expected an integer", meta=meta, got=typ
-            ):
+            with assertRaises(BadSpecValue, "Expected an integer", meta=meta, got=typ):
                 sb.integer_spec().normalise(meta, val)
 
-describe TestCase, "integer_choice_spec":
+describe "integer_choice_spec":
 
-    def make_spec(self, choices=NotSpecified, reason=NotSpecified):
-        choices = [1, 2, 3] if choices is NotSpecified else choices
+    def make_spec(self, choices=sb.NotSpecified, reason=sb.NotSpecified):
+        choices = [1, 2, 3] if choices is sb.NotSpecified else choices
         return sb.integer_choice_spec(choices, reason=reason)
 
     it "takes in a list of choices and a reason":
@@ -981,27 +925,23 @@ describe TestCase, "integer_choice_spec":
     it "defaults reason":
         assert self.make_spec([]).reason == "Expected one of the available choices"
 
-    it "complains if the value isn't one of the choices":
+    it "complains if the value isn't one of the choices", meta:
         choices = [1, 2, 3]
-        meta = mock.Mock(name="meta")
-        reason = mock.Mock(name="reason")
-        with self.fuzzyAssertRaisesError(BadSpecValue, reason, available=choices, got=4):
+        reason = str(uuid.uuid1())
+        with assertRaises(BadSpecValue, reason, available=choices, got=4):
             self.make_spec(choices, reason=reason).normalise(meta, 4)
 
-        with self.fuzzyAssertRaisesError(BadSpecValue, "Expected an integer", got=str):
+        with assertRaises(BadSpecValue, "Expected an integer", got=str):
             self.make_spec(choices, reason=reason).normalise(meta, "blah")
 
-describe TestCase, "float_spec":
-    it "converts string floats into floats":
-        meta = mock.Mock(name="meta")
+describe "float_spec":
+    it "converts string floats into floats", meta:
         assert sb.float_spec().normalise(meta, "13.33") == 13.33
 
-    it "keeps floats as floats":
-        meta = mock.Mock(name="meta")
+    it "keeps floats as floats", meta:
         assert sb.float_spec().normalise(meta, 13.37) == 13.37
 
-    it "complains about values that aren't floats":
-        meta = mock.Mock(name="meta")
+    it "complains about values that aren't floats", meta:
         for val, typ in (
             ("", str),
             ("asdf", str),
@@ -1016,13 +956,10 @@ describe TestCase, "float_spec":
             ([1], list),
             ((1,), tuple),
         ):
-            with self.fuzzyAssertRaisesError(BadSpecValue, "Expected a float", meta=meta, got=typ):
+            with assertRaises(BadSpecValue, "Expected a float", meta=meta, got=typ):
                 sb.float_spec().normalise(meta, val)
 
-describe TestCase, "create_spec":
-    before_each:
-        self.meta = mock.Mock(name="meta", spec_set=Meta)
-
+describe "create_spec":
     it "takes in a kls and specs for options we will instantiate it with":
         kls = mock.Mock(name="kls")
         opt1 = mock.Mock(name="opt1")
@@ -1040,7 +977,7 @@ describe TestCase, "create_spec":
         assert spec.expected_spec == set_options_instance
         set_options.assert_called_once_with(a=opt1, b=opt2)
 
-    it "validates using provided validators":
+    it "validates using provided validators", meta:
         v1 = mock.Mock(name="v1")
         v2 = mock.Mock(name="v2")
         called = []
@@ -1055,60 +992,60 @@ describe TestCase, "create_spec":
         assert spec.validators == (v1, v2)
 
         # Normalising with the create_spec will call validators first
-        spec.normalise(self.meta, val)
+        spec.normalise(meta, val)
 
-        v1.normalise.assert_called_once_with(self.meta, val)
-        v2.normalise.assert_called_once_with(self.meta, val)
+        v1.normalise.assert_called_once_with(meta, val)
+        v2.normalise.assert_called_once_with(meta, val)
         assert called == [1, 2]
 
-    it "returns value as is if already an instance of our kls":
+    it "returns value as is if already an instance of our kls", meta:
         kls = type("kls", (object,), {})
         spec = sb.create_spec(kls)
         instance = kls()
-        assert spec.normalise(self.meta, instance) is instance
+        assert spec.normalise(meta, instance) is instance
 
-    it "uses expected to normalise the val and passes that in as kwargs to kls constructor":
+    it "uses expected to normalise the val and passes that in as kwargs to kls constructor", meta:
 
         class Blah(object):
             pass
 
-        instance = sb.create_spec(Blah).normalise(self.meta, {})
+        instance = sb.create_spec(Blah).normalise(meta, {})
         assert instance.__class__ is Blah
 
         class Meh(object):
-            def __init__(self, a, b):
-                self.a = a
-                self.b = b
+            def __init__(s, a, b):
+                s.a = a
+                s.b = b
 
         a_val = mock.Mock(name="a_val")
         b_val = mock.Mock(name="b_val")
         c_val = mock.Mock(name="c_val")
-        instance = sb.create_spec(Meh, a=pass_through_spec(), b=pass_through_spec()).normalise(
-            self.meta, {"a": a_val, "b": b_val, "c": c_val}
-        )
+        instance = sb.create_spec(
+            Meh, a=sb.pass_through_spec(), b=sb.pass_through_spec()
+        ).normalise(meta, {"a": a_val, "b": b_val, "c": c_val})
         assert instance.__class__ is Meh
         assert instance.a is a_val
         assert instance.b is b_val
 
-    it "passes through errors from expected_spec":
+    it "passes through errors from expected_spec", meta:
 
         class Meh(object):
-            def __init__(self, a):
-                self.a = a
+            def __init__(s, a):
+                s.a = a
 
         a_val = mock.Mock(name="a_val")
         spec_error = BadSpecValue("nope!")
         a_spec = mock.Mock(name="a_spec", spec_set=["normalise"])
         a_spec.normalise.side_effect = spec_error
-        with self.fuzzyAssertRaisesError(BadSpecValue, meta=self.meta, _errors=[spec_error]):
-            sb.create_spec(Meh, a=a_spec).normalise(self.meta, {"a": a_val})
+        with assertRaises(BadSpecValue, meta=meta, _errors=[spec_error]):
+            sb.create_spec(Meh, a=a_spec).normalise(meta, {"a": a_val})
 
-    it "proxies self.spec for fake_filled and creates the kls from the result":
+    it "proxies self.spec for fake_filled and creates the kls from the result", meta:
 
         class Stuff(object):
-            def __init__(self, one, two):
-                self.one = one
-                self.two = two
+            def __init__(s, one, two):
+                s.one = one
+                s.two = two
 
         one_spec_fake = mock.Mock(name="one_spec_fake")
         one_spec = mock.Mock(name="one_spec", spec_set=["fake_filled"])
@@ -1119,74 +1056,74 @@ describe TestCase, "create_spec":
         two_spec.fake_filled.return_value = two_spec_fake
 
         spec = sb.create_spec(Stuff, one=one_spec, two=two_spec)
-        stuff = spec.fake_filled(self.meta)
+        stuff = spec.fake_filled(meta)
         assert isinstance(stuff, Stuff)
         assert stuff.one is one_spec_fake
         assert stuff.two is two_spec_fake
 
-describe TestCase, "or_spec":
-    before_each:
-        self.val = mock.Mock(name="val")
-        self.meta = mock.Mock(name="meta", spec_set=Meta)
-        self.spec1 = mock.Mock(name="spec1")
-        self.spec2 = mock.Mock(name="spec2")
-        self.spec3 = mock.Mock(name="spec3")
+describe "or_spec":
 
-    it "takes in specs as positional arguments":
-        spec = sb.or_spec(self.spec1, self.spec3, self.spec2)
-        assert spec.specs == (self.spec1, self.spec3, self.spec2)
+    @pytest.fixture()
+    def ms(self):
+        class Mocks:
+            val = mock.Mock(name="val")
+            spec1 = mock.Mock(name="spec1")
+            spec2 = mock.Mock(name="spec2")
+            spec3 = mock.Mock(name="spec3")
 
-    it "tries each spec until one succeeds":
+        return Mocks
+
+    it "takes in specs as positional arguments", ms:
+        spec = sb.or_spec(ms.spec1, ms.spec3, ms.spec2)
+        assert spec.specs == (ms.spec1, ms.spec3, ms.spec2)
+
+    it "tries each spec until one succeeds", ms:
         error1 = BadSpecValue("error1")
         error2 = BadSpecValue("error2")
         result = mock.Mock(name="result")
-        self.spec1.normalise.side_effect = error1
-        self.spec2.normalise.side_effect = error2
-        self.spec3.normalise.return_value = result
-        assert (
-            sb.or_spec(self.spec1, self.spec2, self.spec3).normalise(self.meta, self.val)
-        ) is result
+        ms.spec1.normalise.side_effect = error1
+        ms.spec2.normalise.side_effect = error2
+        ms.spec3.normalise.return_value = result
+        assert (sb.or_spec(ms.spec1, ms.spec2, ms.spec3).normalise(meta, ms.val)) is result
 
-        self.spec1.normalise.assert_called_once_with(self.meta, self.val)
-        self.spec2.normalise.assert_called_once_with(self.meta, self.val)
-        self.spec3.normalise.assert_called_once_with(self.meta, self.val)
+        ms.spec1.normalise.assert_called_once_with(meta, ms.val)
+        ms.spec2.normalise.assert_called_once_with(meta, ms.val)
+        ms.spec3.normalise.assert_called_once_with(meta, ms.val)
 
-    it "doesn't try more specs than it needs to":
+    it "doesn't try more specs than it needs to", meta, ms:
         error1 = BadSpecValue("error1")
         result = mock.Mock(name="result")
-        self.spec1.normalise.side_effect = error1
-        self.spec2.normalise.return_value = result
-        assert (
-            sb.or_spec(self.spec1, self.spec2, self.spec3).normalise(self.meta, self.val)
-        ) is result
+        ms.spec1.normalise.side_effect = error1
+        ms.spec2.normalise.return_value = result
+        assert (sb.or_spec(ms.spec1, ms.spec2, ms.spec3).normalise(meta, ms.val)) is result
 
-        self.spec1.normalise.assert_called_once_with(self.meta, self.val)
-        self.spec2.normalise.assert_called_once_with(self.meta, self.val)
-        assert len(self.spec3.normalise.mock_calls) == 0
+        ms.spec1.normalise.assert_called_once_with(meta, ms.val)
+        ms.spec2.normalise.assert_called_once_with(meta, ms.val)
+        assert len(ms.spec3.normalise.mock_calls) == 0
 
-    it "raises all the errors if none of the specs pass":
+    it "raises all the errors if none of the specs pass", meta, ms:
         error1 = BadSpecValue("error1")
         error2 = BadSpecValue("error2")
         error3 = BadSpecValue("error3")
-        self.spec1.normalise.side_effect = error1
-        self.spec2.normalise.side_effect = error2
-        self.spec3.normalise.side_effect = error3
+        ms.spec1.normalise.side_effect = error1
+        ms.spec2.normalise.side_effect = error2
+        ms.spec3.normalise.side_effect = error3
 
-        with self.fuzzyAssertRaisesError(
+        with assertRaises(
             BadSpecValue,
             "Value doesn't match any of the options",
-            meta=self.meta,
-            val=self.val,
+            meta=meta,
+            val=ms.val,
             _errors=[error1, error2, error3],
         ):
-            sb.or_spec(self.spec1, self.spec2, self.spec3).normalise(self.meta, self.val)
+            sb.or_spec(ms.spec1, ms.spec2, ms.spec3).normalise(meta, ms.val)
 
-        self.spec1.normalise.assert_called_once_with(self.meta, self.val)
-        self.spec2.normalise.assert_called_once_with(self.meta, self.val)
-        self.spec3.normalise.assert_called_once_with(self.meta, self.val)
+        ms.spec1.normalise.assert_called_once_with(meta, ms.val)
+        ms.spec2.normalise.assert_called_once_with(meta, ms.val)
+        ms.spec3.normalise.assert_called_once_with(meta, ms.val)
 
-describe TestCase, "match_spec":
-    it "uses the spec that matches the type":
+describe "match_spec":
+    it "uses the spec that matches the type", meta:
         ret1, ret2, ret3 = (mock.Mock(name="ret1"), mock.Mock(name="ret2"), mock.Mock(name="ret3"))
         spec1 = mock.NonCallableMock(
             name="spec1", normalise=mock.Mock(name="normalise1", return_value=ret1)
@@ -1199,7 +1136,6 @@ describe TestCase, "match_spec":
         )
         specs = [(str, spec1), (list, spec2), (dict, spec3)]
 
-        meta = mock.Mock(name="meta")
         spec = sb.match_spec(*specs)
 
         assert spec.normalise(meta, "asdf") is ret1
@@ -1207,14 +1143,13 @@ describe TestCase, "match_spec":
         assert spec.normalise(meta, "bjlk") is ret1
         assert spec.normalise(meta, {1: 2}) is ret3
 
-    it "complains if it can't find a match":
+    it "complains if it can't find a match", meta:
         spec1 = mock.Mock(name="spec1")
         spec2 = mock.Mock(name="spec2")
         spec3 = mock.Mock(name="spec3")
         specs = [(str, spec1), (list, spec2), (dict, spec3)]
 
-        meta = mock.Mock(name="meta")
-        with self.fuzzyAssertRaisesError(
+        with assertRaises(
             BadSpecValue,
             "Value doesn't match any of the options",
             meta=meta,
@@ -1223,137 +1158,149 @@ describe TestCase, "match_spec":
         ):
             sb.match_spec(*specs).normalise(meta, True)
 
-    it "allows a fallback":
-        meta = mock.Mock(name="meta")
+    it "allows a fallback", meta:
         spec = sb.match_spec((bool, sb.overridden("lolz")), fallback=sb.any_spec())
         assert spec.normalise(meta, True) == "lolz"
         assert spec.normalise(meta, "hahah") == "hahah"
 
-    it "allows fallback to be callable":
-        meta = mock.Mock(name="meta")
+    it "allows fallback to be callable", meta:
         spec = sb.match_spec((bool, sb.overridden("lolz")), fallback=lambda: sb.any_spec())
         assert spec.normalise(meta, True) == "lolz"
         assert spec.normalise(meta, "hahah") == "hahah"
 
-describe TestCase, "and_spec":
-    before_each:
-        self.val = mock.Mock(name="val")
-        self.meta = mock.Mock(name="meta", spec_set=Meta)
-        self.spec1 = mock.Mock(name="spec1")
-        self.spec2 = mock.Mock(name="spec2")
-        self.spec3 = mock.Mock(name="spec3")
+describe "and_spec":
 
-    it "takes in specs as positional arguments":
-        spec = sb.or_spec(self.spec1, self.spec3, self.spec2)
-        assert spec.specs == (self.spec1, self.spec3, self.spec2)
+    @pytest.fixture()
+    def ms(self):
+        class Mocks:
+            val = mock.Mock(name="val")
+            spec1 = mock.Mock(name="spec1")
+            spec2 = mock.Mock(name="spec2")
+            spec3 = mock.Mock(name="spec3")
 
-    it "puts successive values through all specs":
+        return Mocks
+
+    it "takes in specs as positional arguments", ms:
+        spec = sb.or_spec(ms.spec1, ms.spec3, ms.spec2)
+        assert spec.specs == (ms.spec1, ms.spec3, ms.spec2)
+
+    it "puts successive values through all specs", meta, ms:
         val1 = mock.Mock(name="val1")
         val2 = mock.Mock(name="val2")
         result = mock.Mock(name="result")
-        self.spec1.normalise.return_value = val1
-        self.spec2.normalise.return_value = val2
-        self.spec3.normalise.return_value = result
-        assert (
-            sb.and_spec(self.spec1, self.spec2, self.spec3).normalise(self.meta, self.val)
-        ) is result
+        ms.spec1.normalise.return_value = val1
+        ms.spec2.normalise.return_value = val2
+        ms.spec3.normalise.return_value = result
+        assert (sb.and_spec(ms.spec1, ms.spec2, ms.spec3).normalise(meta, ms.val)) is result
 
-        self.spec1.normalise.assert_called_once_with(self.meta, self.val)
-        self.spec2.normalise.assert_called_once_with(self.meta, val1)
-        self.spec3.normalise.assert_called_once_with(self.meta, val2)
+        ms.spec1.normalise.assert_called_once_with(meta, ms.val)
+        ms.spec2.normalise.assert_called_once_with(meta, val1)
+        ms.spec3.normalise.assert_called_once_with(meta, val2)
 
-    it "raises an error with all transformations if one of them fails":
+    it "raises an error with all transformations if one of them fails", meta, ms:
         val1 = mock.Mock(name="val1")
         error = BadSpecValue("error1")
-        self.spec1.normalise.return_value = val1
-        self.spec2.normalise.side_effect = error
+        ms.spec1.normalise.return_value = val1
+        ms.spec2.normalise.side_effect = error
 
-        with self.fuzzyAssertRaisesError(
+        with assertRaises(
             BadSpecValue,
             "Value didn't match one of the options",
-            meta=self.meta,
-            transformations=[self.val, val1],
+            meta=meta,
+            transformations=[ms.val, val1],
             _errors=[error],
         ):
-            sb.and_spec(self.spec1, self.spec2, self.spec3).normalise(self.meta, self.val)
+            sb.and_spec(ms.spec1, ms.spec2, ms.spec3).normalise(meta, ms.val)
 
-        self.spec1.normalise.assert_called_once_with(self.meta, self.val)
-        self.spec2.normalise.assert_called_once_with(self.meta, val1)
-        assert self.spec3.normalise.mock_calls == []
+        ms.spec1.normalise.assert_called_once_with(meta, ms.val)
+        ms.spec2.normalise.assert_called_once_with(meta, val1)
+        assert ms.spec3.normalise.mock_calls == []
 
-describe TestCase, "optional_spec":
-    before_each:
-        self.val = mock.Mock(name="val")
-        self.meta = mock.Mock(name="meta", spec_set=Meta)
-        self.spec = mock.Mock(name="spec")
+describe "optional_spec":
 
-    it "takes in a spec":
-        spec = sb.optional_spec(self.spec)
-        assert spec.spec is self.spec
+    @pytest.fixture()
+    def ms(self):
+        class Mocks:
+            val = mock.Mock(name="val")
+            spec = mock.Mock(name="spec")
 
-    it "returns NotSpecified if there is no value":
-        assert sb.optional_spec(self.spec).normalise(self.meta, NotSpecified) is NotSpecified
+        return Mocks
 
-    it "Proxies the spec if there is a value":
+    it "takes in a spec", ms:
+        spec = sb.optional_spec(ms.spec)
+        assert spec.spec is ms.spec
+
+    it "returns sb.NotSpecified if there is no value", meta, ms:
+        assert sb.optional_spec(ms.spec).normalise(meta, sb.NotSpecified) is sb.NotSpecified
+
+    it "Proxies the spec if there is a value", meta, ms:
         result = mock.Mock(name="result")
-        self.spec.normalise.return_value = result
-        assert sb.optional_spec(self.spec).normalise(self.meta, self.val) is result
-        self.spec.normalise.assert_called_once_with(self.meta, self.val)
+        ms.spec.normalise.return_value = result
+        assert sb.optional_spec(ms.spec).normalise(meta, ms.val) is result
+        ms.spec.normalise.assert_called_once_with(meta, ms.val)
 
-    it "proxies self.spec for fake_filled":
+    it "proxies self.spec for fake_filled", meta, ms:
         res = mock.Mock(name="res")
-        self.spec.fake_filled.return_value = res
-        assert sb.optional_spec(self.spec).fake_filled(self.meta) is res
+        ms.spec.fake_filled.return_value = res
+        assert sb.optional_spec(ms.spec).fake_filled(meta) is res
 
-describe TestCase, "dict_from_bool_spec":
-    before_each:
-        self.val = mock.Mock(name="val")
-        self.meta = mock.Mock(name="meta", spec_set=Meta)
-        self.spec = mock.Mock(name="spec")
+describe "dict_from_bool_spec":
 
-    it "takes in a dict_maker and a spec":
+    @pytest.fixture()
+    def ms(self):
+        class Mocks:
+            val = mock.Mock(name="val")
+            spec = mock.Mock(name="spec")
+
+        return Mocks
+
+    it "takes in a dict_maker and a spec", ms:
         dict_maker = mock.Mock(name="dict_maker")
-        spec = sb.dict_from_bool_spec(dict_maker, self.spec)
+        spec = sb.dict_from_bool_spec(dict_maker, ms.spec)
         assert spec.dict_maker is dict_maker
-        assert spec.spec is self.spec
+        assert spec.spec is ms.spec
 
-    it "proxies to the spec with an empty dictionary if no value":
+    it "proxies to the spec with an empty dictionary if no value", meta, ms:
         result = mock.Mock(name="result")
-        self.spec.normalise.return_value = result
+        ms.spec.normalise.return_value = result
         assert (
-            sb.dict_from_bool_spec(lambda: 1, self.spec).normalise(self.meta, NotSpecified)
+            sb.dict_from_bool_spec(lambda: 1, ms.spec).normalise(meta, sb.NotSpecified)
         ) is result
-        self.spec.normalise.assert_called_once_with(self.meta, {})
+        ms.spec.normalise.assert_called_once_with(meta, {})
 
-    it "uses dict_maker if the value is a boolean":
+    it "uses dict_maker if the value is a boolean", meta, ms:
         val = mock.Mock(name="val")
         result = mock.Mock(name="result")
 
         dict_maker = mock.Mock(name="dict_maker")
         dict_maker.return_value = val
 
-        self.spec.normalise.return_value = result
-        assert sb.dict_from_bool_spec(dict_maker, self.spec).normalise(self.meta, False) is result
-        dict_maker.assert_called_once_with(self.meta, False)
-        self.spec.normalise.assert_called_once_with(self.meta, val)
+        ms.spec.normalise.return_value = result
+        assert sb.dict_from_bool_spec(dict_maker, ms.spec).normalise(meta, False) is result
+        dict_maker.assert_called_once_with(meta, False)
+        ms.spec.normalise.assert_called_once_with(meta, val)
 
-    it "uses the value itself if not a boolean":
+    it "uses the value itself if not a boolean", meta, ms:
         val = mock.Mock(name="val")
         result = mock.Mock(name="result")
-        self.spec.normalise.return_value = result
-        assert sb.dict_from_bool_spec(lambda: 1, self.spec).normalise(self.meta, val) is result
-        self.spec.normalise.assert_called_once_with(self.meta, val)
+        ms.spec.normalise.return_value = result
+        assert sb.dict_from_bool_spec(lambda: 1, ms.spec).normalise(meta, val) is result
+        ms.spec.normalise.assert_called_once_with(meta, val)
 
-    it "proxies self.spec for fake_filled":
+    it "proxies self.spec for fake_filled", meta, ms:
         res = mock.Mock(name="res")
-        self.spec.fake_filled.return_value = res
-        assert sb.dict_from_bool_spec(lambda: 1, self.spec).fake_filled(self.meta) is res
+        ms.spec.fake_filled.return_value = res
+        assert sb.dict_from_bool_spec(lambda: 1, ms.spec).fake_filled(meta) is res
 
-describe TestCase, "formatted":
-    before_each:
-        self.val = mock.Mock(name="val")
-        self.meta = mock.Mock(name="meta", spec_set=Meta)
-        self.spec = mock.Mock(name="spec")
+describe "formatted":
+
+    @pytest.fixture()
+    def ms(self):
+        class Mocks:
+            val = mock.Mock(name="val")
+            spec = mock.Mock(name="spec")
+
+        return Mocks
 
     it "takes in spec, formatter and expected_type and after_format":
         spec = mock.Mock(name="spec")
@@ -1366,7 +1313,7 @@ describe TestCase, "formatted":
         assert formatted.after_format is after_format
         assert formatted.expected_type is expected_type
 
-    it "doesn't use formatter if we have after_format and the spec.normalise result is not a string":
+    it "doesn't use formatter if we have after_format and the spec.normalise result is not a string", meta:
         # Doing anything on the formatter will raise an exception and fail the test
         formatter = mock.NonCallableMock(name="formatter", spec=[])
 
@@ -1378,11 +1325,11 @@ describe TestCase, "formatted":
         af.normalise.return_value = result
 
         formatted_spec = sb.formatted(spec, formatter=formatter, after_format=af)
-        assert formatted_spec.normalise(self.meta, val) is result
+        assert formatted_spec.normalise(meta, val) is result
 
-        af.normalise.assert_called_once_with(self.meta, val)
+        af.normalise.assert_called_once_with(meta, val)
 
-    it "doesn't use formatter if we have after_format and the spec.normalise result is not a string and after_format needs to be called first":
+    it "doesn't use formatter if we have after_format and the spec.normalise result is not a string and after_format needs to be called first", meta:
         # Doing anything on the formatter will raise an exception and fail the test
         formatter = mock.NonCallableMock(name="formatter", spec=[])
 
@@ -1396,11 +1343,11 @@ describe TestCase, "formatted":
         afk = mock.Mock(name="afk", return_value=af)
 
         formatted_spec = sb.formatted(spec, formatter=formatter, after_format=afk)
-        assert formatted_spec.normalise(self.meta, val) is result
+        assert formatted_spec.normalise(meta, val) is result
 
-        af.normalise.assert_called_once_with(self.meta, val)
+        af.normalise.assert_called_once_with(meta, val)
 
-    it "uses after_format on the formatted value from the formatter if we have after_format":
+    it "uses after_format on the formatted value from the formatter if we have after_format", meta:
         spec = sb.string_spec()
         val = "{thing}"
         after_format = sb.integer_spec
@@ -1412,21 +1359,21 @@ describe TestCase, "formatted":
 
         formatted_spec = sb.formatted(spec, formatter=formatterK, after_format=after_format)
 
-        assert formatted_spec.normalise(self.meta, val) is 12
+        assert formatted_spec.normalise(meta, val) is 12
 
         formatterK.assert_called_once_with(mock.ANY, mock.ANY, value="{thing}")
 
-    it "uses the formatter":
+    it "uses the formatter", meta_mock, ms:
         meta_path = mock.Mock(name="path")
         options = mock.Mock(name="options")
         meta_class = mock.Mock(name="meta_class")
         meta_class.return_value = options
 
-        self.meta.path = meta_path
-        self.meta.everything = mock.Mock(name="everything", __class__=meta_class)
+        meta_mock.path = meta_path
+        meta_mock.everything = mock.Mock(name="everything", __class__=meta_class)
 
         key_names = mock.Mock(name="key_names")
-        self.meta.key_names = key_names
+        meta_mock.key_names = key_names
 
         formatter = mock.Mock(name="formatter")
         formatter_instance = mock.Mock(name="formatter_instance")
@@ -1436,95 +1383,84 @@ describe TestCase, "formatted":
         formatter_instance.format.return_value = formatted
 
         specd = mock.Mock(name="specd")
-        self.spec.normalise.return_value = specd
+        ms.spec.normalise.return_value = specd
 
         assert (
-            sb.formatted(self.spec, formatter, expected_type=mock.Mock).normalise(
-                self.meta, self.val
-            )
+            sb.formatted(ms.spec, formatter, expected_type=mock.Mock).normalise(meta_mock, ms.val)
         ) is formatted
         formatter_instance.format.assert_called_once_with()
         formatter.assert_called_once_with(options, meta_path, value=specd)
 
         meta_class.assert_called_once_with(
-            converters=self.meta.everything.converters, dont_prefix=self.meta.everything.dont_prefix
+            converters=meta_mock.everything.converters, dont_prefix=meta_mock.everything.dont_prefix
         )
         assert len(options.update.mock_calls) == 2
 
-        self.spec.normalise.assert_called_once_with(self.meta, self.val)
+        ms.spec.normalise.assert_called_once_with(meta_mock, ms.val)
 
-    it "complains if formatted value has wrong type":
+    it "complains if formatted value has wrong type", meta_mock:
         formatter = lambda *args, **kwargs: "asdf"
         spec = sb.any_spec()
-        self.meta.everything = {}
-        self.meta.key_names.return_value = {}
-        with self.fuzzyAssertRaisesError(
-            BadSpecValue, "Expected a different type", expected=mock.Mock, got=str
-        ):
-            sb.formatted(spec, formatter, expected_type=mock.Mock).normalise(self.meta, "{blah}")
+        meta_mock.everything = {}
+        meta_mock.key_names.return_value = {}
+        with assertRaises(BadSpecValue, "Expected a different type", expected=mock.Mock, got=str):
+            sb.formatted(spec, formatter, expected_type=mock.Mock).normalise(meta_mock, "{blah}")
 
-    it "complains if after_format value has wrong type":
+    it "complains if after_format value has wrong type", meta_mock:
         formatter = lambda *args, **kwargs: "13"
         spec = sb.any_spec()
         after_format = sb.integer_spec
-        self.meta.everything = {}
-        self.meta.key_names.return_value = {}
-        with self.fuzzyAssertRaisesError(
-            BadSpecValue, "Expected a different type", expected=mock.Mock, got=int
-        ):
+        meta_mock.everything = {}
+        meta_mock.key_names.return_value = {}
+        with assertRaises(BadSpecValue, "Expected a different type", expected=mock.Mock, got=int):
             sb.formatted(
                 spec, formatter, expected_type=mock.Mock, after_format=after_format
-            ).normalise(self.meta, "{yeap}")
+            ).normalise(meta_mock, "{yeap}")
 
-    it "works with normal dictionary meta.everything":
+    it "works with normal dictionary meta.everything", meta_mock, ms:
         formatter = lambda *args, **kwargs: "asdf"
         spec = sb.any_spec()
-        self.meta.everything = {"blah": 1}
-        self.meta.key_names.return_value = {}
-        res = sb.formatted(spec, formatter).normalise(self.meta, self.val)
+        meta_mock.everything = {"blah": 1}
+        meta_mock.key_names.return_value = {}
+        res = sb.formatted(spec, formatter).normalise(meta_mock, ms.val)
         assert res == "asdf"
 
     describe "fake_filled":
-        it "actually formats the value if with_non_defaulted":
+        it "actually formats the value if with_non_defaulted", meta:
             res = mock.Mock(name="res")
             normalise_either = mock.Mock(name="normalise_either", return_value=res)
             spec = sb.formatted(mock.Mock(name="spec"), mock.Mock(name="formatter"))
             with mock.patch.object(spec, "normalise_either", normalise_either):
-                assert spec.fake_filled(self.meta, with_non_defaulted=True) is res
+                assert spec.fake_filled(meta, with_non_defaulted=True) is res
 
-        it "returns NotSpecified if not with_non_defaulted":
+        it "returns sb.NotSpecified if not with_non_defaulted", meta:
             assert (
                 sb.formatted(mock.Mock(name="spec"), mock.Mock(name="formatter")).fake_filled(
-                    self.meta, with_non_defaulted=False
+                    meta, with_non_defaulted=False
                 )
-            ) is NotSpecified
+            ) is sb.NotSpecified
 
-describe TestCase, "overridden":
-    it "returns the value it's initialised with":
-        meta = mock.Mock(name="meta", spec=[])
+describe "overridden":
+    it "returns the value it's initialised with", meta:
         value = mock.Mock(name="value", spec=[])
         override = mock.Mock(name="override", spec=[])
         assert sb.overridden(override).normalise(meta, value) is override
 
-    it "returns the specified value when calling fake_filled":
-        meta = mock.Mock(name="meta", spec=[])
+    it "returns the specified value when calling fake_filled", meta:
         override = mock.Mock(name="override", spec=[])
         assert sb.overridden(override).fake_filled(meta) is override
 
-describe TestCase, "any_spec":
-    it "returns the value it's given":
-        meta = mock.Mock(name="meta", spec=[])
+describe "any_spec":
+    it "returns the value it's given", meta:
         value = mock.Mock(name="value", spec=[])
         assert sb.any_spec().normalise(meta, value) is value
 
 
-describe TestCase, "string_or_int_as_string_spec":
-    it "returns an empty string for the default":
-        meta = mock.Mock(name="meta")
-        assert sb.string_or_int_as_string_spec().normalise(meta, NotSpecified) == ""
+describe "string_or_int_as_string_spec":
+    it "returns an empty string for the default", meta:
+        assert sb.string_or_int_as_string_spec().normalise(meta, sb.NotSpecified) == ""
 
-    it "complains if the value is neither string or integer":
-        meta = mock.Mock(name="meta")
+    it "complains if the value is neither string or integer", meta:
         for val, typ in (
             ({}, dict),
             ({1: 2}, dict),
@@ -1536,22 +1472,17 @@ describe TestCase, "string_or_int_as_string_spec":
             ([1], list),
             ((1,), tuple),
         ):
-            with self.fuzzyAssertRaisesError(
-                BadSpecValue, "Expected a string or integer", meta=meta, got=typ
-            ):
+            with assertRaises(BadSpecValue, "Expected a string or integer", meta=meta, got=typ):
                 sb.string_or_int_as_string_spec().normalise(meta, val)
 
-    it "returns strings as strings":
-        meta = mock.Mock(name="meta")
+    it "returns strings as strings", meta:
         assert sb.string_or_int_as_string_spec().normalise(meta, "blah") == "blah"
 
-    it "returns integers as strings":
-        meta = mock.Mock(name="meta")
+    it "returns integers as strings", meta:
         assert sb.string_or_int_as_string_spec().normalise(meta, 1) == "1"
 
-describe TestCase, "container_spec":
-    it "returns an instance of the class with normalised value from the specified spec":
-        meta = mock.Mock(name="meta")
+describe "container_spec":
+    it "returns an instance of the class with normalised value from the specified spec", meta:
         normalised = mock.Mock(name="normalised")
         normalise = mock.Mock(name="normalise", return_value=normalised)
         spec = mock.Mock(name="spec", normalise=normalise)
@@ -1565,27 +1496,25 @@ describe TestCase, "container_spec":
         assert type(sb.container_spec(kls, spec).normalise(meta, kls(alright))) is kls
         assert len(normalise.mock_calls) is 0
 
-    it "returns the kls instantiated with the fake val of the spec on fake_filled":
-        meta = mock.Mock(name="meta")
+    it "returns the kls instantiated with the fake val of the spec on fake_filled", meta:
         spec = mock.Mock(name="spec")
         spec_fake = mock.Mock(name="spec_fake")
         spec.fake_filled.return_value = spec_fake
 
         class Meh(object):
-            def __init__(self, val):
-                self.val = val
+            def __init__(s, val):
+                s.val = val
 
         meh = sb.container_spec(Meh, spec).fake_filled(meta)
         assert isinstance(meh, Meh)
         assert meh.val is spec_fake
 
-describe TestCase, "delayed":
-    it "returns a function that will do the normalisation":
+describe "delayed":
+    it "returns a function that will do the normalisation", meta:
         called = []
         normalise = mock.Mock(name="normalise", side_effect=lambda *args: called.append(1))
         spec = mock.Mock(name="spec", normalise=normalise)
 
-        meta = mock.Mock(name="meta")
         val = mock.Mock(name="val")
         result = sb.delayed(spec).normalise(meta, val)
         assert called == []
@@ -1594,14 +1523,13 @@ describe TestCase, "delayed":
         assert called == [1]
         normalise.assert_called_once_with(meta, val)
 
-    it "returns a function that returns the fake_filled of the spec":
+    it "returns a function that returns the fake_filled of the spec", meta:
         called = []
         fake_filled = mock.Mock(
             name="fake_filled", side_effect=lambda *args, **kwargs: called.append(1)
         )
         spec = mock.Mock(name="spec", fake_filled=fake_filled)
 
-        meta = mock.Mock(name="meta")
         result = sb.delayed(spec).fake_filled(meta)
         assert called == []
 
@@ -1609,8 +1537,8 @@ describe TestCase, "delayed":
         assert called == [1]
         fake_filled.assert_called_once_with(meta, with_non_defaulted=False)
 
-describe TestCase, "typed":
-    it "complains if the value is the wrong type":
+describe "typed":
+    it "complains if the value is the wrong type", meta:
 
         class Wanted(object):
             pass
@@ -1618,35 +1546,32 @@ describe TestCase, "typed":
         class AnotherType(object):
             pass
 
-        meta = mock.Mock(name="meta")
         for val in (0, 1, "", "1", [], [1], {}, {1: 1}, lambda: 1, AnotherType()):
-            with self.fuzzyAssertRaisesError(
+            with assertRaises(
                 BadSpecValue, "Got the wrong type of value", expected=Wanted, got=type(val)
             ):
                 sb.typed(Wanted).normalise(meta, val)
 
-    it "returns the instance if it's the same type of class":
+    it "returns the instance if it's the same type of class", meta:
 
         class Wanted(object):
             pass
 
         wanted = Wanted()
-        meta = mock.Mock(name="meta")
         assert sb.typed(Wanted).normalise(meta, wanted) is wanted
 
-describe TestCase, "has":
+describe "has":
     it "takes in the properties to check":
         prop1 = mock.Mock(name="prop1")
         prop2 = mock.Mock(name="prop2")
         assert sb.has(prop1, prop2).properties == (prop1, prop2)
 
-    it "complains if the value doesn't have one of the properties":
+    it "complains if the value doesn't have one of the properties", meta:
 
         class Wanted(object):
             one = 1
 
-        meta = mock.Mock(name="meta")
-        with self.fuzzyAssertRaisesError(
+        with assertRaises(
             BadSpecValue,
             "Value is missing required properties",
             required=("one", "two"),
@@ -1655,7 +1580,7 @@ describe TestCase, "has":
         ):
             sb.has("one", "two").normalise(meta, Wanted())
 
-    it "returns the instance if has all the specified properties":
+    it "returns the instance if has all the specified properties", meta:
 
         class Wanted(object):
             one = 1
@@ -1663,23 +1588,23 @@ describe TestCase, "has":
             three = 3
 
         wanted = Wanted()
-        meta = mock.Mock(name="meta")
         assert sb.has("one", "two").normalise(meta, wanted) is wanted
 
-describe TestCase, "tuple_spec":
+describe "tuple_spec":
     it "takes in the specs to match against":
         spec1 = mock.Mock(name="spec1")
         spec2 = mock.Mock(name="spec2")
         assert sb.tuple_spec(spec1, spec2).specs == (spec1, spec2)
 
     describe "normalise_filled":
-        before_each:
-            self.spec1 = sb.pass_through_spec()
-            self.spec2 = sb.pass_through_spec()
-            self.meta = Meta({}, [])
-            self.ts = sb.tuple_spec(self.spec1, self.spec2)
 
-        it "complains if the value is not a tuple":
+        @pytest.fixture()
+        def ts(self):
+            spec1 = sb.pass_through_spec()
+            spec2 = sb.pass_through_spec()
+            return sb.tuple_spec(spec1, spec2)
+
+        it "complains if the value is not a tuple", ts:
             for val in (
                 0,
                 1,
@@ -1692,29 +1617,29 @@ describe TestCase, "tuple_spec":
                 lambda: 1,
                 type("thing", (object,), {}),
             ):
-                with self.fuzzyAssertRaisesError(BadSpecValue, "Expected a tuple", got=type(val)):
-                    self.ts.normalise(self.meta, val)
+                with assertRaises(BadSpecValue, "Expected a tuple", got=type(val)):
+                    ts.normalise(meta, val)
 
-        it "complains if the tuple doesn't have the same number of values as specs passed into setup":
-            with self.fuzzyAssertRaisesError(
+        it "complains if the tuple doesn't have the same number of values as specs passed into setup", meta, ts:
+            with assertRaises(
                 BadSpecValue,
                 "Expected tuple to be of a particular length",
                 expected=2,
                 got=1,
-                meta=self.meta,
+                meta=meta,
             ):
-                self.ts.normalise(self.meta, (1,))
+                ts.normalise(meta, (1,))
 
-            with self.fuzzyAssertRaisesError(
+            with assertRaises(
                 BadSpecValue,
                 "Expected tuple to be of a particular length",
                 expected=2,
                 got=3,
-                meta=self.meta,
+                meta=meta,
             ):
-                self.ts.normalise(self.meta, (1, 2, 3))
+                ts.normalise(meta, (1, 2, 3))
 
-        it "raises errors if any of the specs don't match":
+        it "raises errors if any of the specs don't match", meta:
             error1 = BadSpecValue("error1")
             error3 = BadSpecValue("error3")
 
@@ -1726,15 +1651,15 @@ describe TestCase, "tuple_spec":
             spec2.normalise.return_value = 4
             spec3.normalise.side_effect = error3
 
-            with self.fuzzyAssertRaisesError(
+            with assertRaises(
                 BadSpecValue,
                 "Value failed some specifications",
                 _errors=[error1, error3],
-                meta=self.meta,
+                meta=meta,
             ):
-                sb.tuple_spec(spec1, spec2, spec3).normalise(self.meta, (1, 2, 3))
+                sb.tuple_spec(spec1, spec2, spec3).normalise(meta, (1, 2, 3))
 
-        it "returns the normalised value if all is good":
+        it "returns the normalised value if all is good", meta:
 
             def normalise(m, v):
                 return v + 1
@@ -1742,17 +1667,16 @@ describe TestCase, "tuple_spec":
             spec1 = mock.Mock(name="spec1")
             spec1.normalise.side_effect = normalise
 
-            assert sb.tuple_spec(spec1, spec1).normalise(self.meta, (1, 3)) == (2, 4)
+            assert sb.tuple_spec(spec1, spec1).normalise(meta, (1, 3)) == (2, 4)
 
-describe TestCase, "none_spec":
-    it "defaults to None":
-        assert sb.none_spec().normalise(Meta.empty(), NotSpecified) is None
+describe "none_spec":
+    it "defaults to None", meta:
+        assert sb.none_spec().normalise(meta, sb.NotSpecified) is None
 
-    it "likes the None Value":
-        assert sb.none_spec().normalise(Meta.empty(), None) is None
+    it "likes the None Value", meta:
+        assert sb.none_spec().normalise(meta, None) is None
 
-    it "dislikes anything other than None":
-        meta = Meta.empty()
+    it "dislikes anything other than None", meta:
         for v in (0, 1, True, False, {}, {1: 2}, [], [1], lambda: None):
-            with self.fuzzyAssertRaisesError(BadSpecValue, "Expected None", got=v, meta=meta):
+            with assertRaises(BadSpecValue, "Expected None", got=v, meta=meta):
                 sb.none_spec().normalise(meta, v)

@@ -1,14 +1,21 @@
-from .errors import BadDirectory, BadFilename, BadSpec, BadSpecDefinition, BadSpecValue
+from .errors import (
+    BadDirectory,
+    BadFilename,
+    BadSpec,
+    BadSpecDefinition,
+    BadSpecValue,
+    DeprecatedKey,
+)
 from .validators import Validator
+from . import validators as va
 from . import spec_base as sb
 from .dictobj import dictobj
-from . import validators
 from .meta import Meta
 
 __all__ = [
     "sb",
+    "va",
     "dictobj",
-    "validators",
     "Validator",
     "Meta",
     "BadDirectory",
@@ -16,4 +23,5 @@ __all__ = [
     "BadSpec",
     "BadSpecDefinition",
     "BadSpecValue",
+    "DeprecatedKey",
 ]

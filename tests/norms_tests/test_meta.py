@@ -1,12 +1,11 @@
 # coding: spec
 
-from input_algorithms.meta import Meta
+from delfick_project.norms import Meta
 
-from noseOfYeti.tokeniser.support import noy_sup_setUp
-from tests.helpers import TestCase
-import mock
+from unittest import mock
+import pytest
 
-describe TestCase, "Meta":
+describe "Meta":
     it "holds everything and a path":
         path = mock.Mock(name="path")
         everything = mock.Mock(name="everything")
@@ -25,49 +24,54 @@ describe TestCase, "Meta":
         assert Meta({}, []) == Meta.empty()
 
     describe "New path":
-        before_each:
-            self.p1 = mock.Mock(name="p1")
-            self.p2 = mock.Mock(name="p2")
-            self.path = [(self.p1, ""), (self.p2, "")]
-            self.everything = mock.Mock(name="everything")
-            self.meta = Meta(self.everything, self.path)
+
+        @pytest.fixture()
+        def ms(self):
+            class Mocks:
+                p1 = mock.Mock(name="p1")
+                p2 = mock.Mock(name="p2")
+                everything = mock.Mock(name="everything")
+
+            Mocks.path = [(Mocks.p1, ""), (Mocks.p2, "")]
+            Mocks.meta = Meta(Mocks.everything, Mocks.path)
+            return Mocks
 
         describe "indexed_at":
-            it "returns a new instance of itself with a new path saying indexed to some index":
+            it "returns a new instance of itself with a new path saying indexed to some index", ms:
                 new_path = mock.Mock(name="new_path")
                 with_new_path = mock.Mock(name="with_new_path")
                 new_path.return_value = with_new_path
 
-                with mock.patch.object(self.meta, "new_path", new_path):
-                    assert self.meta.indexed_at(3) is with_new_path
+                with mock.patch.object(ms.meta, "new_path", new_path):
+                    assert ms.meta.indexed_at(3) is with_new_path
 
                 new_path.assert_called_once_with([("", "[3]")])
 
         describe "at":
-            it "returns a new instance of itself with a new path saying it goes to some key":
+            it "returns a new instance of itself with a new path saying it goes to some key", ms:
                 new_path = mock.Mock(name="new_path")
                 with_new_path = mock.Mock(name="with_new_path")
                 new_path.return_value = with_new_path
 
-                with mock.patch.object(self.meta, "new_path", new_path):
-                    assert self.meta.at("meh") is with_new_path
+                with mock.patch.object(ms.meta, "new_path", new_path):
+                    assert ms.meta.at("meh") is with_new_path
 
                 new_path.assert_called_once_with([("meh", "")])
 
         describe "new_path":
-            it "returns a new instance of the current class with an expanded path":
+            it "returns a new instance of the current class with an expanded path", ms:
                 p3 = mock.Mock(name="p3")
 
                 class MetaSub(Meta):
                     pass
 
-                meta = MetaSub(self.everything, self.path)
-                assert meta._path == [(self.p1, ""), (self.p2, "")]
+                meta = MetaSub(ms.everything, ms.path)
+                assert meta._path == [(ms.p1, ""), (ms.p2, "")]
 
                 new = meta.new_path([(p3, "")])
-                assert meta._path == [(self.p1, ""), (self.p2, "")]
-                assert new._path == [(self.p1, ""), (self.p2, ""), (p3, "")]
-                assert new.everything is self.everything
+                assert meta._path == [(ms.p1, ""), (ms.p2, "")]
+                assert new._path == [(ms.p1, ""), (ms.p2, ""), (p3, "")]
+                assert new.everything is ms.everything
                 assert isinstance(new, MetaSub), type(new)
 
     describe "Joining the path":

@@ -1,13 +1,10 @@
 # coding: spec
 
-from tests.helpers import TestCase
+from delfick_project.norms import BadSpecValue, dictobj, sb, Meta
 
-from input_algorithms.errors import BadSpecValue
-from input_algorithms.dictobj import dictobj
-from input_algorithms import spec_base as sb
-from input_algorithms.meta import Meta
+from delfick_project.errors_pytest import assertRaises
 
-describe TestCase, "Selection":
+describe "Selection":
     describe "plain dictobj with lists":
         it "works with plain fields":
 
@@ -115,7 +112,7 @@ describe TestCase, "Selection":
             error1 = BadSpecValue("Expected a value but got none", meta=m.at("two"))
             error2 = BadSpecValue("Expected a value but got none", meta=m.at("one"))
 
-            with self.fuzzyAssertRaisesError(BadSpecValue, _errors=[error1, error2]):
+            with assertRaises(BadSpecValue, _errors=[error1, error2]):
                 changed = Changed.FieldSpec().normalise(m, {})
 
         it "can override all_required with optional":
@@ -133,7 +130,7 @@ describe TestCase, "Selection":
             m = Meta.empty()
             error2 = BadSpecValue("Expected a value but got none", meta=m.at("one"))
 
-            with self.fuzzyAssertRaisesError(BadSpecValue, _errors=[error2]):
+            with assertRaises(BadSpecValue, _errors=[error2]):
                 changed = Changed.FieldSpec().normalise(m, {})
 
         it "can override all_optional with required":
@@ -151,5 +148,5 @@ describe TestCase, "Selection":
             m = Meta.empty()
             error1 = BadSpecValue("Expected a value but got none", meta=m.at("two"))
 
-            with self.fuzzyAssertRaisesError(BadSpecValue, _errors=[error1]):
+            with assertRaises(BadSpecValue, _errors=[error1]):
                 changed = Changed.FieldSpec().normalise(m, {})
