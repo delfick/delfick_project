@@ -4,6 +4,7 @@ from delfick_project.option_merge import Collector, MergedOptions
 
 from delfick_project.errors_pytest import assertRaises
 from delfick_project.errors import DelfickError
+from delfick_project.norms import sb, Meta
 
 from contextlib import contextmanager
 from getpass import getpass
@@ -43,11 +44,8 @@ describe "Collector":
 
     describe "register_converters":
         it "adds converters":
-            meta = mock.Mock(name="meta")
-            Meta = mock.Mock(name="Meta", return_value=meta)
-            NotSpecified = mock.Mock(name="NotSpecified")
-
-            configuration = MergedOptions.using({"two": 2, "three": 3})
+            configuration = MergedOptions.using({"two": {"three.four": 2}, "three": 3})
+            meta = Meta(configuration, [])
 
             spec1 = mock.Mock(name="spec1")
             spec1.normalise.return_value = "ONE"
@@ -55,18 +53,19 @@ describe "Collector":
             spec2 = mock.Mock(name="spec2")
             spec2.normalise.return_value = "TWO"
 
-            specs = {(0, ("one",)): spec1, (0, ("two",)): spec2}
+            specs = {"one": spec1, ("two", "three.four"): spec2}
 
             collector = Collector()
-            collector.register_converters(specs, Meta, configuration, NotSpecified)
+            collector.configuration = configuration
+            collector.register_converters(specs)
             configuration.converters.activate()
 
             assert configuration["one"] == "ONE"
-            assert configuration["two"] == "TWO"
+            assert configuration["two.three.four"] == "TWO"
             assert configuration["three"] == 3
 
-            spec1.normalise.assert_called_once_with(meta.at("one"), NotSpecified)
-            spec2.normalise.assert_called_once_with(meta.at("two"), 2)
+            spec1.normalise.assert_called_once_with(meta.at("one"), sb.NotSpecified)
+            spec2.normalise.assert_called_once_with(meta.at("two").at("three.four"), 2)
 
     describe "Cloning":
         it "returns an instance that has rerun collect_configuration and prepare":

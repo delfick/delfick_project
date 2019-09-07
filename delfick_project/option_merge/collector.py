@@ -63,6 +63,8 @@ For example:
 
 from .converter import Converter
 
+from delfick_project.norms import Meta, sb
+
 from getpass import getpass
 import logging
 import os
@@ -190,26 +192,50 @@ class Collector(object):
         self.configuration.converters.activate()
         self.extra_prepare_after_activation(self.configuration, args_dict)
 
-    def register_converters(self, specs, Meta, configuration, NotSpecified):
+    def register_converters(self, specs, configuration=None, announce_converters=True):
         """
         Register converters
 
         specs
-            a Dictionary of {(priority, [path]): spec}
+            a Dictionary of {key: spec}
 
-        Meta
-            The class to instantiate to create ``meta``
+            Where key is either a string or a tuple of strings
 
-            The converter will call ``spec.normalise(meta, val)``
+            You would use a tuple of strings if you want to have a nested key,
+            which is useful if any part of the key has dots in it.
+
+            For example ``("images", "ubuntu.16.04")``
 
         configuration
-            The configuration to add the converter to
+            The configuration to add the converter to.
+
+            This defaults to self.configuration
+
+        announce_converters
+            If True (default) then we log when we convert these keys
+
+        For example:
+
+        .. code-block:: python
+
+            collector.register_converters({
+                "one": sb.string_spec(),
+                ("two", "three"): sb.integer_spec()
+            })
         """
-        for (_, key), spec in sorted(specs.items()):
+        if configuration is None:
+            configuration = self.configuration
+
+        s = sb.dictof(sb.tupleof(sb.string_spec()), sb.any_spec())
+        specs = s.normalise(Meta.empty().at("<register_converters>"), specs)
+
+        for key, spec in specs.items():
 
             def make_converter(k, s):
                 def converter(p, v):
-                    log.info("Converting %s", p)
+                    if announce_converters:
+                        log.info("Converting %s", p)
+
                     meta = Meta(p.configuration, [])
                     for kk in k:
                         meta = meta.at(kk)
@@ -218,7 +244,7 @@ class Collector(object):
 
                 configuration.add_converter(Converter(convert=converter, convert_path=k))
                 if k not in configuration:
-                    configuration[k] = NotSpecified
+                    configuration[k] = sb.NotSpecified
 
             make_converter(key, spec)
 

@@ -49,3 +49,8 @@ Changelog
      ``from delfick_project.addons import addon_hook`` and the default namespace
      it looks for is now ``delfick_project.addons`` rather than
      ``option_merge.addons``
+
+   * collector.register_converters now has a different signature. You just pass
+     in a dictionary of ``{key: spec}`` where key is either a string or tuple
+     of strings. So you don't need to tell it about the Meta or NotSpecified
+     objects.
