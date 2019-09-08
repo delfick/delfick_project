@@ -1,4 +1,4 @@
-from namespace_green import VERSION
+from namespace_blue import VERSION
 from setuptools import setup
 
 # fmt: off

@@ -1,13 +1,11 @@
 # coding: spec
 
-from option_merge_addons import Register, option_merge_addon_hook
+from delfick_project.addons import Register, addon_hook
 
-from noseOfYeti.tokeniser.support import noy_sup_setUp
-from tests.helpers import TestCase
+from unittest import mock
+import pytest
 
-import mock
-
-describe TestCase, "Register":
+describe "Register":
     it "takes in an addon_getter and a collector":
         addon_getter = mock.Mock(name="addon_getter")
         collector = mock.Mock(name="collector")
@@ -176,7 +174,7 @@ describe TestCase, "Register":
             layersInstance = mock.Mock(name="LayersInstance", layered=[layer1, layer2])
             FakeLayers = mock.Mock(name="Layers", return_value=layersInstance)
 
-            with mock.patch("option_merge_addons.Layers", FakeLayers):
+            with mock.patch("delfick_project.addons.Layers", FakeLayers):
                 register = Register(None, None)
                 register.imported = {("n1", "n1"): True, ("n1", "n2"): True, ("n2", "n1"): True}
                 layered = list(register.layered)
@@ -190,9 +188,14 @@ describe TestCase, "Register":
             ]
 
     describe "_import_known":
-        before_each:
-            self.collector = mock.Mock(name="collector")
-            self.addon_getter = mock.Mock(name="addon_getter")
+
+        @pytest.fixture()
+        def ms(self):
+            class Mocks:
+                collector = mock.Mock(name="collector")
+                addon_getter = mock.Mock(name="addon_getter")
+
+            return Mocks
 
         it "returns false if everything in known is already in imported":
             register = Register(None, None)
@@ -200,25 +203,25 @@ describe TestCase, "Register":
             register.imported = {(1, 2): True, (3, 4): True}
             assert not register._import_known()
 
-        it "uses addon_getter on anything not already imported and does nothing with the result":
-            register = Register(self.addon_getter, self.collector)
+        it "uses addon_getter on anything not already imported and does nothing with the result", ms:
+            register = Register(ms.addon_getter, ms.collector)
             register.add_pairs((1, 3))
             res = type("result", (object,), {"extras": [(4, 5)]})()
-            self.addon_getter.return_value = res
+            ms.addon_getter.return_value = res
 
             assert register.imported == {}
             assert register.known == [(1, 3)]
             assert register._import_known()
-            self.addon_getter.assert_called_once_with(1, 3, self.collector, known=[(1, 3)])
-            self.addon_getter.reset_mock()
+            ms.addon_getter.assert_called_once_with(1, 3, ms.collector, known=[(1, 3)])
+            ms.addon_getter.reset_mock()
             assert register.imported == {(1, 3): res}
             assert register.known == [(1, 3), (4, 5)]
 
             # And test it imports what it found
             res2 = type("result2", (object,), {"extras": []})()
-            self.addon_getter.return_value = res2
+            ms.addon_getter.return_value = res2
             assert register._import_known()
-            self.addon_getter.assert_called_once_with(4, 5, self.collector, known=[(1, 3), (4, 5)])
+            ms.addon_getter.assert_called_once_with(4, 5, ms.collector, known=[(1, 3), (4, 5)])
             assert register.imported == {(1, 3): res, (4, 5): res2}
             assert register.known == [(1, 3), (4, 5)]
 
@@ -287,7 +290,7 @@ describe TestCase, "Register":
         it "replaces __all__":
             i1 = mock.Mock(name="i1")
 
-            @option_merge_addon_hook(extras=[("one", "__all__"), ("one", "one"), ("two", "one")])
+            @addon_hook(extras=[("one", "__all__"), ("one", "one"), ("two", "one")])
             def r1(*args, **kwargs):
                 pass
 

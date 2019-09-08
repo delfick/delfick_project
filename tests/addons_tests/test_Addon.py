@@ -1,17 +1,16 @@
 # coding: spec
 
-from option_merge_addons import Addon
+from delfick_project.addons import Addon
 
-from input_algorithms.spec_base import NotSpecified
-from input_algorithms.meta import Meta
-from tests.helpers import TestCase
-import mock
+from delfick_project.norms import Meta
 
-describe TestCase, "Addon":
+from unittest import mock
+
+describe "Addon":
     it "has name, a resolver and a namespace":
         resolver = mock.Mock(name="resolver")
         addon = Addon.FieldSpec().normalise(
-            Meta({}, []), {"name": "bob", "resolver": resolver, "namespace": "stuff"}
+            Meta.empty(), {"name": "bob", "resolver": resolver, "namespace": "stuff"}
         )
         assert addon.name == "bob"
         assert addon.resolver == resolver
@@ -63,9 +62,9 @@ describe TestCase, "Addon":
             addon.process(collector)
 
             assert collector.register_converters.mock_calls == [
-                mock.call([specs1, specs2], Meta, configuration, NotSpecified),
-                mock.call([specs3], Meta, configuration, NotSpecified),
-                mock.call(None, Meta, configuration, NotSpecified),
+                mock.call([specs1, specs2]),
+                mock.call([specs3]),
+                mock.call(None),
             ]
 
     describe "post_register":

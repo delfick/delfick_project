@@ -1,4 +1,4 @@
-from delfick_project.errors import BadSpecValue, dictobj, sb, Meta
+from delfick_project.norms import BadSpecValue, dictobj, sb, Meta
 from delfick_project.errors import DelfickError, ProgrammerError
 from delfick_project.layerz import Layers
 
@@ -100,9 +100,7 @@ class Addon(dictobj.Spec):
     def process(self, collector):
         for result in self.resolved:
             if collector is not None:
-                collector.register_converters(
-                    result.get("specs", {}), Meta, collector.configuration, sb.NotSpecified
-                )
+                collector.register_converters(result.get("specs", {}))
 
     def post_register(self, **kwargs):
         list(self.resolver(post_register=True, **kwargs))

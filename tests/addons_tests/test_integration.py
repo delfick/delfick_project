@@ -1,14 +1,20 @@
 # coding: spec
 
-from option_merge_addons import AddonGetter, Register
+from delfick_project.addons import AddonGetter, Register
 
-from tests.helpers import TestCase
-from tests import global_register
+from unittest import mock
+import pytest
 
-import mock
 
-describe TestCase, "order of import, resolution and post order":
-    it "does it in the right order":
+@pytest.fixture()
+def global_register():
+    from addons_tests_register import global_register
+
+    return global_register
+
+
+describe "order of import, resolution and post order":
+    it "does it in the right order", global_register:
         global_register["imported"] = []
         addon_getter = AddonGetter()
         addon_getter.add_namespace("black.addons")

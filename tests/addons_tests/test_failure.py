@@ -1,14 +1,21 @@
 # coding: spec
 
-from option_merge_addons import AddonGetter, Register, Addon, ProgrammerError
+from delfick_project.addons import AddonGetter, Register, Addon
 
-from tests.helpers import TestCase
-from tests import global_register
+from delfick_project.errors_pytest import assertRaises
+from delfick_project.errors import ProgrammerError
+from delfick_project.layerz import DepCycle
 
-from noseOfYeti.tokeniser.support import noy_sup_setUp
-import layerz
-import mock
+from unittest import mock
+import pytest
 import sys
+
+
+@pytest.fixture()
+def global_register():
+    from addons_tests_register import global_register
+
+    return global_register
 
 
 def expected_import_error(module):
@@ -18,30 +25,37 @@ def expected_import_error(module):
         return "No module named '{0}'".format(module)
 
 
-describe TestCase, "Failure":
-    before_each:
-        self.getter = AddonGetter()
-        self.collector = mock.Mock(name="collector")
-        self.collector.configuration = {"resolved": []}
-        self.getter.add_namespace("failure.addons")
+describe "Failure":
 
-    it "complains if the addon is unimportable":
+    @pytest.fixture()
+    def getter(self):
+        getter = AddonGetter()
+        getter.add_namespace("failure.addons")
+        return getter
+
+    @pytest.fixture()
+    def collector(self):
+        collector = mock.Mock(name="collector")
+        collector.configuration = {"resolved": []}
+        return collector
+
+    it "complains if the addon is unimportable", getter, collector:
         error = AddonGetter.BadImport(
             "Error whilst resolving entry_point",
             error=expected_import_error("wasdf"),
             importing="failure.addons.unimportable",
             module="namespace_failure.unimportable",
         )
-        with self.fuzzyAssertRaisesError(
+        with assertRaises(
             AddonGetter.BadImport, "Failed to import some entry points", _errors=[error]
         ):
-            self.getter("failure.addons", "unimportable", self.collector)
+            getter("failure.addons", "unimportable", collector)
 
-    it "complains if the addon recursively includes itself via another plugin at import time":
-        self.collector.configuration = {"resolved": []}
-        register = Register(self.getter, self.collector)
-        with self.fuzzyAssertRaisesError(
-            layerz.DepCycle,
+    it "complains if the addon recursively includes itself via another plugin at import time", getter, collector:
+        collector.configuration = {"resolved": []}
+        register = Register(getter, collector)
+        with assertRaises(
+            DepCycle,
             chain=[
                 ("failure.addons", "recursive1"),
                 ("failure.addons", "recursive2"),
@@ -50,11 +64,11 @@ describe TestCase, "Failure":
         ):
             register.register(("failure.addons", "recursive1"))
 
-    it "complains if the addon recursively includes itself via another plugin at resolve time":
-        self.collector.configuration = {"resolved": []}
-        register = Register(self.getter, self.collector)
-        with self.fuzzyAssertRaisesError(
-            layerz.DepCycle,
+    it "complains if the addon recursively includes itself via another plugin at resolve time", getter, collector:
+        collector.configuration = {"resolved": []}
+        register = Register(getter, collector)
+        with assertRaises(
+            DepCycle,
             chain=[
                 ("failure.addons", "recursive1_extra"),
                 ("failure.addons", "recursive2_extra"),
@@ -63,9 +77,9 @@ describe TestCase, "Failure":
         ):
             register.register(("failure.addons", "recursive1_extra"))
 
-    it "complains if the hook doesn't work":
-        self.collector.configuration = {"resolved": []}
-        register = Register(self.getter, self.collector)
+    it "complains if the hook doesn't work", getter, collector:
+        collector.configuration = {"resolved": []}
+        register = Register(getter, collector)
         register.add_pairs(("failure.addons", "bad_hook"))
         register.recursive_import_known()
         error = Addon.BadHook(
@@ -74,44 +88,40 @@ describe TestCase, "Failure":
             name="bad_hook",
             namespace="failure.addons",
         )
-        with self.fuzzyAssertRaisesError(Addon.BadHook, _errors=[error]):
+        with assertRaises(Addon.BadHook, _errors=[error]):
             register.recursive_resolve_imported()
 
-    it "Only logs a warning if namespace isn't registered":
+    it "Only logs a warning if namespace isn't registered", getter, collector:
         fake_log = mock.Mock(name="fake_log")
-        with mock.patch("option_merge_addons.log", fake_log):
-            Register(self.getter, self.collector).register(("nonexistent", "blah"))
+        with mock.patch("delfick_project.addons.log", fake_log):
+            Register(getter, collector).register(("nonexistent", "blah"))
         fake_log.warning.assert_called_once_with(
             "Unknown plugin namespace\tnamespace=%s\tentry_point=%s\tavailable=%s",
             "nonexistent",
             "blah",
-            sorted(["option_merge.addons", "failure.addons"]),
+            sorted(["delfick_project.addons", "failure.addons"]),
         )
 
-    it "complains if it can't import an addon from a known namespace":
-        register = Register(self.getter, self.collector)
-        with self.fuzzyAssertRaisesError(
-            AddonGetter.NoSuchAddon, addon="failure.addons.nonexistent"
-        ):
+    it "complains if it can't import an addon from a known namespace", getter, collector:
+        register = Register(getter, collector)
+        with assertRaises(AddonGetter.NoSuchAddon, addon="failure.addons.nonexistent"):
             register.register(("failure.addons", "nonexistent"))
 
-    it "doesn't complain if the addon has no hook":
-        register = Register(self.getter, self.collector)
+    it "doesn't complain if the addon has no hook", getter, collector, global_register:
+        register = Register(getter, collector)
         register.add_pairs(("failure.addons", "nohook"))
         assert global_register["nohook_found"] == False
         register.recursive_import_known()
         assert global_register["nohook_found"] == True
 
-    it "doesn't complain if the hook doesn't have a result":
-        assert self.collector.configuration["resolved"] == []
-        Register(self.getter, self.collector).register(("failure.addons", "noresult"))
-        assert self.collector.configuration["resolved"] == [("namespace_failure.noresult",)]
+    it "doesn't complain if the hook doesn't have a result", getter, collector:
+        assert collector.configuration["resolved"] == []
+        Register(getter, collector).register(("failure.addons", "noresult"))
+        assert collector.configuration["resolved"] == [("namespace_failure.noresult",)]
 
-    it "complains if you try to make extra with a post_register hook":
-        with self.fuzzyAssertRaisesError(
+    it "complains if you try to make extra with a post_register hook", getter, collector:
+        with assertRaises(
             ProgrammerError,
             "Sorry, can't specify ``extras`` and ``post_register`` at the same time",
         ):
-            Register(self.getter, self.collector).register(
-                ("failure.addons", "postregister_and_extras")
-            )
+            Register(getter, collector).register(("failure.addons", "postregister_and_extras"))

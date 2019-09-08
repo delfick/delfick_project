@@ -1,16 +1,18 @@
 # coding: spec
 
-from option_merge_addons import AddonGetter, option_merge_addon_hook
+from delfick_project.addons import AddonGetter, addon_hook
 
-from noseOfYeti.tokeniser.support import noy_sup_setUp
-from input_algorithms.meta import Meta
-from tests.helpers import TestCase
+from delfick_project.errors_pytest import assertRaises
+from delfick_project.norms import Meta
+
 from operator import attrgetter
-import mock
+from unittest import mock
+import pytest
+import uuid
 
-describe TestCase, "AddonGetter":
-    it "defaults a option_merge.addons namespace":
-        assert list(AddonGetter().namespaces.keys()) == ["option_merge.addons"]
+describe "AddonGetter":
+    it "defaults a delfick_project.addons namespace":
+        assert list(AddonGetter().namespaces.keys()) == ["delfick_project.addons"]
 
     describe "add_namespace":
         it "registers result_spec and addon_spec in the namespaces dict":
@@ -31,25 +33,25 @@ describe TestCase, "AddonGetter":
             namespace = mock.Mock(name="namespace")
 
             def iter_entry_points(ns):
-                return {"option_merge.addons": [], namespace: [ep1, ep2, ep3]}[ns]
+                return {"delfick_project.addons": [], namespace: [ep1, ep2, ep3]}[ns]
 
             fake_iter_entry_points = mock.Mock(
                 name="iter_entry_points", side_effect=iter_entry_points
             )
 
             with mock.patch(
-                "option_merge_addons.pkg_resources.iter_entry_points", fake_iter_entry_points
+                "delfick_project.addons.pkg_resources.iter_entry_points", fake_iter_entry_points
             ):
                 getter = AddonGetter()
-                assert getter.entry_points == {"option_merge.addons": {}}
+                assert getter.entry_points == {"delfick_project.addons": {}}
                 getter.add_namespace(namespace)
                 assert getter.entry_points == {
-                    "option_merge.addons": {},
+                    "delfick_project.addons": {},
                     namespace: {"entry1": [ep1], "entry2": [ep2, ep3]},
                 }
 
             assert fake_iter_entry_points.mock_calls == [
-                mock.call("option_merge.addons"),
+                mock.call("delfick_project.addons"),
                 mock.call(namespace),
             ]
 
@@ -66,16 +68,20 @@ describe TestCase, "AddonGetter":
             assert sorted(getter.all_for("blah")) == sorted([("blah", "one"), ("blah", "two")])
 
     describe "get":
-        before_each:
-            self.getter = AddonGetter()
-            self.configuration = mock.Mock(name="configuration")
-            self.collector = mock.Mock(name="collector", configuration=self.configuration)
 
-        it "Logs a warning and does nothing if namespace is unknown":
-            assert "bob" not in self.getter.namespaces
-            assert self.getter("bob", "one", self.collector) is None
+        @pytest.fixture()
+        def getter(self):
+            return AddonGetter()
 
-        it "finds all the entry points and resolved the into the addon_spec":
+        @pytest.fixture()
+        def collector(self):
+            return mock.Mock(name="collector")
+
+        it "Logs a warning and does nothing if namespace is unknown", getter, collector:
+            assert "bob" not in getter.namespaces
+            assert getter("bob", "one", collector) is None
+
+        it "finds all the entry points and resolved the into the addon_spec", getter:
             known = mock.Mock(name="known")
             result = mock.Mock(name="result")
             normalised = mock.Mock(name="normalised")
@@ -99,17 +105,17 @@ describe TestCase, "AddonGetter":
                 name="resolve_entry_points", return_value=(resolver, extras)
             )
 
-            self.getter.add_namespace(namespace, result_spec, addon_spec)
+            getter.add_namespace(namespace, result_spec, addon_spec)
 
             with mock.patch.multiple(
-                self.getter,
+                getter,
                 find_entry_points=fake_find_entry_points,
                 resolve_entry_points=fake_resolve_entry_points,
             ):
-                assert self.getter(namespace, entry_point_name, collector, known) == normalised
+                assert getter(namespace, entry_point_name, collector, known) == normalised
 
             addon_spec.normalise.assert_called_once_with(
-                Meta({}, []),
+                Meta.empty(),
                 {
                     "namespace": namespace,
                     "name": entry_point_name,
@@ -147,131 +153,143 @@ describe TestCase, "AddonGetter":
             result_spec.normalise.assert_called_once_with(mock.ANY, {"blah": "one"})
 
     describe "find_entry_points":
-        before_each:
-            self.namespace = mock.Mock(name="namesapce")
-            self.entry_point_name = mock.Mock(name="entry_point_name")
-            self.entry_point_full_name = "{0}.{1}".format(self.namespace, self.entry_point_name)
 
-        it "uses pkg_resources.iter_entry_points":
+        @pytest.fixture()
+        def ms(self):
+            class Mocks:
+                namespace = mock.Mock(name="namesapce")
+                entry_point_name = mock.Mock(name="entry_point_name")
+
+            Mocks.entry_point_full_name = f"{Mocks.namespace}.{Mocks.entry_point_name}"
+            return Mocks
+
+        it "uses pkg_resources.iter_entry_points", ms:
             ep = mock.Mock(name="ep")
-            ep.name = self.entry_point_name
+            ep.name = ms.entry_point_name
             fake_iter_entry_points = mock.Mock(name="iter_entry_points", return_value=[ep])
 
             with mock.patch(
-                "option_merge_addons.pkg_resources.iter_entry_points", fake_iter_entry_points
+                "delfick_project.addons.pkg_resources.iter_entry_points", fake_iter_entry_points
             ):
                 res = AddonGetter()
-                res.add_namespace(self.namespace)
+                res.add_namespace(ms.namespace)
                 found = res.find_entry_points(
-                    self.namespace, self.entry_point_name, self.entry_point_full_name
+                    ms.namespace, ms.entry_point_name, ms.entry_point_full_name
                 )
                 assert found == [ep]
 
-        it "complains if it finds no entry points":
+        it "complains if it finds no entry points", ms:
             fake_iter_entry_points = mock.Mock(name="iter_entry_points", return_value=[])
 
-            with self.fuzzyAssertRaisesError(
-                AddonGetter.NoSuchAddon, addon=self.entry_point_full_name
-            ):
+            with assertRaises(AddonGetter.NoSuchAddon, addon=ms.entry_point_full_name):
                 with mock.patch(
-                    "option_merge_addons.pkg_resources.iter_entry_points", fake_iter_entry_points
+                    "delfick_project.addons.pkg_resources.iter_entry_points", fake_iter_entry_points
                 ):
                     res = AddonGetter()
-                    res.add_namespace(self.namespace)
+                    res.add_namespace(ms.namespace)
                     res.find_entry_points(
-                        self.namespace, self.entry_point_name, self.entry_point_full_name
+                        ms.namespace, ms.entry_point_name, ms.entry_point_full_name
                     )
 
-        it "uses all found entry points if it finds many":
+        it "uses all found entry points if it finds many", ms:
             ep = mock.Mock(name="ep")
-            ep.name = self.entry_point_name
+            ep.name = ms.entry_point_name
             ep2 = mock.Mock(name="ep2")
-            ep2.name = self.entry_point_name
+            ep2.name = ms.entry_point_name
             fake_iter_entry_points = mock.Mock(name="iter_entry_points", return_value=[ep, ep2])
 
             with mock.patch(
-                "option_merge_addons.pkg_resources.iter_entry_points", fake_iter_entry_points
+                "delfick_project.addons.pkg_resources.iter_entry_points", fake_iter_entry_points
             ):
                 res = AddonGetter()
-                res.add_namespace(self.namespace)
+                res.add_namespace(ms.namespace)
                 found = res.find_entry_points(
-                    self.namespace, self.entry_point_name, self.entry_point_full_name
+                    ms.namespace, ms.entry_point_name, ms.entry_point_full_name
                 )
                 assert found == [ep, ep2]
 
     describe "resolve_entry_points":
-        before_each:
-            self.namespace = mock.Mock(name="namespace")
-            self.entry_point_name = mock.Mock(name="entry_point_name")
-            self.collector = mock.Mock(name="collector")
-            self.result_maker = mock.Mock(name="result_maker")
 
-            self.module_name1 = self.unique_value()
-            self.module_name2 = self.unique_value()
-            self.ep1 = mock.Mock(name="ep1", module_name=self.module_name1)
-            self.ep2 = mock.Mock(name="ep2", module_name=self.module_name2)
-            self.entry_points = [self.ep1, self.ep2]
-            self.entry_point_full_name = mock.Mock(name="entry_point_full_name")
+        @pytest.fixture()
+        def ms(self):
+            class Mocks:
+                namespace = mock.Mock(name="namespace")
+                entry_point_name = mock.Mock(name="entry_point_name")
+                collector = mock.Mock(name="collector")
+                result_maker = mock.Mock(name="result_maker")
 
-            self.getter = AddonGetter()
+                module_name1 = str(uuid.uuid1())
+                module_name2 = str(uuid.uuid1())
 
-        it "raises an error if it can't resolve any of the entry points":
+            return Mocks
+
+        @pytest.fixture()
+        def entry(self, ms):
+            class Entry:
+                ep1 = mock.Mock(name="ep1", module_name=ms.module_name1)
+                ep2 = mock.Mock(name="ep2", module_name=ms.module_name2)
+
+            Entry.entry_points = [Entry.ep1, Entry.ep2]
+            Entry.entry_point_full_name = mock.Mock(name="entry_point_full_name")
+            return Entry
+
+        @pytest.fixture()
+        def getter(self):
+            return AddonGetter()
+
+        it "raises an error if it can't resolve any of the entry points", getter, entry, ms:
             e1 = ImportError("nup")
-            self.ep1.resolve.side_effect = e1
-            self.ep1.resolve.return_value = {}
+            entry.ep1.resolve.side_effect = e1
+            entry.ep1.resolve.return_value = {}
 
             found_error = AddonGetter.BadImport(
                 "Error whilst resolving entry_point",
-                importing=self.entry_point_full_name,
-                module=self.ep1.module_name,
+                importing=entry.entry_point_full_name,
+                module=entry.ep1.module_name,
                 error=str(e1),
             )
 
-            with self.fuzzyAssertRaisesError(
+            with assertRaises(
                 AddonGetter.BadImport, "Failed to import some entry points", _errors=[found_error]
             ):
-                self.getter.resolve_entry_points(
-                    self.namespace,
-                    self.entry_point_name,
-                    self.collector,
-                    self.result_maker,
-                    self.entry_points,
-                    self.entry_point_full_name,
+                getter.resolve_entry_points(
+                    ms.namespace,
+                    ms.entry_point_name,
+                    ms.collector,
+                    ms.result_maker,
+                    entry.entry_points,
+                    entry.entry_point_full_name,
                     [],
                 )
 
-        it "gets a resolver and returns it with the extras":
-            self.ep1.resolve.return_value = type(
+        it "gets a resolver and returns it with the extras", getter, entry, ms:
+            entry.ep1.resolve.return_value = type(
                 "module",
                 (object,),
-                {
-                    "hook": option_merge_addon_hook(extras=[("one", "two")])(
-                        lambda *args, **kwargs: None
-                    )
-                },
+                {"hook": addon_hook(extras=[("one", "two")])(lambda *args, **kwargs: None)},
             )
-            self.ep2.resolve.return_value = type("module", (object,), {})
+            entry.ep2.resolve.return_value = type("module", (object,), {})
 
             resolver = mock.Mock(name="resolver")
             fake_get_resolver = mock.Mock(name="get_resolver", return_value=resolver)
 
-            hooks, extras = self.getter.resolve_entry_points(
-                self.namespace,
-                self.entry_point_name,
-                self.collector,
-                self.result_maker,
-                self.entry_points,
-                self.entry_point_full_name,
+            hooks, extras = getter.resolve_entry_points(
+                ms.namespace,
+                ms.entry_point_name,
+                ms.collector,
+                ms.result_maker,
+                entry.entry_points,
+                entry.entry_point_full_name,
                 [],
             )
-            with mock.patch.object(self.getter, "get_resolver", fake_get_resolver):
-                res = self.getter.resolve_entry_points(
-                    self.namespace,
-                    self.entry_point_name,
-                    self.collector,
-                    self.result_maker,
-                    self.entry_points,
-                    self.entry_point_full_name,
+            with mock.patch.object(getter, "get_resolver", fake_get_resolver):
+                res = getter.resolve_entry_points(
+                    ms.namespace,
+                    ms.entry_point_name,
+                    ms.collector,
+                    ms.result_maker,
+                    entry.entry_points,
+                    entry.entry_point_full_name,
                     [],
                 )
                 assert res == (resolver, extras)
@@ -280,7 +298,7 @@ describe TestCase, "AddonGetter":
         it "finds hooks from the modules":
             hook1 = lambda *args, **kwargs: None
             module1 = type("module", (object,), {})
-            module2 = type("module", (object,), {"hook": option_merge_addon_hook()(hook1)})
+            module2 = type("module", (object,), {"hook": addon_hook()(hook1)})
             modules = [module1, module2]
 
             assert AddonGetter().get_hooks_and_extras(modules, []) == ([module2.hook], [])
@@ -293,8 +311,8 @@ describe TestCase, "AddonGetter":
                 "module",
                 (object,),
                 {
-                    "hook": option_merge_addon_hook()(hook1),
-                    "other": option_merge_addon_hook()(hook2),
+                    "hook": addon_hook()(hook1),
+                    "other": addon_hook()(hook2),
                     "not_a_hook": lambda: None,
                 },
             )
@@ -309,13 +327,13 @@ describe TestCase, "AddonGetter":
             hook1 = lambda *args, **kwargs: None
             hook2 = lambda *args, **kwargs: None
             hook3 = lambda *args, **kwargs: None
-            module1 = type("module", (object,), {"fasf": option_merge_addon_hook()(hook3)})
+            module1 = type("module", (object,), {"fasf": addon_hook()(hook3)})
             module2 = type(
                 "module",
                 (object,),
                 {
-                    "hook": option_merge_addon_hook()(hook1),
-                    "other": option_merge_addon_hook()(hook2),
+                    "hook": addon_hook()(hook1),
+                    "other": addon_hook()(hook2),
                     "not_a_hook": lambda: None,
                 },
             )
@@ -331,16 +349,14 @@ describe TestCase, "AddonGetter":
             hook2 = lambda *args, **kwargs: None
             hook3 = lambda *args, **kwargs: None
             module1 = type(
-                "module",
-                (object,),
-                {"fasf": option_merge_addon_hook(extras=[("one", "two")])(hook3)},
+                "module", (object,), {"fasf": addon_hook(extras=[("one", "two")])(hook3)}
             )
             module2 = type(
                 "module",
                 (object,),
                 {
-                    "hook": option_merge_addon_hook(extras=[("one", "three")])(hook1),
-                    "other": option_merge_addon_hook(extras=[("four", "five")])(hook2),
+                    "hook": addon_hook(extras=[("one", "three")])(hook1),
+                    "other": addon_hook(extras=[("four", "five")])(hook2),
                     "not_a_hook": lambda: None,
                 },
             )
@@ -356,11 +372,7 @@ describe TestCase, "AddonGetter":
             module1 = type(
                 "module",
                 (object,),
-                {
-                    "asdf": option_merge_addon_hook(extras=[("one", "one"), ("one", "__all__")])(
-                        hook1
-                    )
-                },
+                {"asdf": addon_hook(extras=[("one", "one"), ("one", "__all__")])(hook1)},
             )
             modules = [module1]
 
@@ -376,59 +388,50 @@ describe TestCase, "AddonGetter":
             all_for.assert_called_once_with("one")
 
     describe "get_resolver":
-        before_each:
-            self.hooks = mock.Mock(name="hooks")
-            self.collector = mock.Mock(name="collector")
-            self.result_maker = mock.Mock(name="result_maker")
 
-        it "returns a function":
-            assert callable(
-                AddonGetter().get_resolver(self.collector, self.result_maker, self.hooks)
-            )
+        @pytest.fixture()
+        def ms(self):
+            class Mocks:
+                hooks = mock.Mock(name="hooks")
+                collector = mock.Mock(name="collector")
+                result_maker = mock.Mock(name="result_maker")
 
-        it "calls just the post_register hooks if post_register is True and also gives them the kwargs":
+            return Mocks
+
+        it "returns a function", ms:
+            assert callable(AddonGetter().get_resolver(ms.collector, ms.result_maker, ms.hooks))
+
+        it "calls just the post_register hooks if post_register is True and also gives them the kwargs", ms:
             called = []
             kw3 = mock.Mock(name="kw3")
             kw4 = mock.Mock(name="kw4")
 
-            hook1 = option_merge_addon_hook(post_register=True)(
-                lambda c, kw3, kw4: called.append((c, 1))
-            )
-            hook2 = option_merge_addon_hook(post_register=False)(lambda: called.append(2))
-            hook3 = option_merge_addon_hook(post_register=True)(
-                lambda c, kw3, kw4: called.append((c, 3))
-            )
-            hook4 = option_merge_addon_hook(post_register=False)(lambda: called.append(4))
+            hook1 = addon_hook(post_register=True)(lambda c, kw3, kw4: called.append((c, 1)))
+            hook2 = addon_hook(post_register=False)(lambda: called.append(2))
+            hook3 = addon_hook(post_register=True)(lambda c, kw3, kw4: called.append((c, 3)))
+            hook4 = addon_hook(post_register=False)(lambda: called.append(4))
             hooks = [hook1, hook2, hook3, hook4]
 
-            resolver = AddonGetter().get_resolver(self.collector, self.result_maker, hooks)
+            resolver = AddonGetter().get_resolver(ms.collector, ms.result_maker, hooks)
 
             assert called == []
             list(resolver(post_register=True, kw3=kw3, kw4=kw4))
-            assert called == [(self.collector, 1), (self.collector, 3)]
+            assert called == [(ms.collector, 1), (ms.collector, 3)]
 
-        it "calls non post_register hooks if post_register is False and passes in the collector and result_maker":
+        it "calls non post_register hooks if post_register is False and passes in the collector and result_maker", ms:
             called = []
 
-            hook1 = option_merge_addon_hook(post_register=True)(
-                lambda c, kw3, kw4: called.append((c, 1))
-            )
-            hook2 = option_merge_addon_hook(post_register=False)(
-                lambda c, r: called.append((c, r, 2))
-            )
-            hook3 = option_merge_addon_hook(post_register=True)(
-                lambda c, kw3, kw4: called.append((c, 3))
-            )
-            hook4 = option_merge_addon_hook(post_register=False)(
-                lambda c, r: called.append((c, r, 4))
-            )
+            hook1 = addon_hook(post_register=True)(lambda c, kw3, kw4: called.append((c, 1)))
+            hook2 = addon_hook(post_register=False)(lambda c, r: called.append((c, r, 2)))
+            hook3 = addon_hook(post_register=True)(lambda c, kw3, kw4: called.append((c, 3)))
+            hook4 = addon_hook(post_register=False)(lambda c, r: called.append((c, r, 4)))
             hooks = [hook1, hook2, hook3, hook4]
 
-            resolver = AddonGetter().get_resolver(self.collector, self.result_maker, hooks)
+            resolver = AddonGetter().get_resolver(ms.collector, ms.result_maker, hooks)
 
             assert called == []
             list(resolver(post_register=False))
             assert called == [
-                (self.collector, self.result_maker, 2),
-                (self.collector, self.result_maker, 4),
+                (ms.collector, ms.result_maker, 2),
+                (ms.collector, ms.result_maker, 4),
             ]
