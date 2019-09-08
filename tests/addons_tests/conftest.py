@@ -10,16 +10,16 @@ def needs_installation(location):
     name = os.path.basename(location)
     l = os.path.join(location, name, "__init__.py")
     if not os.path.exists(l):
-        raise Exception(f"Failed to find __init__.py for {name}")
+        raise Exception("Failed to find __init__.py for {0}".format(name))
     version = runpy.run_path(l)["VERSION"]
 
     try:
         pkg = __import__(name)
         if pkg.VERSION != version:
-            print(f"expected {name} VERSION to be {version}, got {pkg.VERSION}")
+            print("expected {0} VERSION to be {1}, got {2}".format(name, version, pkg.VERSION))
             pkg = None
     except ImportError:
-        print(f"Could not import {name}")
+        print("Could not import {0}".format(name))
         pkg = None
 
     return pkg is None

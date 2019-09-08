@@ -82,6 +82,7 @@ describe "AddonGetter":
             assert getter("bob", "one", collector) is None
 
         it "finds all the entry points and resolved the into the addon_spec", getter:
+            meta = Meta.empty()
             known = mock.Mock(name="known")
             result = mock.Mock(name="result")
             normalised = mock.Mock(name="normalised")
@@ -115,7 +116,7 @@ describe "AddonGetter":
                 assert getter(namespace, entry_point_name, collector, known) == normalised
 
             addon_spec.normalise.assert_called_once_with(
-                Meta.empty(),
+                meta,
                 {
                     "namespace": namespace,
                     "name": entry_point_name,
@@ -139,7 +140,7 @@ describe "AddonGetter":
             )
 
             addon_spec.normalise.assert_called_once_with(
-                mock.ANY,
+                meta,
                 {
                     "namespace": namespace,
                     "name": entry_point_name,
@@ -150,7 +151,8 @@ describe "AddonGetter":
 
             result_maker = fake_resolve_entry_points.mock_calls[0][1][3]
             assert result_maker(blah="one") is result
-            result_spec.normalise.assert_called_once_with(mock.ANY, {"blah": "one"})
+            meta = Meta({"blah": "one"}, [])
+            result_spec.normalise.assert_called_once_with(meta, {"blah": "one"})
 
     describe "find_entry_points":
 
@@ -160,7 +162,7 @@ describe "AddonGetter":
                 namespace = mock.Mock(name="namesapce")
                 entry_point_name = mock.Mock(name="entry_point_name")
 
-            Mocks.entry_point_full_name = f"{Mocks.namespace}.{Mocks.entry_point_name}"
+            Mocks.entry_point_full_name = "{0}.{1}".format(Mocks.namespace, Mocks.entry_point_name)
             return Mocks
 
         it "uses pkg_resources.iter_entry_points", ms:
