@@ -1,0 +1,4 @@
+.. _addons:
+
+Addon Manager
+=============

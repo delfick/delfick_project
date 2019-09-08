@@ -1,0 +1,4 @@
+.. _errors:
+
+Exception Helper
+================
