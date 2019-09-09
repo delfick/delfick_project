@@ -17,19 +17,20 @@ import sys
 import os
 
 
-def make_message(instance, record, oldGetMessage, program="", provide_timestamp=False):
-    def f(v):
-        if inspect.istraceback(v):
-            return " |:| ".join(traceback.format_tb(v))
-        if isinstance(v, dict):
-            return json.dumps(v, default=f, sort_keys=True)
-        elif hasattr(v, "as_dict"):
-            return json.dumps(v.as_dict(), default=f, sort_keys=True)
-        elif isinstance(v, str):
-            return v
-        else:
-            return repr(v)
+def obj_to_string(v):
+    if inspect.istraceback(v):
+        return " |:| ".join(traceback.format_tb(v))
+    if isinstance(v, dict):
+        return json.dumps(v, default=obj_to_string, sort_keys=True)
+    elif hasattr(v, "as_dict"):
+        return json.dumps(v.as_dict(), default=obj_to_string, sort_keys=True)
+    elif isinstance(v, str):
+        return v
+    else:
+        return repr(v)
 
+
+def make_message(instance, record, oldGetMessage, program="", provide_timestamp=False):
     if isinstance(record.msg, dict):
         base = dict(record.msg)
     else:
@@ -52,7 +53,7 @@ def make_message(instance, record, oldGetMessage, program="", provide_timestamp=
     if dc.get("stack_info"):
         base["stack"] = instance.formatter.formatStack(dc["stack_info"])
 
-    return f(base)
+    return obj_to_string(base)
 
 
 class SimpleFormatter(logging.Formatter):
