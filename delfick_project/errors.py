@@ -1,3 +1,50 @@
+"""
+delfick_project provides a custom error class for making working with
+exceptions a little nicer.
+
+Usage looks like:
+
+.. code-block:: python
+    
+    from delfick_project.errors import DelfickError
+
+    class MyError(DelfickError):
+        desc = "something went wrong"
+
+    raise MyError("Computer says no", arg1=True, arg2=3)
+
+DelfickError instances have the following properties:
+
+* Instantiation takes a message and arbitrary keyword arguments. if one of the
+  arguments is ``_errors`` then this will be treated specially when presenting
+  the error as a string, and will be available on the instance as ``error.errors``
+
+  All other keyword arguments are available under ``error.kwargs``
+
+* ``__str__`` takes into account desc on the class, the message given to the
+  instance,  any _errors on the instance and the rest of the keyword arguments.
+
+* ``error.as_dict()`` returns the error as a dictionary. a "message" key will
+  combine desc on the class and the message given to the instance. "errors" will
+  be a list of the _errors list as dictionaries (or string for errors that have
+  no ``as_dict`` method. And the rest of ``error.kwargs`` in the dictionary.
+
+* Instances can be used as keys in a dictionary. It matches on a
+  tuple of ``(error_kls, messages, kwargs_as_tuple, errors_as_tuple)``
+
+* Instances can be used in an equality check based off the same
+  information used to make it hashable
+
+* Instances are sortable
+
+This module also provides:
+
+.. autoclass:: ProgrammerError
+
+.. autoclass:: UserQuit
+
+.. autoclass:: DelfickErrorTestMixin
+"""
 from contextlib import contextmanager
 from functools import total_ordering
 from unittest.util import safe_repr
@@ -132,7 +179,10 @@ class DelfickError(Exception):
 
 
 class ProgrammerError(Exception):
-    """For when the programmer should have prevented something happening"""
+    """
+    A non DelfickError exception for when the programmer should have prevented
+    something happening
+    """
 
 
 class Empty:
@@ -147,6 +197,25 @@ class UserQuit(DelfickError):
 
 
 class DelfickErrorTestMixin:
+    """
+    A mixin for use with ``unittest.TestCase`` that provides the ability to
+    test for DelfickError exceptions.
+
+    .. code-block:: python
+
+        from delfick_project.errors import DelfickErrorTestMixin
+
+        from unittest import TestCase
+
+        class TestThings(TestCase, DelfickErrorTestMixin):
+            def test_something(self):
+                error1 = DelfickError("something bad happend")
+                with self.fuzzyAssertRaisesError(MyError, "nope", arg1=2, _errors=[error1]):
+                    raise MyError("nope", arg1=2, arg2=3, _errors=[error1])
+
+    .. automethod:: fuzzyAssertRaisesError
+    """
+
     @contextmanager
     def fuzzyAssertRaisesError(self, expected_kls, expected_msg_regex=Empty, **values):
         """

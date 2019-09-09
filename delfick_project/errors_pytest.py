@@ -1,3 +1,6 @@
+"""
+.. autofunction:: assertRaises
+"""
 from delfick_project.errors import DelfickError
 
 from textwrap import dedent
@@ -33,6 +36,15 @@ class assertRaises:
 
     This is the same as fuzzyAssertRaisesError in DelfickErrorTestMixin
     but more suitable to use in pytest.
+
+    .. code-block:: python
+
+        from delficK-project.errors_pytest import assertRaises
+
+        def test_something():
+            error1 = DelfickError("something bad happend")
+            with assertRaises(MyError, "nope", arg1=2, _errors=[error1]):
+                raise MyError("nope", arg1=2, arg2=3, _errors=[error1])
     """
 
     def __init__(self, expected_kls, expected_msg_regex=Empty, **values):
