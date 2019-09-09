@@ -5,7 +5,6 @@
     :members:
     :member-order: bysource
 """
-from rainbow_logging_handler import RainbowLoggingHandler
 from datetime import datetime
 from functools import partial
 import logging.handlers
@@ -15,6 +14,11 @@ import inspect
 import json
 import sys
 import os
+
+try:
+    from rainbow_logging_handler import RainbowLoggingHandler
+except ImportError:
+    RainbowLoggingHandler = logging.StreamHandler
 
 
 def obj_to_string(v):
@@ -131,7 +135,7 @@ class JsonToConsoleHandler(logging.StreamHandler):
         )
 
 
-class RainbowHandler(RainbowLoggingHandler):
+class ConsoleHandler(RainbowLoggingHandler):
     def format(s, record):
         oldGetMessage = record.getMessage
 
@@ -159,7 +163,7 @@ class RainbowHandler(RainbowLoggingHandler):
                 return oldGetMessage()
 
         record.getMessage = newGetMessage
-        return super(RainbowHandler, s).format(record)
+        return super().format(record)
 
 
 class LogContext(object):
@@ -248,7 +252,7 @@ def determine_handler(
     if json_to_console:
         return JsonToConsoleHandler(program, logging_handler_file)
 
-    return RainbowHandler(logging_handler_file)
+    return ConsoleHandler(logging_handler_file)
 
 
 def setup_logging(
@@ -264,6 +268,10 @@ def setup_logging(
 ):
     """
     Setup the logging handlers
+
+    .. note:: if you configure the logs to go to the console (and not as json
+        strings), then they will use colors if you have
+        'rainbow_logging_handler==2.2.2' installed in your python environment.
 
     log
         The log to add the handler to.
@@ -325,9 +333,11 @@ def setup_logging(
         if only_message:
             base_format = "%(message)s"
 
-        handler._column_color["%(asctime)s"] = ("cyan", None, False)
-        handler._column_color["%(levelname)-7s"] = ("green", None, False)
-        handler._column_color["%(message)s"][logging.INFO] = ("blue", None, False)
+        if hasattr(handler, "_column_color"):
+            handler._column_color["%(asctime)s"] = ("cyan", None, False)
+            handler._column_color["%(levelname)-7s"] = ("green", None, False)
+            handler._column_color["%(message)s"][logging.INFO] = ("blue", None, False)
+
         if only_message:
             handler.setFormatter(SimpleFormatter(base_format))
         else:

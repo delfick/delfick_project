@@ -38,6 +38,12 @@ Changelog
 
    * delfick_error is now under delfick_project.errors and
      delfick_project.errors_pytest
+   * delfick_logging is now under delfick_project.logging.
+
+     * rainbow_logging_handler is now an optional dependency. If you want
+       colourful logs then just install 'rainbow_logging_handler==2.2.2' in
+       your python environment
+
    * option_merge is now under delfick_project.option_merge
    * input_algorithms is now under delfick_project.norms
 

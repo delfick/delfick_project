@@ -11,14 +11,14 @@ setup(
     , python_requires = ">= 3.4"
 
     , install_requires =
-      [ 'rainbow_logging_handler==2.2.2'
-      , 'namedlist==1.7'
+      [ 'namedlist==1.7'
       ]
 
     , extras_require =
       { 'tests':
         [ 'pytest==5.1.1'
         , 'noseOfYeti==1.8.3'
+        , 'rainbow_logging_handler==2.2.2'
         ]
       }
 
