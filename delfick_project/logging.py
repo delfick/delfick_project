@@ -225,6 +225,32 @@ class LogContext(object):
 lc = LogContext()
 
 
+def determine_handler(
+    program, syslog_address, udp_address, tcp_address, json_to_console, logging_handler_file
+):
+    if syslog_address:
+        address = syslog_address
+        if not syslog_address.startswith("/") and ":" in syslog_address:
+            split = address.split(":", 2)
+            address = (split[0], int(split[1]))
+        return SyslogHandler(address=address)
+
+    if udp_address:
+        return JsonOverUDPHandler(
+            program, udp_address.split(":")[0], int(udp_address.split(":")[1])
+        )
+
+    if tcp_address:
+        return JsonOverTCPHandler(
+            program, tcp_address.split(":")[0], int(tcp_address.split(":")[1])
+        )
+
+    if json_to_console:
+        return JsonToConsoleHandler(program, logging_handler_file)
+
+    return RainbowHandler(logging_handler_file)
+
+
 def setup_logging(
     log=None,
     level=logging.INFO,
@@ -279,25 +305,9 @@ def setup_logging(
     """
     log = log if log is not None else logging.getLogger(log)
 
-    if syslog_address:
-        address = syslog_address
-        if not syslog_address.startswith("/") and ":" in syslog_address:
-            split = address.split(":", 2)
-            address = (split[0], int(split[1]))
-        handler = SyslogHandler(address=address)
-    elif udp_address:
-        handler = JsonOverUDPHandler(
-            program, udp_address.split(":")[0], int(udp_address.split(":")[1])
-        )
-    elif tcp_address:
-        handler = JsonOverTCPHandler(
-            program, tcp_address.split(":")[0], int(tcp_address.split(":")[1])
-        )
-    else:
-        if json_to_console:
-            handler = JsonToConsoleHandler(program, logging_handler_file)
-        else:
-            handler = RainbowHandler(logging_handler_file)
+    handler = determine_handler(
+        program, syslog_address, udp_address, tcp_address, json_to_console, logging_handler_file
+    )
 
     # Protect against this being called multiple times
     handler.delfick_logging = True
@@ -338,13 +348,13 @@ def setup_logging_theme(handler, colors="light"):
     in color for INFO level messages.
     """
     if colors not in ("light", "dark"):
-        logging.getLogger("delfick_logging").warning(
+        logging.getLogger("delfick_project.logging").warning(
             lc("Told to set colors to a theme we don't have", got=colors, have=["light", "dark"])
         )
         return
 
-    # Haven't put much effort into actually working out more than just the message colour
-    if colors == "light":
-        handler._column_color["%(message)s"][logging.INFO] = ("cyan", None, False)
-    else:
-        handler._column_color["%(message)s"][logging.INFO] = ("blue", None, False)
+    if hasattr(handler, "_column_color"):
+        if colors == "light":
+            handler._column_color["%(message)s"][logging.INFO] = ("cyan", None, False)
+        else:
+            handler._column_color["%(message)s"][logging.INFO] = ("blue", None, False)
