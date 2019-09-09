@@ -10,10 +10,6 @@ setup(
 
     , python_requires = ">= 3.4"
 
-    , install_requires =
-      [ 'namedlist==1.7'
-      ]
-
     , extras_require =
       { 'tests':
         [ 'pytest==5.1.1'

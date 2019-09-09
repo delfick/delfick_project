@@ -50,6 +50,7 @@ Changelog
      * many_item_formatted_spec is now under spec_base
      * you can now say ``from delfick_project.norms import sb`` instead
        of ``from input_algorithms import spec_base as sb``
+     * dictobj no longer has a dependency on the namedlist project
 
    * the ``option_merge_addons.option_merge_addon_hook`` is now
      ``from delfick_project.addons import addon_hook`` and the default namespace

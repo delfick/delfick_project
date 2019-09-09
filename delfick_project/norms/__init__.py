@@ -9,7 +9,7 @@ from .errors import (
 from .validators import Validator
 from . import validators as va
 from . import spec_base as sb
-from .dictobj import dictobj
+from .obj import dictobj
 from .meta import Meta
 
 __all__ = [

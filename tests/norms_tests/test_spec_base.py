@@ -1,11 +1,10 @@
 # coding: spec
 
 from delfick_project.norms import BadSpec, BadSpecValue, BadDirectory, BadFilename
-from delfick_project.norms import sb, Meta
+from delfick_project.norms import sb, Meta, dictobj
 
 from delfick_project.errors_pytest import assertRaises
 
-from namedlist import namedlist
 from unittest import mock
 import pytest
 import uuid
@@ -985,7 +984,9 @@ describe "create_spec":
         v1.normalise.side_effect = lambda m, v: called.append(1)
         v2.normalise.side_effect = lambda m, v: called.append(2)
 
-        kls = namedlist("kls", "blah")
+        class kls(dictobj):
+            fields = ["blah"]
+
         val = {"blah": "stuff"}
 
         spec = sb.create_spec(kls, v1, v2, blah=sb.string_spec())

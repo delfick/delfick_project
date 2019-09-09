@@ -41,8 +41,8 @@ Creates an ``__init__`` that behaves like:
 
     Is a perfectly valid example.
 
-    Internally, ``dictobj`` uses a library called ``namedlist`` to validate the
-    fields and work out the default values when an option isn't specified.
+    Note that if you specify fields as a dictionary, you must specify those
+    arguments as keyword arguments when you instantiate the class.
 
 Once an instance of ``dictobj`` is created you may access the attributes however
 you wish!
@@ -64,10 +64,150 @@ from .field_spec import Field, NullableField
 from . import spec_base as sb
 from .errors import BadSpec
 
-from namedlist import namedlist
+from collections import defaultdict
 
-empty_defaults = namedlist("Defaults", [])
-cached_namedlists = {}
+_cached_fields = {}
+
+
+class Fields:
+    @classmethod
+    def make(kls, fieldskls, fields):
+        if fieldskls not in _cached_fields:
+            if not fields:
+                _cached_fields[fieldskls] = None
+            else:
+                _cached_fields[fieldskls] = Fields(fieldskls, fields)
+        return _cached_fields[fieldskls]
+
+    def __init__(self, kls, fields):
+        self.kls = kls
+        self.posargs = []
+        self.kwargs = []
+
+        if isinstance(fields, (tuple, list)):
+            result = self.posargs
+        elif isinstance(fields, dict):
+            result = self.kwargs
+        else:
+            raise TypeError(
+                "Fields on kls {0} should be a list, tuple or dictionary, got {1}".format(
+                    kls, type(fields)
+                )
+            )
+
+        for i, field in enumerate(fields):
+            if isinstance(field, str):
+                result.append((field,))
+            elif isinstance(field, tuple) and len(field) == 2 and isinstance(field[0], str):
+                result.append(field)
+            else:
+                raise TypeError(
+                    "Field {0} of kls {1} is not a valid field, got {2}".format(i, kls, field)
+                )
+
+        names = [f[0] for f in result]
+        if len(set(names)) != len(names):
+            by_name = defaultdict(int)
+            for n in names:
+                by_name[n] += 1
+            duplicated = {n: num for n, num in by_name.items() if num > 1}
+            raise TypeError(
+                "Found duplicated fields in definition of {0}: {1}".format(
+                    kls, sorted(duplicated.keys())
+                )
+            )
+
+    def resolve(self, args, kwargs):
+        if args and self.kwargs:
+            raise TypeError("Expected only keyword arguments")
+
+        if len(args) > len(self.posargs):
+            raise TypeError(
+                "Expected up to {0} positional arguments, got {1}".format(
+                    len(self.posargs), len(args)
+                )
+            )
+
+        result = {}
+        pos = self.resolve_provided(result, args, kwargs)
+        self.resolve_positional_dflts(result, pos)
+        self.resolve_kwargs_dflts(result)
+        return result
+
+    @property
+    def all_fields(self):
+        yield from self.posargs
+        yield from self.kwargs
+
+    def resolve_provided(self, result, args, kwargs):
+        pos = 0
+        for value in args:
+            item = self.posargs[pos]
+            if len(item) == 2:
+                name, _ = item
+            else:
+                (name,) = item
+            result[name] = value
+            pos += 1
+
+        for field, value in kwargs.items():
+            found = False
+            for item in self.all_fields:
+                if len(item) == 2:
+                    name, _ = item
+                else:
+                    (name,) = item
+
+                if name == field:
+                    if name in result:
+                        raise TypeError(
+                            "Cannot provide a field ({0}) as both positional and keyword arguments".format(
+                                name
+                            )
+                        )
+                    result[field] = value
+                    found = True
+
+            if not found:
+                raise TypeError(
+                    "Received a keyword argument ({0}) that isn't on the class".format(field)
+                )
+
+        return pos
+
+    def resolve_positional_dflts(self, result, pos):
+        for i, item in enumerate(self.posargs[pos:]):
+            if len(item) == 2:
+                name, dflt = item
+                if name not in result:
+                    if callable(dflt):
+                        dflt = dflt()
+                    result[name] = dflt
+            else:
+                (name,) = item
+                if name not in result:
+                    raise TypeError(
+                        "No default value set for positional argument {0} ({1}) and no value provided".format(
+                            i + pos, name
+                        )
+                    )
+
+    def resolve_kwargs_dflts(self, result):
+        for item in self.kwargs:
+            if len(item) == 2:
+                name, dflt = item
+                if name not in result:
+                    if callable(dflt):
+                        dflt = dflt()
+                    result[name] = dflt
+            else:
+                (name,) = item
+                if name not in result:
+                    raise TypeError(
+                        "No default value set for keyword argument ({0}) and no value provided".format(
+                            name
+                        )
+                    )
 
 
 class dictobj(dict):
@@ -77,33 +217,16 @@ class dictobj(dict):
     Field = Field
     NullableField = NullableField
 
-    def make_defaults(self):
-        """Make a namedtuple for extracting our wanted keys"""
-        if not self.fields:
-            return empty_defaults
-        else:
-            fields = []
-            end_fields = []
-            for field in self.fields:
-                if isinstance(field, (tuple, list)):
-                    name, dflt = field
-                    if callable(dflt):
-                        dflt = dflt()
-                    end_fields.append((name, dflt))
-                else:
-                    fields.append(field)
-
-            joined = fields + end_fields
-            identifier = str(joined)
-            if identifier not in cached_namedlists:
-                cached_namedlists[identifier] = namedlist("Defaults", joined)
-            return cached_namedlists[identifier]
-
     def __init__(self, *args, **kwargs):
-        super(dictobj, self).__init__()
+        super().__init__()
         self.setup(*args, **kwargs)
 
-    def __nonzero__(self):
+    @classmethod
+    def __init_subclass__(kls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        Fields.make(kls, kls.fields)
+
+    def __bool__(self):
         """
         Dictionaries are Falsey when empty, whereas we want this to be Truthy
         like a normal object
@@ -111,9 +234,16 @@ class dictobj(dict):
         return True
 
     def setup(self, *args, **kwargs):
-        defaults = self.make_defaults()(*args, **kwargs)
-        for field in defaults._fields:
-            self[field] = getattr(defaults, field)
+        fields = Fields.make(self.__class__, self.fields)
+
+        if fields is None:
+            if args:
+                raise TypeError("Expected 0 positional arguments, got {0}".format(len(args)))
+            if kwargs:
+                raise TypeError("Expected 0 keyword arguments, got {0}".format(len(kwargs)))
+        else:
+            for key, value in fields.resolve(args, kwargs).items():
+                setattr(self, key, value)
 
     def __getattr__(self, key):
         """Pretend object access"""
@@ -122,7 +252,7 @@ class dictobj(dict):
             return object.__getattribute__(self, key)
 
         try:
-            return super(dictobj, self).__getitem__(key)
+            return super().__getitem__(key)
         except KeyError as e:
             if e.message == key:
                 raise AttributeError(key)
@@ -135,20 +265,18 @@ class dictobj(dict):
         super call to ``dict.__getitem__``.
         """
         key = str(key)
-        if key not in self or hasattr(self.__class__, key):
+        if key not in self and hasattr(self.__class__, key):
             return object.__getattribute__(self, key)
         else:
-            return super(dictobj, self).__getitem__(key)
+            return super().__getitem__(key)
 
     def __setattr__(self, key, val):
         """
-        If the key is on the class already, then set the value on the instance
-        directly.
+        We use the setitem logic on the class.
 
-        We also do the equivalent of ``dict.__setitem__`` on this instance.
+        This will put the value in the underlying dictionary and if the key
+        is a property on the instance, override that property on the instance.
         """
-        if hasattr(self.__class__, key):
-            object.__setattr__(self, key, val)
         self[key] = val
 
     def __delattr__(self, key):
@@ -157,10 +285,11 @@ class dictobj(dict):
         instance, otherwise do a super call to ``dict.__delitem__`` on this
         instance.
         """
-        if key in self:
-            del self[key]
-        else:
+        key = str(key)
+        if key not in self or hasattr(self.__class__, key):
             object.__delattr__(self, key)
+        else:
+            del self[key]
 
     def __setitem__(self, key, val):
         """
@@ -170,11 +299,17 @@ class dictobj(dict):
         """
         if hasattr(self.__class__, key):
             object.__setattr__(self, key, val)
-        super(dictobj, self).__setitem__(key, val)
+        super().__setitem__(key, val)
 
     def clone(self):
         """Return a clone of this object"""
-        return self.__class__(**dict((name, self[name]) for name in self.fields))
+        result = {}
+        for field in self.fields:
+            if isinstance(field, tuple):
+                field = field[0]
+            result[field] = self[field]
+
+        return self.__class__(**result)
 
     def as_dict(self, **kwargs):
         """
@@ -182,15 +317,20 @@ class dictobj(dict):
 
         This will call ``as_dict`` on values if they have such an attribute.
         """
+        if not self.fields:
+            return {}
+
         result = {}
         for field in self.fields:
-            if isinstance(field, (list, tuple)):
-                field, _ = field
+            if isinstance(field, tuple):
+                field = field[0]
+
             val = self[field]
             if hasattr(val, "as_dict"):
                 result[field] = val.as_dict(**kwargs)
             else:
                 result[field] = val
+
         return result
 
     @classmethod
