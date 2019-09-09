@@ -52,8 +52,10 @@ For example:
     # }
 
     #### /path/to/some.json
-    # { "contrived":
-    #   { "example": 2
+    # { "some":
+    #   { "contrived":
+    #     { "example": 2
+    #     }
     #   }
     # }
 

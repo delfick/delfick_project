@@ -7,7 +7,7 @@
    api/addons
    api/layerz
    api/norms
-   api/option_merge
+   api/option_merge/index.rst
 
 .. _delfick_project:
 
