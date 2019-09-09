@@ -135,8 +135,9 @@ class ProgrammerError(Exception):
     """For when the programmer should have prevented something happening"""
 
 
-class NotSpecified(object):
-    """Used to tell the difference between None and Empty"""
+class Empty:
+    def __repr__(self):
+        return "<EMPTY>"
 
 
 class UserQuit(DelfickError):
@@ -147,7 +148,7 @@ class UserQuit(DelfickError):
 
 class DelfickErrorTestMixin:
     @contextmanager
-    def fuzzyAssertRaisesError(self, expected_kls, expected_msg_regex=NotSpecified, **values):
+    def fuzzyAssertRaisesError(self, expected_kls, expected_msg_regex=Empty, **values):
         """
         Assert that something raises a particular type of error.
 
@@ -169,11 +170,11 @@ class DelfickErrorTestMixin:
                     error, "_fake_delfick_error", False
                 ):
                     # For normal exceptions we just regex against the string of the whole exception
-                    if expected_msg_regex is not NotSpecified:
+                    if expected_msg_regex is not Empty:
                         self.assertMatchingRegex(str(error), expected_msg_regex)
                 else:
                     # For special DelfickError exceptions, we compare against error.message, error.kwargs and error._errors
-                    if expected_msg_regex is not NotSpecified:
+                    if expected_msg_regex is not Empty:
                         self.assertMatchingRegex(error.message, expected_msg_regex)
 
                     errors = values.get("_errors")
@@ -195,7 +196,7 @@ class DelfickErrorTestMixin:
                     print(error)
                     print()
                     msg = "Expected: {0}".format(expected_kls)
-                    if expected_msg_regex is not NotSpecified:
+                    if expected_msg_regex is not Empty:
                         msg = "{0}: {1}".format(msg, expected_msg_regex)
                     if values:
                         msg = "{0}: {1}".format(msg, values)
