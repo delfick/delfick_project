@@ -1,3 +1,16 @@
+"""
+delfick_project provides an App class that helps with some of the plumbing
+involved in making a cli application.
+
+To use, define a subclass of App, fill out atleast execute and use the main
+classmethod on it as the entry point to your application:
+
+.. automethod:: App.main
+
+The class is as follows:
+
+.. autoclass:: App
+"""
 from .logging import setup_logging, setup_logging_theme
 from .errors import DelfickError, UserQuit
 
@@ -31,106 +44,107 @@ class ArgumentError(DelfickError):
 
 class App(object):
     """
-    .. automethod:: main
+    .. autoattribute:: VERSION
 
-    ``Attributes``
+        The version of your application, best way is to define this somewhere
+        and import it into your mainline and setup.py from that location
 
-        .. autoattribute:: VERSION
+    .. autoattribute:: CliParserKls
 
-            The version of your application, best way is to define this somewhere
-            and import it into your mainline and setup.py from that location
+        The class to use for our CliParser
 
-        .. autoattribute:: CliParserKls
+    .. autoattribute:: logging_handler_file
 
-            The class to use for our CliParser
+        The file to log output to (default is stderr)
 
-        .. autoattribute:: logging_handler_file
+    .. autoattribute:: cli_categories
 
-            The file to log output to (default is stderr)
+        self.execute is passed a dictionary args_dict which is from looking
+        at the args_obj object returned by argparse
 
-        .. autoattribute:: cli_categories
+        This option will break up arguments into hierarchies based on the
+        name of the argument.
 
-            self.execute is passed a dictionary args_dict which is from looking
-            at the args_obj object returned by argparse
+        For example:
 
-            This option will break up arguments into hierarchies based on the
-            name of the argument.
+        ``cli_categories = ['app']``
 
-            For example:
+        and we have arguments for
+        ``[silent, verbose, debug, app_config, app_option1, app_option2]``
 
-            ``cli_categories = ['app']``
+        Then args_dict will be:
 
-            and we have arguments for
-            ``[silent, verbose, debug, app_config, app_option1, app_option2]``
+        .. code-block:: json
 
-            Then args_dict will be:
-
-            .. code-block:: json
-
-                { "app": {"config": value, "option1": value, "option2": value}
-                , "silent": value, "verbose": value, "debug": value
+            { "app":
+                { "config": "value"
+                , "option1": "value"
+                , "option2": "value"
                 }
+            , "silent": "value"
+            , "verbose": "value"
+            , "debug": "value"
+            }
 
-        .. autoattribute:: cli_description
+    .. autoattribute:: cli_description
 
-            The description to give at the top of --help output
+        The description to give at the top of ``--help`` output
 
-        .. autoattribute:: cli_environment_defaults
+    .. autoattribute:: cli_environment_defaults
 
-            A map of environment variables to --argument that you want to map
+        A map of environment variables to ``--argument`` that you want to map
 
-            For example:
+        For example:
 
-            ``cli_environment_defaults = {"APP_CONFIG": "--config"}``
+        ``cli_environment_defaults = {"APP_CONFIG": "--config"}``
 
-            Items may also be a tuple of ``(replacement, default)``
+        Items may also be a tuple of ``(replacement, default)``
 
-            For example, ``{"APP_CONFIG": ("--config", "./config.yml")}``
+        For example, ``{"APP_CONFIG": ("--config", "./config.yml")}``
 
-            Which means ``defaults["--config"] == {'default': "./config.yml"}``
-            if APP_CONFIG isn't in the environment.
+        Which means ``defaults["--config"] == {'default': "./config.yml"}``
+        if APP_CONFIG isn't in the environment.
 
-        .. autoattribute:: cli_positional_replacements
+    .. autoattribute:: cli_positional_replacements
 
-            A list mapping positional arguments to --arguments
+        A list mapping positional arguments to ``--arguments``
 
-            For example:
+        For example:
 
-            ``cli_positional_replacements = ['--environment', '--stack']``
-                Will mean the first positional argument becomes the value for
-                --environment and the second positional becomes the value for
-                '--stack'
+        ``cli_positional_replacements = ['--environment', '--stack']``
+        Will mean the first positional argument becomes the value for
+        ``--environment`` and the second positional becomes the value for
+        ``--stack``
 
-                Note for this to work, you must do something like:
+        Note for this to work, you must do something like:
 
-                .. code-block:: python
+        .. code-block:: python
 
-                    def setup_other_args(self, parser, defaults):
-                        parser.add_argument('--environment'
-                            , help = "the environment!"
-                            , **defaults['--environment']
-                            )
+            def setup_other_args(self, parser, defaults):
+                parser.add_argument('--environment'
+                    , help = "the environment!"
+                    , **defaults['--environment']
+                    )
 
-            Items in positional_replacements may also be a tuple of
-            ``(replacement, default)``
+        Items in positional_replacements may also be a tuple of
+        ``(replacement, default)``
 
-            For example:
+        For example:
 
-            ``cli_positional_replacements = [('--task', 'list_tasks')]``
-                will mean the first positional argument becomes the value for
-                --task
+        ``cli_positional_replacements = [('--task', 'list_tasks')]``
+            will mean the first positional argument becomes the value for
+            ``--task``
 
-                But if it's not specified, then
-                ``defaults['--task'] == {"default": "list_tasks"}``
+            But if it's not specified, then
+            ``defaults['--task'] == {"default": "list_tasks"}``
 
-        .. autoattribute:: issue_tracker_link
+    .. autoattribute:: issue_tracker_link
 
-            A link to where users can go to post issues
+        A link to where users can go to post issues
 
-            It is used when we get an unexpected exception.
+        It is used when we get an unexpected exception.
 
-    ``Hooks``
-
+    Hooks
         .. automethod:: execute
 
         .. automethod:: setup_other_logging
@@ -138,6 +152,33 @@ class App(object):
         .. automethod:: specify_other_args
 
         .. automethod:: exception_handler
+
+    Customize
+        .. automethod:: setup_logging_theme
+
+    Default cli arguments
+        ``--verbose`` ``--silent`` ``--debug``
+            These control the level of logging in your application. Note that
+            you may only specify one of these three.
+
+            ``--silent`` means Errors only. ``--verbose`` and ``--debug`` do
+            the same thing and just means we get DEBUG logs as well.
+            
+            If none of these three are specified then you'll get INFO and above
+            logs.
+
+        Logging options
+            There are some options that are passed into
+            :func:`~delfick_project.logging.setup_logging`
+
+            * ``--logging-program``
+            * ``--tcp-logging-address``
+            * ``--udp-logging-address``
+            * ``--syslog-address``
+            * ``--json-console-logs``
+
+        ``--version``
+            Print out the version and quit
     """
 
     ########################
@@ -168,18 +209,36 @@ class App(object):
 
         .. code-block:: python
 
-            from delfick_app import App
+            from delfick_project.app import App
 
             class MyApp(App):
-                [..]
+                def execute(self, args_obj, args_dict, extra_args, logging_handler, **kwargs):
+                    print("My wonderful program goes here!")
 
             main = MyApp.main
         """
         app = kls()
         app.mainline(argv, **execute_args)
 
-    def execute(self, args_obj, args_dict, extra_args, logging_handler):
-        """Hook for executing the application itself"""
+    def execute(self, args_obj, args_dict, extra_args, logging_handler, **kwargs):
+        """
+        Hook for executing the application itself
+
+        args_obj
+            The object from argparse.parse_args
+
+        args_dict
+            The options for args_obj as a dictionary
+
+        extra_args
+            A string of everything specified after a ``--`` on the cli.
+
+        logging_handler
+            The logging handler created by setup_logging 
+
+        kwargs
+            Extra keyword arguments passed down from the mainline.
+        """
         raise NotImplementedError()
 
     def setup_other_logging(self, args_obj, verbose=False, silent=False, debug=False):
@@ -288,7 +347,11 @@ class App(object):
         return handler
 
     def setup_logging_theme(self, handler, colors="light"):
-        """Setup a logging theme"""
+        """
+        Setup a logging theme, the two options for colors is light and dark
+
+        Note that nothing calls this method by default
+        """
         return setup_logging_theme(handler, colors=colors)
 
     def make_cli_parser(self):
@@ -326,7 +389,7 @@ class CliParser(object):
         Parse argv and return (args_obj, args_dict, extra)
 
         Where args_obj is the object return by argparse
-        extra is all the arguments after a --
+        extra is all the arguments after a ``--``
         and args_dict is a dictionary representation of the args_obj object
         """
         if categories is None:
@@ -353,7 +416,8 @@ class CliParser(object):
         """
         Build up an ArgumentParser and parse our argv!
 
-        Also complain if any --argument is both specified explicitly and as a positional
+        Also complain if any ``--argument`` is both specified explicitly and
+        as a positional
         """
         if argv is None:
             argv = sys.argv[1:]
@@ -364,7 +428,7 @@ class CliParser(object):
         return parsed, other_args
 
     def check_args(self, argv, defaults, positional_replacements):
-        """Check that we haven't specified an arg as positional and a --flag"""
+        """Check that we haven't specified an arg as positional and a ``--flag``"""
         num_positionals = 0
         args = []
         for thing in argv:
@@ -393,7 +457,8 @@ class CliParser(object):
         """
         Split up argv into args, other_args and defaults
 
-        Other args is anything after a "--" and args is everything before a "--"
+        Other args is anything after a ``--`` and args is everything before a
+        ``--``
         """
         if argv is None:
             argv = sys.argv[1:]
@@ -420,20 +485,21 @@ class CliParser(object):
 
     def make_defaults(self, argv, positional_replacements, environment_defaults):
         """
-        Make and return a dictionary of {--flag: {"default": value}}
+        Make and return a dictionary of ``{--flag: {"default": value}}``
 
         This method will also remove the positional arguments from argv
         that map to positional_replacements.
 
-        Defaults are populated from mapping environment_defaults to --arguments
-        and mapping positional_replacements to --arguments
+        Defaults are populated from mapping environment_defaults to ``--arguments``
+        and mapping positional_replacements to ``--arguments``
 
-        So if positional_replacements is [--stack] and argv is ["blah", "--stuff", 1]
-        defaults will equal {"--stack": {"default": "blah"}}
+        So if positional_replacements is ``[--stack]`` and argv is
+        ``["blah", "--stuff", 1]`` defaults will equal
+        ``{"--stack": {"default": "blah"}}``
 
-        If environment_defaults is {"CONFIG_LOCATION": "--config"}
+        If environment_defaults is ``{"CONFIG_LOCATION": "--config"}``
         and os.environ["CONFIG_LOCATION"] = "/a/path/to/somewhere.yml"
-        then defaults will equal {"--config": {"default": "/a/path/to/somewhere.yml"}}
+        then defaults will equal ``{"--config": {"default": "/a/path/to/somewhere.yml"}}``
 
         Positional arguments will override environment defaults.
         """
@@ -477,7 +543,7 @@ class CliParser(object):
         return defaults
 
     def make_parser(self, defaults):
-        """Create an argparse ArgumentParser, setup --verbose, --silent, --debug and call specify_other_args"""
+        """Create an argparse ArgumentParser with some default flags for logging"""
         parser = argparse.ArgumentParser(description=self.description)
 
         logging = parser.add_mutually_exclusive_group()

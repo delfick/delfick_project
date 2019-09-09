@@ -2,3 +2,5 @@
 
 Mainline helpers
 ================
+
+.. automodule:: delfick_project.app

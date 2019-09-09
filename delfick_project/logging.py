@@ -1,3 +1,10 @@
+"""
+.. autofunction:: setup_logging
+
+.. autoclass:: LogContext
+    :members:
+    :member-order: bysource
+"""
 from rainbow_logging_handler import RainbowLoggingHandler
 from datetime import datetime
 from functools import partial
@@ -155,6 +162,37 @@ class RainbowHandler(RainbowLoggingHandler):
 
 
 class LogContext(object):
+    """
+    An object to represent logging context
+
+    One of these is provided as ``delfick_project.logging.lc``
+
+    You use it by doing something like:
+
+    .. code-block:: python
+
+        from delfick_project.logging import lc
+
+        import logging
+
+        log = logging.getLogger("myproject")
+
+        log.info(lc("Some logs", var1="one"))
+
+        ctx = lc.using(var2="two")
+        log.info(ctx("message", anotherarg=1))
+
+    Then as long as you've used :func:`~delfick_project.logging.setup_logging`
+    the logger will understand the result of calling the logging context and
+    display it nicely.
+
+    For printing to the console it'll display the keyword argument as tab
+    separated ``key=value`` pairs whereas all other outputs will get the log
+    as a json object.
+
+    .. automethod:: __call__
+    """
+
     def __init__(self, initial=None, extra=None):
         self.initial = initial if initial is not None else {}
         self.context = dict(self.initial)
@@ -163,6 +201,9 @@ class LogContext(object):
                 self.context[k] = v
 
     def __call__(self, *args, **kwargs):
+        """
+        Return a dictionary of ``{"msg": " ".join(args), **kwargs}``
+        """
         res = dict(self.context)
         if args:
             res["msg"] = " ".join(args)
@@ -171,9 +212,11 @@ class LogContext(object):
         return res
 
     def using(self, **kwargs):
+        """Return a new logging context with these extra context"""
         return LogContext(self.context, kwargs)
 
     def unsafe_add_context(self, key, value):
+        """Mutate the current logging context"""
         self.context[key] = value
         return self
 
@@ -213,9 +256,7 @@ def setup_logging(
         If tcp_address, udp_address or json_to_console is specified, then we
         create a field in the json called program with this value.
 
-    syslog_address
-    tcp_address
-    udp_address
+    syslog_address, tcp_address, udp_address
         If none of these is specified, then we log to the console.
 
         Otherwise we use the address to converse with a remote server.

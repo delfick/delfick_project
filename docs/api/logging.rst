@@ -2,3 +2,5 @@
 
 Logging
 =======
+
+.. automodule:: delfick_project.logging
