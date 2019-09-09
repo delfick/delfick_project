@@ -1,4 +1,4 @@
-extensions = ["sphinx.ext.autodoc", "sphinx_rtd_theme"]
+extensions = ["sphinx.ext.autodoc", "sphinx_rtd_theme", "delfick_project.norms.sphinx.show_specs"]
 
 html_theme = "sphinx_rtd_theme"
 html_static_path = ["_static"]

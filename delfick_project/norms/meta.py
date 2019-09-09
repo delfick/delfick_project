@@ -1,18 +1,53 @@
 """
 ``Meta`` is an important object that is used to keep track of our position in
 the original ``val`` when we are normalising it.
+
+Note that the Meta object can be imported directly from ``delfick_project.norms``
+
+.. autoclass:: Meta
 """
 
 
 class Meta(object):
     """
-    Meta has a concept of the wider context, kept as the ``everything`` property
-    , and the path into ``everything`` where we are.
+    Meta has a concept of the wider context, kept as the ``everything`` property,
+    and the path into ``everything`` where we are.
 
     We move around the ``everything`` by creating new instances of ``Meta`` that
     refers to a new part: using the methods on the ``meta`` object.
 
-    Arguments
+    .. automethod:: empty
+
+    .. automethod:: __init__
+
+    .. automethod:: at
+
+    .. automethod:: indexed_at
+
+    .. automethod:: key_names
+
+    .. automethod:: __eq__
+
+    .. automethod:: __lt__
+
+    .. automethod:: __gt__
+
+    .. autoproperty:: path
+
+    .. autoproperty:: nonspecial_path
+
+    .. autoproperty:: source
+    """
+
+    everything = None
+
+    @classmethod
+    def empty(kls):
+        """Return a Meta with empty configuration and empty path"""
+        return kls({}, [])
+
+    def __init__(self, everything, path):
+        """
         everything
             The wider context
 
@@ -20,36 +55,7 @@ class Meta(object):
             Can be given as a string or a list of tuples.
 
             If provided as a string, it is converted to ``[(path, "")]``
-
-    Usage
-        .. automethod:: at
-
-        .. automethod:: indexed_at
-
-        .. automethod:: key_names
-
-    Useful
-        .. automethod:: __eq__
-
-        .. automethod:: __lt__
-
-        .. automethod:: __gt__
-
-    Path
-        .. automethod:: path
-
-        .. automethod:: nonspecial_path
-
-        .. automethod:: source
-    """
-
-    everything = None
-
-    @classmethod
-    def empty(kls):
-        return kls({}, [])
-
-    def __init__(self, everything, path):
+        """
         self._path = path
         if isinstance(self._path, str):
             self._path = [(self._path, "")]
@@ -73,14 +79,17 @@ class Meta(object):
         return self.__class__(self.everything, self._path + part)
 
     def key_names(self):
-        """Return {_key_name_<i>: <i'th part of part} for each part in the path reversed"""
+        """
+        Return ``{_key_name_<i>: <i'th part of path>}`` for each part in the path
+        reversed
+        """
         return dict(
             ("_key_name_{0}".format(index), val)
             for index, (val, _) in enumerate(reversed(self._path))
         )
 
     def __eq__(self, other):
-        """Wortk out if we have the same ``everything`` and ``path``"""
+        """Work out if we have the same ``everything`` and ``path``"""
         return self.everything == other.everything and self.path == other.path
 
     def __lt__(self, other):

@@ -6,8 +6,8 @@
    api/logging
    api/addons
    api/layerz
-   api/norms
    api/option_merge/index.rst
+   api/norms/index.rst
 
 .. _delfick_project:
 

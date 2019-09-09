@@ -1,9 +1,31 @@
 """
-spec_base is the core of the norm package and implements many specification
+spec_base is the core of the norms package and implements many specification
 classes based off the ``Spec`` class.
 
 A specification is an object with a ``normalise`` method and is used to validate
 and transform data.
+
+The following items are all found under ``delfick_project.norms.sb``. For example:
+
+.. code-block:: python
+
+    from delfick_project.norms import sb, Meta
+
+    class double_spec(sb.Spec):
+        def normalise_filled(self, meta, val):
+            val = sb.integer_spec().normalise(meta, val)
+            return val * 2
+
+    lst = sb.listof(double_spec()).normalise(Meta.empty(), ["3", 4, 5])
+    assert lst == [6, 8, 10]
+
+.. autoclass:: NotSpecified
+
+.. autofunction:: apply_validators
+
+.. autoclass:: Spec
+
+.. show_specs::
 """
 from .errors import BadSpec, BadSpecValue, BadDirectory, BadFilename
 
@@ -66,52 +88,17 @@ class Spec(object):
     """
     Default shape for a spec (specification, not test!)
 
-    __init__
-        passes all *args and **kwargs to a ``self.setup`` if that exists on the
-        class
+    .. automethod:: __init__
 
-    normalise
-        Calls one of the following functions on the class, choosing in this order:
+    .. automethod:: normalise
 
-        normalise_either
-            If defined, then this is meant to work with both a specified value as
-            well as ``NotSpecified``.
-
-            If this function returns ``NotSpecified``, then we continue looking
-            for a function to handle this value.
-
-        normalise_empty
-            Called if the value is ``NotSpecified``.
-
-        default
-            Called if the value is ``NotSpecified``.
-
-        return NotSpecified
-            If the value is NotSpecified and the above don't return, then the
-            value is returned as is.
-
-        normalise_filled
-            The value is not ``NotSpecified``
-
-        If none of those options are defined, then an error is raised complaining
-        that we couldn't work out what to do with the value.
-
-        Note that any validation errors should be an subclass of
-        ``delfick_project.norms.BadSpec``. This is because the default specs
-        only catch such exceptions. Anything else is assumed to be a
-        ProgrammerError and worthy of a traceback.
-
-    fake_filled
-        If ``fake`` is on the class that is used, otherwise if ``default`` is on
-        the class that is used, otherwise we return ``NotSpecified``.
-
-        This is used to generate fake data from a specification.
+    .. automethod:: fake_filled
 
     The idea is that a Spec is an object with a ``normalise`` method that takes
     in two objects: ``meta`` and ``val``.
 
     ``meta``
-        Should be an instance of ``delfick_project.norms.Meta`` and is used to
+        Should be an instance of :class:`~delfick_project.norms.Meta` and is used to
         indicate where we are. This should be passed to any children specifications.
 
         For example, if we are normalising a dictionary where a child specification
@@ -126,21 +113,55 @@ class Spec(object):
         Should be the value we are normalising. The normalising process should
         validate and transform the value to be what we are specifying.
 
-        For example listof(string_spec()) will transform a single string to be
-        a list of one string.
+        For example sb.listof(sb.string_spec()) will transform a single string
+        to be a list of one string.
 
     When you create a subclass of ``Spec`` you either implement one of the
     ``normalise_*`` methods or ``normalise`` itself.
     """
 
     def __init__(self, *pargs, **kwargs):
+        """
+        passes all ``*args`` and ``**kwargs`` to a ``self.setup`` if that exists
+        on the class
+        """
         self.pargs = pargs
         self.kwargs = kwargs
         if hasattr(self, "setup"):
             self.setup(*pargs, **kwargs)
 
     def normalise(self, meta, val):
-        """Use this spec to normalise our value"""
+        """
+        Calls one of the following functions on the class, choosing in this order:
+
+        normalise_either(meta, val)
+            If defined, then this is meant to work with both a specified value as
+            well as :class:`NotSpecified`.
+
+            If this function returns :class:`NotSpecified`, then we continue looking
+            for a function to handle this value.
+
+        normalise_empty(meta)
+            Called if the value is :class:`NotSpecified`.
+
+        default(meta)
+            Called if the value is :class:`NotSpecified`.
+
+        return NotSpecified
+            If the value is :class:`NotSpecified` and the above don't return,
+            then the value is returned as is.
+
+        normalise_filled(meta, val)
+            The value is not :class:`NotSpecified`
+
+        If none of those options are defined, then an error is raised complaining
+        that we couldn't work out what to do with the value.
+
+        Note that any validation errors should be an subclass of
+        :class:`~delfick_project.norms.errors.BadSpec`. This is because the
+        default specs only catch such exceptions. Anything else is assumed to be
+        a ProgrammerError and worthy of a traceback.
+        """
         if hasattr(self, "normalise_either"):
             result = self.normalise_either(meta, val)
             if result is not NotSpecified:
@@ -161,7 +182,13 @@ class Spec(object):
         )
 
     def fake_filled(self, meta, with_non_defaulted=False):
-        """Return this spec as if it was filled with the defaults"""
+        """
+        If a ``fake`` method is on the class, we return ``fake(meta, with_non_defaulted)``
+
+        otherwise, if a ``default`` method is on the class, we return ``default(meta)``
+
+        otherwise we just return :class:`NotSpecified`
+        """
         if hasattr(self, "fake"):
             return self.fake(meta, with_non_defaulted=with_non_defaulted)
         if hasattr(self, "default"):
@@ -1002,7 +1029,7 @@ class and_spec(Spec):
     This will do ``val = spec.normalise(meta, val)`` for each ``spec`` that is
     provided and returns the final ``val``.
 
-    If any of the ``spec``s fail, then an error is raised.
+    If any of the ``spec`` fail, then an error is raised.
     """
 
     def setup(self, *specs):

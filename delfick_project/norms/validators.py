@@ -1,15 +1,32 @@
 """
 Validators are the same as any other subclass of
-:class:`delfick_project.norms.sb.Spec` in that it has a ``normalise`` method
+:class:`~delfick_project.norms.spec_base.Spec` in that it has a ``normalise`` method
 that takes in ``meta`` and ``val`` and returns a new ``val``.
 
-It is convention that a validator subclasses :class:`delfick_project.norms.Validator`
-and implements a ``validate`` method. This means ``sb.NotSpecified`` values are
+It is convention that a validator subclasses :class:`~delfick_project.norms.Validator`
+and implements a ``validate`` method. This means :class:`NotSpecified` values are
 ignored and any specified value goes through the ``validate`` method.
 
 It is the job of the validator to raise a subclass of
-:class:`delfick_project.norms.BadSpec` if something is wrong, otherwise just
+:class:`~delfick_project.norms.errors.BadSpec` if something is wrong, otherwise just
 return ``val``.
+
+The following is all available under ``delfick_project.norms.va``. For example:
+
+.. code-block:: python
+
+    from delfick_project.norms import va, BadSpecValue
+
+    class divisible_by_two(va.Validator):
+        def validate(self, meta, val):
+            val = sb.integer_spec().normalise(meta, val)
+            if val % 2 != 0:
+                raise BadSpecValue("Value was not divisible by two", got=val, meta=meta)
+            return val
+
+.. autoclass:: Validator
+
+.. show_validators::
 """
 from .errors import BadSpecValue, DeprecatedKey, BadSpecDefinition
 from . import spec_base as sb
@@ -28,15 +45,23 @@ def register(func):
 
 class Validator(sb.Spec):
     """
-    A specification that either returns ``sb.NotSpecified`` if ``val`` is
-    ``sb.NotSpecified`` or simply calls ``self.validate``.
+    A specification that either returns :class:`NotSpecified` if ``val`` is
+    :class:`NotSpecified` or simply calls ``self.validate``.
 
-    ``validate``
-        A method to do validation on a value. if the value is invalid, it is best
-        to raise an instance of ``delfick_project.norms.BadSpec``.
+    .. automethod:: validate
     """
 
-    def validate(meta, val):
+    def validate(self, meta, val):
+        """
+        Subclasses of Validator must implement this method.
+
+        It will do validation on a value.
+        
+        If the value is invalid then raise an instance of
+        :class:`~delfick_project.norms.errors.BadSpec`.
+
+        Otherwise return the value
+        """
         raise NotImplementedError()
 
     def normalise_either(self, meta, val):
@@ -304,7 +329,7 @@ class regexed(Validator):
 
             regexed(regex1, ..., regexn).normalise(meta, val)
 
-    This will match the ``val`` against all the ``regex``s and will complain if
+    This will match the ``val`` against all the ``regex`` and will complain if
     any of them fail, otherwise the ``val`` is returned.
     """
 
