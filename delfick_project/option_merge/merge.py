@@ -17,7 +17,7 @@ from .not_found import NotFound
 from .joiner import dot_joiner
 from .path import Path
 
-from collections import Mapping
+from collections.abc import Mapping
 import logging
 
 log = logging.getLogger("delfick_project.option_merge.merge")
