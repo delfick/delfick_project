@@ -1,5 +1,5 @@
 from .merge import ConverterProperty, KeyValuePairsConverter, AttributesConverter
-from .formatter import MergedOptionStringFormatter, NoFormat
+from .formatter import MergedOptionStringFormatter, NoFormat, BadOptionFormat
 from .converter import Converter, Converters
 from .merge import MergedOptions
 from .collector import Collector
@@ -12,6 +12,7 @@ __all__ = [
     "Collector",
     "Converters",
     "MergedOptions",
+    "BadOptionFormat",
     "ConverterProperty",
     "AttributesConverter",
     "KeyValuePairsConverter",

@@ -1,7 +1,6 @@
 # coding: spec
 
 from delfick_project.norms import sb, dictobj, Meta, BadSpec
-
 from delfick_project.norms.field_spec import (
     FieldSpec,
     Field,
@@ -9,6 +8,8 @@ from delfick_project.norms.field_spec import (
     FieldSpecMixin,
     FieldSpecMetakls,
 )
+
+from delfick_project.option_merge import MergedOptions, MergedOptionStringFormatter
 from delfick_project.errors_pytest import assertRaises
 from delfick_project.errors import ProgrammerError
 
@@ -29,20 +30,27 @@ describe "FieldSpec":
                 one = dictobj.Field(sb.string_spec())
                 two = dictobj.Field(sb.integer_spec)
                 three = dictobj.NullableField(sb.integer_spec)
+                four = dictobj.Field(format_into=sb.integer_spec, default="{four}")
 
-            res = MyKls.FieldSpec().normalise(Meta.empty(), {"one": "1", "two": "2"})
+            formatter = MergedOptionStringFormatter
+            options = {"one": "1", "two": "2", "four": "6"}
+            meta = Meta(options, [])
+            res = MyKls.FieldSpec(formatter=formatter).normalise(meta, options)
+
             assert type(res) == MyKls
             assert res.one == "1"
             assert res.two == 2
             assert res.three == None
+            assert res.four == 6
 
             class MyChildKls(MyKls):
                 four = dictobj.Field(sb.boolean)
                 five = dictobj.Field(sb.dictionary_spec)
 
-            child = MyChildKls.FieldSpec().normalise(
-                Meta.empty(), {"one": "1", "two": "2", "four": False, "five": {}}
+            child = MyChildKls.FieldSpec(formatter=formatter).normalise(
+                meta, {"one": "1", "two": "2", "four": False, "five": {}}
             )
+
             assert type(child) == MyChildKls
             assert child.one == "1"
             assert child.two == 2
@@ -53,8 +61,8 @@ describe "FieldSpec":
             class MyGrandChildKls(MyChildKls):
                 six = dictobj.Field(sb.boolean)
 
-            child = MyGrandChildKls.FieldSpec().normalise(
-                Meta.empty(), {"one": "1", "two": "2", "four": False, "five": {}, "six": True}
+            child = MyGrandChildKls.FieldSpec(formatter=formatter).normalise(
+                meta, {"one": "1", "two": "2", "four": False, "five": {}, "six": True}
             )
             assert type(child) == MyGrandChildKls
             assert child.one == "1"
@@ -528,7 +536,7 @@ describe "Field":
             dflt = mock.Mock(name="dflt")
 
             class Formatter(object):
-                def __init__(s, options, path, value):
+                def __init__(s, options, value, chain=None):
                     s.value = value
 
                 def format(s):
@@ -541,6 +549,15 @@ describe "Field":
 
             assert spec.normalise(meta, sb.NotSpecified) == ("formatted", dflt)
             assert spec.normalise(meta, inp) == ("formatted", ret)
+
+        it "works with MergedOptionStringFormatter":
+            all_options = MergedOptions.using({"one": "{two}", "two": 4})
+            meta = Meta(all_options, [])
+
+            spec = sb.any_spec()
+            spec = Field(format_into=spec).make_spec(meta, MergedOptionStringFormatter)
+
+            assert spec.normalise(meta.at(".one"), "{one}") == "4"
 
         it "wraps everything in wrapper if it's defined", meta, formatter:
             spec = Field(sb.string_or_int_as_string_spec, wrapper=sb.listof).make_spec(

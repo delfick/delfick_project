@@ -1202,7 +1202,12 @@ class formatted(Spec):
         if not isinstance(specd, str) and af != NotSpecified:
             return af.normalise(meta, specd)
 
-        formatted = self.formatter(options, meta.path, value=specd).format()
+        chain = []
+        path = meta.path
+        if path:
+            chain.append(path)
+
+        formatted = self.formatter(options, specd, chain=chain).format()
         if af != NotSpecified:
             formatted = af.normalise(meta, formatted)
 

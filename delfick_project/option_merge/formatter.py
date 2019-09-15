@@ -4,45 +4,31 @@ formatter that can format strings using a MergedOptions object.
 
 .. code-block:: python
 
-    from delfick_project.option_merge import MergedOptionStringFormatter
-    from delfick_project.errors import DelfickError
-    from delfick_project.norms import Meta
+    from delfick_project.option_merge import MergedOptionStringFormatter, MergedOptions
 
-    class BadOptionFormat(DelfickError):
-        pass
-
-    class MyFormatter(MergedOptionStringFormatter):
-        def get_string(self, key):
-            if key not in self.all_options:
-                kwargs = {}
-                if len(self.chain) > 1:
-                    kwargs['source'] = Meta(self.all_options, self.chain[-2]).source
-                raise BadOptionFormat("Can't find key in options", key=key, chain=self.chain, **kwargs)
-
-            return super(MyFormatter, self).get_string(key)
-
-        def special_get_field(self, value, args, kwargs, format_spec=None):
-            if format_spec in ("env", ):
-                return value, ()
-
-            if value in self.chain:
-                raise BadOptionFormat("Recursive option", chain=self.chain + [value])
+    class Formatter(MergedOptionStringFormatter):
+        custom_format_specs = ["env"]
 
         def special_format_field(self, obj, format_spec):
             if format_spec == "env":
                 return "${{{0}}}".format(obj)
 
-    m = MergedOptions.using({"a": {"b": 3}, "c": 5})
-    formatted = MyFormatter(m, "", "a.b: {a.b} and c={c}").format()
-    assert formatted == "a.b: 3 and c=5"
+    m = MergedOptions.using({"a": {"b": 3}, "c": 5, "d": "{c}"})
+    formatted = Formatter(m, "a.b: {a.b}, d: {d} and c={c} and d={BLAH:env}").format()
+    assert formatted == "a.b: 3, d: 5 and c=5 and d=${BLAH}"
 """
 
 from .merge import MergedOptions
 
-from delfick_project.norms import sb
+from delfick_project.errors import DelfickError
+from delfick_project.norms import Meta
 
 import string
 import types
+
+
+class BadOptionFormat(DelfickError):
+    pass
 
 
 class NoFormat(object):
@@ -57,76 +43,53 @@ class MergedOptionStringFormatter(string.Formatter):
     Resolve format options into a MergedOptions dictionary
     """
 
-    def __init__(self, all_options, option_path, chain=None, value=sb.NotSpecified):
+    custom_format_specs = []
+
+    def __init__(self, all_options, value, chain=None):
         if chain is None:
-            if isinstance(option_path, list):
-                chain = [thing for thing in option_path]
-            else:
-                chain = [option_path]
+            chain = []
         self.chain = chain
         self.value = value
-        self.option_path = option_path
         self.all_options = all_options
         super(MergedOptionStringFormatter, self).__init__()
 
     def format(self):
-        """Format our option_path into all_options"""
+        """Format our value into all_options"""
         val = self.value
-        if val is sb.NotSpecified:
-            val = self.get_string(self.option_path)
 
         if isinstance(val, NoFormat):
             return val.val
         if not isinstance(val, str):
             return val
-        return super(MergedOptionStringFormatter, self).format(val)
+        return super().format(val)
 
     def special_get_field(self, value, args, kwargs, format_spec=None):
         """
-        Must be implemented
-
-        In this function it is recommended you do something similar to:
-
-        .. code-block:: python
-
-            if value in self.chain:
-                raise ValueError("Recursive option")
-
-        But raise a more meaningful error!
-
-        You may also return (value, ()) if ``format_spec`` is a custom format.
+        Complain about recursive options and return value as is for custom_format_specs
         """
-        raise NotImplementedError()
+        if value in self.chain:
+            raise BadOptionFormat("Recursive option", chain=self.chain + [value])
+
+        if format_spec in self.custom_format_specs:
+            return value, ()
 
     def special_format_field(self, obj, format_spec):
         """
-        Must be implemented
-
         In this function you match against ``format_spec`` and return either a
         formatted version of ``obj`` or None.
 
         .. code-block:: python
 
             class MyFormatter(MergedOptionStringFormatter):
-                def special_get_field(self, value, args, kwargs, format_spec=None):
-                    if format_spec == "plus_one":
-                        return value, ()
+                custom_format_specs = ["plus_one"]
 
                 def special_format_field(obj, format_spec):
                     if format_spec == "plus_one":
                         return int(obj) + 1
 
-            m = MergedOptions.using({"a": 3})
-            formatted = MyFormatter(m, "", "{a:plus_one}").format()
-            assert formatted == "4"
+            formatted = MyFormatter({}, "", value="{3:plus_one}").format()
+            assert formatted == 4
         """
-        raise NotImplementedError()
-
-    def with_option_path(self, value):
-        """Clone this instance with the new value as option_path and no override value"""
-        return self.__class__(
-            self.all_options, value, chain=self.chain + [value], value=sb.NotSpecified
-        )
 
     def get_string(self, key):
         """
@@ -135,6 +98,11 @@ class MergedOptionStringFormatter(string.Formatter):
         it is recommended you override this method and raise an error if the key
         does not exist in self.all_options..
         """
+        if key not in self.all_options:
+            kwargs = {}
+            if len(self.chain) > 1:
+                kwargs["source"] = Meta(self.all_options, self.chain[-2]).source
+            raise BadOptionFormat("Can't find key in options", key=key, chain=self.chain, **kwargs)
         return self.all_options[key]
 
     def get_field(self, value, args, kwargs, format_spec=None):
@@ -143,7 +111,9 @@ class MergedOptionStringFormatter(string.Formatter):
         if special is not None:
             return special
         else:
-            return self.with_option_path(value).format(), ()
+            val = self.get_string(value)
+            f = self.__class__(self.all_options, val, chain=self.chain + [value])
+            return f.format(), ()
 
     def format_field(self, obj, format_spec):
         """Know about any special formats"""

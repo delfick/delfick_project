@@ -25,10 +25,65 @@ Which is equivalent to:
 .. code-block:: python
 
     class MyAmazingKls(dictobj, Field.mixin):
-        fields = {"one": string_spec, "two": listof(string_spec()), "three": defaulted(or_spec(none_spec(), string_spec()), None)}
+        fields = {
+              "one": string_spec
+            , "two": listof(string_spec())
+            , "three": defaulted(or_spec(none_spec(), string_spec()), None)
+            }
 
-and have MyAmazingKls.FieldSpec().normalise for normalising a
-dictionary into an instance of MyAmazingKls!
+You then use these specs by normalising an instance of MyAmazingKls.FieldSpec.
+
+For example:
+
+.. code-block:: python
+
+    from delfick_project.norms import dictobj, Meta
+
+    class D(dictobj.Spec):
+        one = dictobj.Field(sb.string_spec, wrapper=sb.required)
+        two = dictobj.Field(sb.integer_spec, default=20)
+        three = dictobj.NullableField(sb.boolean)
+
+    spec = D.FieldSpec()
+    d = spec.normalise(Meta.empty(), {"one": "hello"})
+    
+    # Which is equivalent to
+    d = spec.empty_normalise(one="hello")
+
+    # and then you'll have
+    assert d.one == "hello"
+    assert d.two == 20
+    assert d.three is None
+
+You can also have a form of dependency injection by combining this from objects from option_merge
+
+.. code-block:: python
+
+    from delfick_project.option_merge import MergedOptionStringFormatter, MergedOptions
+    from delfick_project.norms import dictobj, Meta
+
+    class D(dictobj.Spec):
+        thing = dictobj.Field(format_into=sb.any_spec, default="{things.thing}")
+        one = dictobj.Field(sb.overridden("{one}"), formatted=True)
+        two = dictobj.Field(sb.integer_spec)
+
+    class Thing:
+        _merged_options_formattable = True
+
+    thing = Thing()
+    everything = MergedOptions.using(
+          { "things": {"thing": thing}
+          , "one": "three"
+          }
+        )
+
+    meta = Meta(everything, [])
+    spec = D.FieldSpec(formatter=MergedOptionStringFormatter)
+    d = spec.normalise(meta, {"two": 20})
+
+    assert d.thing is thing
+    assert d.one == "three"
+    assert d.two == 20
 """
 
 from delfick_project.errors import ProgrammerError
@@ -88,8 +143,13 @@ class FieldSpec(object):
 
             spec = None
             if isinstance(options, Field):
+                if not meta.path:
+                    m = meta.at(".{0}".format(name))
+                else:
+                    m = meta.at(name)
+
                 try:
-                    spec = options.make_spec(meta.at(name), self.formatter)
+                    spec = options.make_spec(m, self.formatter)
                 except BadSpec as error:
                     errors.append(error)
             else:

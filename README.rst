@@ -25,7 +25,8 @@ Changelog
 
 0.5 - TBD
    Mostly drop in replacement to including the delfick_app, delfick_error,
-   delfick_logging, option_merge and input_algorithms in your project.
+   delfick_logging, option_merge, layerz, option_merge_addons and
+   input_algorithms in your project.
 
    Changes include:
 
@@ -45,6 +46,20 @@ Changelog
        your python environment
 
    * option_merge is now under delfick_project.option_merge
+
+     * The MergedOptionStringFormatter can be used as is and doesn't require
+       being a subclass. This is because I can use DelfickError to implement
+       the missing parts that had to be done by the user
+     * The MergedOptionStringFormatter makes it easier to specify custom format
+       specs. If you want a custom spec to not be formatted then specify it in
+       a class attribute on your Formatter as custom_format_specs (which should
+       be a list of strings). And just implement special_format_field. 
+     * The MergedOptionStringFormatter ``__init__`` has changed signature and
+       is just ``__init__(all_options, value, chain=None)``. To mimic the
+       option_path option from before say something like
+       ``MyFormatter(all_options, "{path}")`` instead of
+       ``MyFormatter(all_options, "path")``
+
    * input_algorithms is now under delfick_project.norms
 
      * many_item_formatted_spec is now under spec_base

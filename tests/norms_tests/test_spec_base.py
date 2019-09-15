@@ -1362,10 +1362,10 @@ describe "formatted":
 
         assert formatted_spec.normalise(meta, val) is 12
 
-        formatterK.assert_called_once_with(mock.ANY, mock.ANY, value="{thing}")
+        formatterK.assert_called_once_with(mock.ANY, "{thing}", chain=[])
 
     it "uses the formatter", meta_mock, ms:
-        meta_path = mock.Mock(name="path")
+        meta_path = Meta({}, []).at("one").path
         options = mock.Mock(name="options")
         meta_class = mock.Mock(name="meta_class")
         meta_class.return_value = options
@@ -1390,7 +1390,7 @@ describe "formatted":
             sb.formatted(ms.spec, formatter, expected_type=mock.Mock).normalise(meta_mock, ms.val)
         ) is formatted
         formatter_instance.format.assert_called_once_with()
-        formatter.assert_called_once_with(options, meta_path, value=specd)
+        formatter.assert_called_once_with(options, specd, chain=["one"])
 
         meta_class.assert_called_once_with(
             converters=meta_mock.everything.converters, dont_prefix=meta_mock.everything.dont_prefix
