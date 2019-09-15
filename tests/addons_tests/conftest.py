@@ -1,3 +1,4 @@
+import pkg_resources
 import importlib
 import runpy
 import site
@@ -15,7 +16,9 @@ def needs_installation(location):
 
     try:
         pkg = __import__(name)
-        if pkg.VERSION != version:
+        try:
+            pkg_resources.working_set.require("{0}=={1}".format(name, version))
+        except pkg_resources.VersionConflict:
             print("expected {0} VERSION to be {1}, got {2}".format(name, version, pkg.VERSION))
             pkg = None
     except ImportError:
@@ -40,3 +43,4 @@ if locations:
     pip._internal.main(args)
 
     importlib.reload(site)
+    importlib.reload(pkg_resources)
