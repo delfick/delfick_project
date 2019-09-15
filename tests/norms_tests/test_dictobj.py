@@ -130,7 +130,9 @@ describe "Fields":
             fields = {"one": "h1", ("two", True): "h2", "three": "h3", ("four", False): "h4"}
             fs = Fields(kls, fields)
             assert fs.posargs == []
-            assert sorted(fs.kwargs) == sorted([("one",), ("two", True), ("three",), ("four", False)])
+            assert sorted(fs.kwargs) == sorted(
+                [("one",), ("two", True), ("three",), ("four", False)]
+            )
 
     describe "resolving with posargs":
         it "complains if we provide more positional arguments than we have":
