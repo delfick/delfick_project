@@ -46,7 +46,7 @@ For example:
 
     spec = D.FieldSpec()
     d = spec.normalise(Meta.empty(), {"one": "hello"})
-    
+
     # Which is equivalent to
     d = spec.empty_normalise(one="hello")
 

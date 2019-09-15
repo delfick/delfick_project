@@ -5,7 +5,7 @@ exceptions a little nicer.
 Usage looks like:
 
 .. code-block:: python
-    
+
     from delfick_project.errors import DelfickError
 
     class MyError(DelfickError):

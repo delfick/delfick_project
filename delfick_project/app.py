@@ -163,7 +163,7 @@ class App(object):
 
             ``--silent`` means Errors only. ``--verbose`` and ``--debug`` do
             the same thing and just means we get DEBUG logs as well.
-            
+
             If none of these three are specified then you'll get INFO and above
             logs.
 
@@ -234,7 +234,7 @@ class App(object):
             A string of everything specified after a ``--`` on the cli.
 
         logging_handler
-            The logging handler created by setup_logging 
+            The logging handler created by setup_logging
 
         kwargs
             Extra keyword arguments passed down from the mainline.

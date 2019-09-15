@@ -56,7 +56,7 @@ class Validator(sb.Spec):
         Subclasses of Validator must implement this method.
 
         It will do validation on a value.
-        
+
         If the value is invalid then raise an instance of
         :class:`~delfick_project.norms.errors.BadSpec`.
 
