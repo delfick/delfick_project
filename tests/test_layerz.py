@@ -1,7 +1,7 @@
 # coding: spec
 
 from delfick_project.errors_pytest import assertRaises
-from delfick_project.layerz import Layers
+from delfick_project.layerz import Layers, DepCycle
 
 from itertools import zip_longest
 from unittest import mock
@@ -138,11 +138,11 @@ describe "Layers":
             deps["dep1"].dependencies = lambda a: ["dep2"]
             deps["dep2"].dependencies = lambda a: ["dep1"]
 
-            with assertRaises(Layers.DepCycle, chain=["dep1", "dep2", "dep1"]):
+            with assertRaises(DepCycle, chain=["dep1", "dep2", "dep1"]):
                 instance.add_to_layers("dep1")
 
             instance.reset()
-            with assertRaises(Layers.DepCycle, chain=["dep2", "dep1", "dep2"]):
+            with assertRaises(DepCycle, chain=["dep2", "dep1", "dep2"]):
                 instance.add_to_layers("dep2")
 
         describe "Dependencies":

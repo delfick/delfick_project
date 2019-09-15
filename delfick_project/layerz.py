@@ -26,22 +26,14 @@ and only add a dep to a layer that occurs after all it's dependencies.
 Cyclic dependencies will be complained about.
 """
 
+from delfick_project.errors import DelfickError
 
-class DepCycle(Exception):
-    _fake_delfick_error = True
 
-    def __init__(self, chain):
-        self.message = ""
-        self.chain = chain
-        self.kwargs = dict(chain=chain)
-
-    def __str__(self):
-        return "DepCycle: chain={0}".format(self.chain)
+class DepCycle(DelfickError):
+    pass
 
 
 class Layers(object):
-    DepCycle = DepCycle
-
     def __init__(self, deps, all_deps=None):
         self.deps = deps
         self.all_deps = all_deps
@@ -88,7 +80,7 @@ class Layers(object):
             dep_chain = list(chain)
             if dependency in chain:
                 dep_chain.append(dependency)
-                raise self.DepCycle(chain=dep_chain)
+                raise DepCycle(chain=dep_chain)
             self.add_to_layers(dependency, dep_chain)
 
         layer = 0
