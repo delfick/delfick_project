@@ -55,6 +55,8 @@ For example:
     assert d.two == 20
     assert d.three is None
 
+.. autoclass:: Field
+
 You can also have a form of dependency injection by combining this from objects from option_merge
 
 .. code-block:: python
@@ -241,6 +243,8 @@ class Field(object):
       * Whether this is a formatted field
       * has a default
       * Is wrapped by some other spec class
+
+    .. automethod:: make_spec
     """
 
     mixin = FieldSpecMixin
@@ -299,6 +303,7 @@ class Field(object):
           * If callable, then call it
 
           * If is nullable
+
             * or the spec with none_spec
             * if we have an after format, do the same with that
 

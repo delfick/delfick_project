@@ -1,64 +1,5 @@
 """
-This is an object that behaves like both an object (dot notation access to
-attributes) and like a dictionary (square bracket notation access to attrs).
-
-It is a subclass of ``dict`` and has ``is_dict`` set to True.
-
-It will also generate an ``__init__`` for you based on what you specify as the
-``fields`` attribute.
-
-.. code-block:: python
-
-    class MyAmazingKls(dictobj):
-        fields = ["one", "two", ("three", 4)]
-
-Creates an ``__init__`` that behaves like:
-
-.. code-block:: python
-
-    def __init__(self, one, two, three=4):
-        self.one = one
-        self.two = two
-        self.three = three
-
-``fields``
-    Must be an iterable of strings where each string is a valid variable name.
-
-    Or a tuple of ``(<variable_name>, <dflt_value>)`` where the ``<dflt_value>``
-    is used if that variable is not passed into ``__init__``.
-
-    Because it must be an iterable, it can also be a dictionary where the values
-    are docstrings for the attributes!
-
-    .. code-block:: python
-
-        class MyAmazingKls(dictobj):
-            fields = {
-                  "one": "The first argument"
-                , "two": "The second argument"
-                , ("three", 4): "Optional third argument"
-                }
-
-    Is a perfectly valid example.
-
-    Note that if you specify fields as a dictionary, you must specify those
-    arguments as keyword arguments when you instantiate the class.
-
-Once an instance of ``dictobj`` is created you may access the attributes however
-you wish!
-
-.. code-block:: python
-
-    instance = MyAmazingKls(one=1, two=2)
-
-    instance.one == 1
-    instance["one"] == 1
-
-    instance.three == 4
-
-    list(instance.items()) == [("one", 1), ("two", 2), ("three", 4)]
-
-    instance.as_dict() == {"one": 1, "two": 2, "three": 4}
+.. autoclass:: dictobj
 """
 from .field_spec import Field, NullableField
 from . import spec_base as sb
@@ -211,6 +152,73 @@ class Fields:
 
 
 class dictobj(dict):
+    """
+    This is an object that behaves like both an object (dot notation access to
+    attributes) and like a dictionary (square bracket notation access to attrs).
+
+    It is a subclass of ``dict`` and has ``is_dict`` set to True.
+
+    It will also generate an ``__init__`` for you based on what you specify as the
+    ``fields`` attribute.
+
+    .. code-block:: python
+
+        class MyAmazingKls(dictobj):
+            fields = ["one", "two", ("three", 4)]
+
+    Creates an ``__init__`` that behaves like:
+
+    .. code-block:: python
+
+        def __init__(self, one, two, three=4):
+            self.one = one
+            self.two = two
+            self.three = three
+
+    .. attribute:: fields
+
+        Must be an iterable of strings where each string is a valid variable name.
+
+        Or a tuple of ``(<variable_name>, <dflt_value>)`` where the ``<dflt_value>``
+        is used if that variable is not passed into ``__init__``.
+
+        Because it must be an iterable, it can also be a dictionary where the values
+        are docstrings for the attributes!
+
+        .. code-block:: python
+
+            class MyAmazingKls(dictobj):
+                fields = {
+                      "one": "The first argument"
+                    , "two": "The second argument"
+                    , ("three", 4): "Optional third argument"
+                    }
+
+        Is a perfectly valid example.
+
+        Note that if you specify fields as a dictionary, you must specify those
+        arguments as keyword arguments when you instantiate the class.
+
+        Also, if fields doesn't make sense, an exception will be raised when you
+        define your subclass of dictobj
+
+    Once an instance of ``dictobj`` is created you may access the attributes however
+    you wish!
+
+    .. code-block:: python
+
+        instance = MyAmazingKls(one=1, two=2)
+
+        instance.one == 1
+        instance["one"] == 1
+
+        instance.three == 4
+
+        list(instance.items()) == [("one", 1), ("two", 2), ("three", 4)]
+
+        instance.as_dict() == {"one": 1, "two": 2, "three": 4}
+    """
+
     fields = None
     is_dict = True
 
