@@ -7,6 +7,7 @@ from delfick_project.errors_pytest import assertRaises
 
 from unittest import mock
 import pytest
+import sys
 
 describe "Fields":
 
@@ -67,7 +68,8 @@ describe "Fields":
             kls = type("Kls", (), {})
             for fields in (0, 1, None, True, False, lambda: 1, kls):
                 with assertRaises(
-                    TypeError, f".+ should be a list, tuple or dictionary, got {type(fields)}"
+                    TypeError,
+                    ".+ should be a list, tuple or dictionary, got {0}".format(type(fields)),
                 ):
                     Fields(kls, fields)
 
@@ -113,7 +115,7 @@ describe "Fields":
                     testcases.append(fs)
 
                 for fields in testcases:
-                    with assertRaises(TypeError, f".+ is not a valid field, .+"):
+                    with assertRaises(TypeError, ".+ is not a valid field, .+"):
                         Fields(kls, fields)
 
         it "sets posargs for list/tuple fields":
@@ -128,7 +130,7 @@ describe "Fields":
             fields = {"one": "h1", ("two", True): "h2", "three": "h3", ("four", False): "h4"}
             fs = Fields(kls, fields)
             assert fs.posargs == []
-            assert fs.kwargs == [("one",), ("two", True), ("three",), ("four", False)]
+            assert sorted(fs.kwargs) == sorted([("one",), ("two", True), ("three",), ("four", False)])
 
     describe "resolving with posargs":
         it "complains if we provide more positional arguments than we have":
@@ -246,6 +248,8 @@ describe "dictobj":
         assert D().is_dict
 
     it "defines Fields for classes at definition", cached_fields:
+        if sys.version_info.major == 3 and sys.version_info.minor < 6:
+            pytest.skip("No subclass hook before python3.6")
 
         class D(dictobj):
             fields = ["one"]
@@ -257,6 +261,9 @@ describe "dictobj":
         assert fields.kwargs == []
 
     it "complains on definition if fields are nonsensical":
+        if sys.version_info.major == 3 and sys.version_info.minor < 6:
+            pytest.skip("No subclass hook before python3.6")
+
         msg = "Found duplicated fields in definition .+"
         with assertRaises(TypeError, msg):
 

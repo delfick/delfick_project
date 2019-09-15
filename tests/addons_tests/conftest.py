@@ -35,6 +35,8 @@ for name in os.listdir(addons_tests):
 if locations:
     import pip._internal
 
-    pip._internal.main(["install", "-e", *locations])
+    args = ["install", "-e"]
+    args.extend(locations)
+    pip._internal.main(args)
 
     importlib.reload(site)
