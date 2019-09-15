@@ -70,7 +70,7 @@ class SimpleFormatter(logging.Formatter):
         if sys.version.startswith("2.6"):
             logging.Formatter.__init__(self, *args, **kwargs)
         else:
-            super(SimpleFormatter, self).__init__(*args, **kwargs)
+            super().__init__(*args, **kwargs)
         self.ignore_extra = ignore_extra
 
     def format(self, record):
@@ -81,19 +81,19 @@ class SimpleFormatter(logging.Formatter):
             if sys.version.startswith("2.6"):
                 return logging.Formatter.format(self, record)
             else:
-                return super(SimpleFormatter, self).format(record)
+                return super().format(record)
 
 
 class SyslogHandler(logging.handlers.SysLogHandler):
     def format(self, record):
         record.getMessage = partial(make_message, self, record, record.getMessage)
-        return super(SyslogHandler, self).format(record)
+        return super().format(record)
 
 
 class JsonOverUDPHandler(logging.handlers.DatagramHandler):
     def __init__(self, program, host, port):
         self.program = program
-        super(JsonOverUDPHandler, self).__init__(host, port)
+        super().__init__(host, port)
 
     def makePickle(self, record):
         record.getMessage = partial(
@@ -104,13 +104,13 @@ class JsonOverUDPHandler(logging.handlers.DatagramHandler):
             program=self.program,
             provide_timestamp=True,
         )
-        return "{0}\n".format(super(JsonOverUDPHandler, self).format(record)).encode()
+        return "{0}\n".format(super().format(record)).encode()
 
 
 class JsonOverTCPHandler(logging.handlers.SocketHandler):
     def __init__(self, program, host, port):
         self.program = program
-        super(JsonOverTCPHandler, self).__init__(host, port)
+        super().__init__(host, port)
 
     def makePickle(self, record):
         record.getMessage = partial(
@@ -121,13 +121,13 @@ class JsonOverTCPHandler(logging.handlers.SocketHandler):
             program=self.program,
             provide_timestamp=True,
         )
-        return "{0}\n".format(super(JsonOverTCPHandler, self).format(record)).encode()
+        return "{0}\n".format(super().format(record)).encode()
 
 
 class JsonToConsoleHandler(logging.StreamHandler):
     def __init__(self, program, stream=None):
         self.program = program
-        super(JsonToConsoleHandler, self).__init__(stream=stream)
+        super().__init__(stream=stream)
 
     def format(self, record):
         return make_message(

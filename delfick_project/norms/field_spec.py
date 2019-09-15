@@ -349,4 +349,4 @@ class NullableField(Field):
 
     def __init__(self, *args, **kwargs):
         kwargs["nullable"] = True
-        super(NullableField, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)

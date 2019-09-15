@@ -65,7 +65,7 @@ class DelfickError(Exception):
         if "_errors" in kwargs:
             del kwargs["_errors"]
         self.message = message
-        super(DelfickError, self).__init__(message)
+        super().__init__(message)
 
     def __str__(self):
         message = self.oneline()

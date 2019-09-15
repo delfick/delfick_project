@@ -51,7 +51,7 @@ class MergedOptionStringFormatter(string.Formatter):
         self.chain = chain
         self.value = value
         self.all_options = all_options
-        super(MergedOptionStringFormatter, self).__init__()
+        super().__init__()
 
     def format(self):
         """Format our value into all_options"""
@@ -138,7 +138,7 @@ class MergedOptionStringFormatter(string.Formatter):
             if is_dict or is_special_type or is_a_mock or is_formattable:
                 return obj
             else:
-                return super(MergedOptionStringFormatter, self).format_field(obj, format_spec)
+                return super().format_field(obj, format_spec)
 
     def vformat(self, format_string, args, kwargs):
         """This changes in 3.5.1 and I want it to not have changed"""

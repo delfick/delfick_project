@@ -295,7 +295,7 @@ class dictof(dictionary_spec):
 
     def normalise_filled(self, meta, val):
         """Make sure all the names match the spec and normalise the values"""
-        val = super(dictof, self).normalise_filled(meta, val)
+        val = super().normalise_filled(meta, val)
 
         result = {}
         errors = []
@@ -811,7 +811,7 @@ class valid_string_spec(string_spec):
 
     def normalise_filled(self, meta, val):
         """Make sure if there is a value, that it is valid"""
-        val = super(valid_string_spec, self).normalise_filled(meta, val)
+        val = super().normalise_filled(meta, val)
         return apply_validators(meta, val, self.validators)
 
 
@@ -843,7 +843,7 @@ class integer_choice_spec(integer_spec):
 
     def normalise_filled(self, meta, val):
         """Complain if val isn't one of the available"""
-        val = super(integer_choice_spec, self).normalise_filled(meta, val)
+        val = super().normalise_filled(meta, val)
 
         if val not in self.choices:
             raise BadSpecValue(self.reason, available=self.choices, got=val, meta=meta)
@@ -879,7 +879,7 @@ class string_choice_spec(string_spec):
 
     def normalise_filled(self, meta, val):
         """Complain if val isn't one of the available"""
-        val = super(string_choice_spec, self).normalise_filled(meta, val)
+        val = super().normalise_filled(meta, val)
 
         if val not in self.choices:
             raise BadSpecValue(self.reason, available=self.choices, got=val, meta=meta)
