@@ -235,7 +235,7 @@ describe "Custom MergedOptionStringFormatter":
     it "works":
 
         class MyStringFormatter(MergedOptionStringFormatter):
-            custom_format_specs = ["no_interpret"]
+            passthrough_format_specs = ["no_interpret"]
 
             def special_format_field(s, obj, format_spec):
                 if format_spec == "upper":

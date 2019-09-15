@@ -7,7 +7,7 @@ formatter that can format strings using a MergedOptions object.
     from delfick_project.option_merge import MergedOptionStringFormatter, MergedOptions
 
     class Formatter(MergedOptionStringFormatter):
-        custom_format_specs = ["env"]
+        passthrough_format_specs = ["env"]
 
         def special_format_field(self, obj, format_spec):
             if format_spec == "env":
@@ -43,7 +43,7 @@ class MergedOptionStringFormatter(string.Formatter):
     Resolve format options into a MergedOptions dictionary
     """
 
-    custom_format_specs = []
+    passthrough_format_specs = []
 
     def __init__(self, all_options, value, chain=None):
         if chain is None:
@@ -65,12 +65,12 @@ class MergedOptionStringFormatter(string.Formatter):
 
     def special_get_field(self, value, args, kwargs, format_spec=None):
         """
-        Complain about recursive options and return value as is for custom_format_specs
+        Complain about recursive options and return value as is for passthrough_format_specs
         """
         if value in self.chain:
             raise BadOptionFormat("Recursive option", chain=self.chain + [value])
 
-        if format_spec in self.custom_format_specs:
+        if format_spec in self.passthrough_format_specs:
             return value, ()
 
     def special_format_field(self, obj, format_spec):
@@ -81,22 +81,22 @@ class MergedOptionStringFormatter(string.Formatter):
         .. code-block:: python
 
             class MyFormatter(MergedOptionStringFormatter):
-                custom_format_specs = ["plus_one"]
+                passthrough_format_specs = ["plus_one"]
 
                 def special_format_field(obj, format_spec):
                     if format_spec == "plus_one":
                         return int(obj) + 1
 
-            formatted = MyFormatter({}, "", value="{3:plus_one}").format()
+            formatted = MyFormatter({}, "{3:plus_one}").format()
             assert formatted == 4
+
+        .. note:: If you want the formatted value as obj then don't put your
+            format_spec in the passthrough_format_specs list
         """
 
     def get_string(self, key):
         """
-        Get a string from all_options
-
-        it is recommended you override this method and raise an error if the key
-        does not exist in self.all_options..
+        Get a string from all_options and complain if the key doesn't exist.
         """
         if key not in self.all_options:
             kwargs = {}

@@ -52,8 +52,8 @@ Changelog
        the missing parts that had to be done by the user
      * The MergedOptionStringFormatter makes it easier to specify custom format
        specs. If you want a custom spec to not be formatted then specify it in
-       a class attribute on your Formatter as custom_format_specs (which should
-       be a list of strings). And just implement special_format_field. 
+       a class attribute on your Formatter as passthrough_format_specs (which
+       should be a list of strings). And just implement special_format_field. 
      * The MergedOptionStringFormatter ``__init__`` has changed signature and
        is just ``__init__(all_options, value, chain=None)``. To mimic the
        option_path option from before say something like
