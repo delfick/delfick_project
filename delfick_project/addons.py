@@ -129,9 +129,6 @@ class AddonGetter(object):
     class NoSuchAddon(DelfickError):
         desc = "No such addon"
 
-    class BadImport(DelfickError):
-        desc = "Bad import"
-
     class BadAddon(DelfickError):
         desc = "Bad addon"
 
@@ -217,22 +214,9 @@ class AddonGetter(object):
         entry_point_full_name,
         known,
     ):
-        errors = []
         modules = []
         for entry_point in entry_points:
-            try:
-                modules.append(entry_point.resolve())
-            except ImportError as error:
-                err = self.BadImport(
-                    "Error whilst resolving entry_point",
-                    importing=entry_point_full_name,
-                    module=entry_point.module_name,
-                    error=str(error),
-                )
-                errors.append(err)
-
-        if errors:
-            raise self.BadImport("Failed to import some entry points", _errors=errors)
+            modules.append(entry_point.resolve())
 
         hooks, extras = self.get_hooks_and_extras(modules, known)
         resolver = self.get_resolver(collector, result_maker, hooks)

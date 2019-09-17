@@ -73,6 +73,9 @@ Changelog
      it looks for is now ``delfick_project.addons`` rather than
      ``option_merge.addons``
 
+   * Resolving addons with delfick_project.addons will no longer intercept
+     exceptions with a BadImport exception.
+
    * collector.register_converters now has a different signature. You just pass
      in a dictionary of ``{key: spec}`` where key is either a string or tuple
      of strings. So you don't need to tell it about the Meta or NotSpecified

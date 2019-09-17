@@ -39,16 +39,8 @@ describe "Failure":
         collector.configuration = {"resolved": []}
         return collector
 
-    it "complains if the addon is unimportable", getter, collector:
-        error = AddonGetter.BadImport(
-            "Error whilst resolving entry_point",
-            error=expected_import_error("wasdf"),
-            importing="failure.addons.unimportable",
-            module="namespace_failure.unimportable",
-        )
-        with assertRaises(
-            AddonGetter.BadImport, "Failed to import some entry points", _errors=[error]
-        ):
+    it "passes on the error if the addon is unimportable", getter, collector:
+        with assertRaises(ImportError, "No module named 'wasdf'"):
             getter("failure.addons", "unimportable", collector)
 
     it "complains if the addon recursively includes itself via another plugin at import time", getter, collector:

@@ -239,21 +239,12 @@ describe "AddonGetter":
         def getter(self):
             return AddonGetter()
 
-        it "raises an error if it can't resolve any of the entry points", getter, entry, ms:
+        it "passes on the error if it can't resolve any of the entry points", getter, entry, ms:
             e1 = ImportError("nup")
             entry.ep1.resolve.side_effect = e1
             entry.ep1.resolve.return_value = {}
 
-            found_error = AddonGetter.BadImport(
-                "Error whilst resolving entry_point",
-                importing=entry.entry_point_full_name,
-                module=entry.ep1.module_name,
-                error=str(e1),
-            )
-
-            with assertRaises(
-                AddonGetter.BadImport, "Failed to import some entry points", _errors=[found_error]
-            ):
+            with assertRaises(ImportError, "nup"):
                 getter.resolve_entry_points(
                     ms.namespace,
                     ms.entry_point_name,
