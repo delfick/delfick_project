@@ -587,3 +587,14 @@ class CliParser(object):
 
         self.specify_other_args(parser, defaults)
         return parser
+
+
+class OptionalFileType(argparse.FileType):
+    """
+    A proxy to argparse.FileType that skips if the file doesn't exist
+    """
+
+    def __call__(self, location):
+        if not os.path.exists(location):
+            return None
+        return super().__call__(location)

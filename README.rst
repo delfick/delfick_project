@@ -36,6 +36,7 @@ Changelog
      * No boto integration in delfick_app
      * No command_output function in delfick_app
      * No DelayedFileType argparse helper as that's only necessary in python2.6
+     * Added OptionalFileType that returns None if the file doesn't exist
 
    * delfick_error is now under delfick_project.errors and
      delfick_project.errors_pytest
