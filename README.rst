@@ -10,23 +10,23 @@ This is a collection of code that I use in nearly all my projects:
 * Validation and Normalisation of data
 * Module addon system
 
-It started as a monorepo of these projects:
-
-* https://github.com/delfick/delfick_app
-* https://github.com/delfick/delfick_error
-* https://github.com/delfick/delfick_logging
-* https://github.com/delfick/option_merge
-* https://github.com/delfick/input_algorithms
-* https://github.com/delfick/layerz
-* https://github.com/delfick/option_merge_addons
+Documentation can be found at https://delfick-project.readthedocs.io/en/latest/
 
 Changelog
 ---------
 
 0.5 - TBD
-   Mostly drop in replacement to including the delfick_app, delfick_error,
-   delfick_logging, option_merge, layerz, option_merge_addons and
-   input_algorithms in your project.
+   Moved the following projects into here
+
+   * https://github.com/delfick/delfick_app
+   * https://github.com/delfick/delfick_error
+   * https://github.com/delfick/delfick_logging
+   * https://github.com/delfick/option_merge
+   * https://github.com/delfick/input_algorithms
+   * https://github.com/delfick/layerz
+   * https://github.com/delfick/option_merge_addons
+
+   This is mostly a drop in replacement to including these projects
 
    Changes include:
 
