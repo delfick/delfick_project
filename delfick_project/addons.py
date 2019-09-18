@@ -5,7 +5,6 @@ from delfick_project.layerz import Layers
 from collections import defaultdict
 import pkg_resources
 import logging
-import six
 
 log = logging.getLogger("delfick_project.addons")
 
@@ -26,33 +25,6 @@ class addon_hook(object):
         return func
 
 
-class spec_key_spec(sb.Spec):
-    """
-    Turns value into (int, (str1, str2, ..., strn))
-
-    If value is a single string: (0, (val, ))
-
-    if value is a tuple of strings: (0, (val1, val2, ..., valn))
-
-    if value is a list of strings: (0, (val2, val2, ..., valn))
-
-    if value is already correct, then return as is
-    """
-
-    def normalise_filled(self, meta, val):
-        if isinstance(val, six.string_types):
-            return (0, (val,))
-        else:
-            if isinstance(val, list) or isinstance(val, tuple) and len(val) > 0:
-                is_int = type(val[0]) is int
-                is_digit = getattr(val[0], "isdigit", lambda: False)()
-                if not is_int and not is_digit:
-                    val = (0, val)
-
-            spec = sb.tuple_spec(sb.integer_spec(), sb.tupleof(sb.string_spec()))
-            return spec.normalise(meta, val)
-
-
 class no_such_key_spec(sb.Spec):
     def setup(self, reason):
         self.reason = reason
@@ -62,7 +34,7 @@ class no_such_key_spec(sb.Spec):
 
 
 class Result(dictobj.Spec):
-    specs = dictobj.Field(sb.dictof(spec_key_spec(), sb.has("normalise")))
+    specs = dictobj.Field(sb.dictof(sb.tupleof(sb.string_spec()), sb.has("normalise")))
     extra = dictobj.Field(no_such_key_spec("Use extras instead (notice the s!)"))
     extras = dictobj.Field(sb.listof(sb.tuple_spec(sb.string_spec(), sb.tupleof(sb.string_spec()))))
 

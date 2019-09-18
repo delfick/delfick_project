@@ -15,6 +15,9 @@ Documentation can be found at https://delfick-project.readthedocs.io/en/latest/
 Changelog
 ---------
 
+0.5.1
+   * Removed six import I didn't notice in migration
+
 0.5 - 18 September 2019
    Moved the following projects into here
 
