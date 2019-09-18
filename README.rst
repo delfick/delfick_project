@@ -15,7 +15,7 @@ Documentation can be found at https://delfick-project.readthedocs.io/en/latest/
 Changelog
 ---------
 
-0.5 - TBD
+0.5 - 18 September 2019
    Moved the following projects into here
 
    * https://github.com/delfick/delfick_app
