@@ -9,9 +9,20 @@ from unittest import mock
 import datetime
 import tempfile
 import logging
+import pytest
 import io
 import os
 import re
+
+
+@pytest.fixture(autouse=True)
+def reset_log_handlers():
+    root = logging.getLogger(None)
+    oldhandlers = list(root.handlers)
+    try:
+        yield
+    finally:
+        root.handlers = oldhandlers
 
 
 describe "App":
@@ -42,15 +53,11 @@ describe "App":
                         ],
                     )
 
-            root = logging.getLogger(None)
-            oldhandlers = root.handlers
             try:
                 MyApp().mainline([], print_errors_to=fle)
                 assert False, "This should have failed"
             except SystemExit as error:
                 assert error.code == 1
-            finally:
-                root.handlers = oldhandlers
 
             fle.flush()
             fle.seek(0)

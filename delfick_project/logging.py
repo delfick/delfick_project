@@ -319,8 +319,9 @@ def setup_logging(
 
     # Protect against this being called multiple times
     handler.delfick_logging = True
-    if any(getattr(h, "delfick_logging", False) for h in log.handlers):
-        return
+    for h in log.handlers:
+        if getattr(h, "delfick_logging", False):
+            return h
 
     if syslog_address:
         handler.setFormatter(
