@@ -177,6 +177,7 @@ describe "CliParser":
                 "json_console_logs": False,
                 "tcp_logging_address": "",
                 "udp_logging_address": "",
+                "logging_handler_file": None,
             }
 
         it "Doesn't complain about flagged values in positional placement":

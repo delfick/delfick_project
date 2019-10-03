@@ -331,6 +331,10 @@ class App(object):
         if args_obj.silent:
             level = logging.ERROR
 
+        logging_handler_file = args_obj.logging_handler_file
+        if not logging_handler_file:
+            logging_handler_file = self.logging_handler_file
+
         handler = setup_logging(
             log=log,
             level=level,
@@ -339,7 +343,7 @@ class App(object):
             udp_address=args_obj.udp_logging_address,
             tcp_address=args_obj.tcp_logging_address,
             only_message=only_message,
-            logging_handler_file=self.logging_handler_file,
+            logging_handler_file=logging_handler_file,
             json_to_console=args_obj.json_console_logs,
         )
 
@@ -584,6 +588,10 @@ class CliParser(object):
         )
 
         parser.add_argument("--version", help="Print out the version!", action="store_true")
+
+        parser.add_argument(
+            "--logging-handler-file", help="File to print logs to", type=argparse.FileType("w")
+        )
 
         self.specify_other_args(parser, defaults)
         return parser
