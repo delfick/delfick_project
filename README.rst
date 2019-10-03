@@ -15,8 +15,8 @@ Documentation can be found at https://delfick-project.readthedocs.io/en/latest/
 Changelog
 ---------
 
-0.5.2 - TBD
-   * Added a default --logging-handler-file for saying where logs should go to.
+0.5.2 - 3 October 2019
+   * Added an option --logging-handler-file for saying where logs should go to.
      This essentially defaults to sys.stderr
 
 0.5.1 - 18 September 2019
