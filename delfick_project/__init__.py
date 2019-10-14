@@ -1,2 +1,2 @@
 """pytest-cov: avoid already-imported warning: PYTEST_DONT_REWRITE."""
-VERSION = "0.5.2"
+VERSION = "0.6.0"
