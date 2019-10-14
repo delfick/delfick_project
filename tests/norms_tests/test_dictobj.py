@@ -510,3 +510,15 @@ describe "dictobj":
             d = D(one=m, two=E(three=5))
             assert d.as_dict(a=a, b=b) == {"one": n, "two": {"three": 5}}
             m.as_dict.assert_called_once_with(a=a, b=b)
+
+        it "works when a non-dictobj object has an as_dict":
+
+            class Thing:
+                def as_dict(self):
+                    return {"a": 1}
+
+            class D(dictobj):
+                fields = ["thing"]
+
+            d = D(thing=Thing())
+            assert d.as_dict("path", seen=[]) == {"thing": {"a": 1}}

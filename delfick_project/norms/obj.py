@@ -319,7 +319,7 @@ class dictobj(dict):
 
         return self.__class__(**result)
 
-    def as_dict(self, **kwargs):
+    def as_dict(self, *args, **kwargs):
         """
         Return as a deeply nested dictionary
 
@@ -328,16 +328,14 @@ class dictobj(dict):
         if not self.fields:
             return {}
 
+        from delfick_project.option_merge.helper import convert_to_dict
+
         result = {}
         for field in self.fields:
             if isinstance(field, tuple):
                 field = field[0]
 
-            val = self[field]
-            if hasattr(val, "as_dict"):
-                result[field] = val.as_dict(**kwargs)
-            else:
-                result[field] = val
+            result[field] = convert_to_dict(self[field], args, kwargs)
 
         return result
 

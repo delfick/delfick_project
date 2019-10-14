@@ -9,6 +9,7 @@ It is also used to get thesource for particular paths.
 """
 
 from .versioning import versioned_iterable, versioned_value
+from .helper import convert_to_dict
 from .merge import MergedOptions
 from .not_found import NotFound
 from .value_at import value_at
@@ -347,7 +348,9 @@ class Storage(object):
             while not found or path_without_prefix:
                 if hasattr(data, "is_dict") and data.is_dict:
                     if hasattr(val, "as_dict"):
-                        val = val.as_dict(path_without_prefix, seen=seen, ignore=ignore)
+                        val = convert_to_dict(
+                            val, (path_without_prefix,), {"seen": seen, "ignore": ignore}
+                        )
                         path_without_prefix = ""
                     else:
                         val = dict(val)
@@ -363,7 +366,11 @@ class Storage(object):
                     path_without_prefix = path_without_prefix.without(dot_joiner(used))
 
             if found and path_without_prefix == "":
-                is_dict = lambda item: type(item) in (dict, MergedOptions) or isinstance(item, dict)
+                is_dict = (
+                    lambda item: type(item) in (dict, MergedOptions)
+                    or isinstance(item, dict)
+                    or hasattr(item, "as_dict")
+                )
                 if not is_dict(val):
                     result = val
                 else:

@@ -4,6 +4,8 @@ from delfick_project.option_merge import MergedOptions
 from delfick_project.option_merge import helper as hp
 from delfick_project.option_merge.path import Path
 
+from delfick_project.norms import dictobj
+
 from unittest import mock
 import itertools
 
@@ -142,3 +144,67 @@ describe "merge_into_dict":
                 "one": 1,
                 "two": 2,
             }
+
+describe "convert_to_dict":
+    it "works if the object's as_dict has no parameters":
+
+        class Thing:
+            def as_dict(s):
+                return {"a": 1}
+
+        t = hp.convert_to_dict(Thing(), (1,), {"a": 1})
+        assert t == {"a": 1}
+
+    it "works with dictobj":
+        called = []
+
+        class Other:
+            def as_dict(s, *args, **kwargs):
+                called.append((args, kwargs))
+                return {"b": 2}
+
+        class Thing(dictobj):
+            fields = ["one"]
+
+        t = hp.convert_to_dict(Thing(one=Other()), (1,), {"a": 1})
+        assert t == {"one": {"b": 2}}
+        assert called == [((1,), {"a": 1})]
+
+    it "works with MergedOptions":
+        called = []
+
+        class Other:
+            def as_dict(s, *args, **kwargs):
+                called.append((args, kwargs))
+                return {"b": 2}
+
+        class Thing(dictobj):
+            fields = ["one"]
+
+        m = MergedOptions.using()
+        m["wat"] = Thing(one=Other())
+
+        m2 = MergedOptions.using({"thing": Thing(one="a")}, m)
+
+        t = hp.convert_to_dict(m2, (), {})
+        assert t == {"thing": {"one": "a"}, "wat": {"one": {"b": 2}}}
+        assert called == [((), {"ignore": [], "seen": mock.ANY})]
+
+    it "works with things that don't have as_dict":
+
+        class Thing:
+            pass
+
+        for thing in (0, 1, "", "a", [], [1], {}, {"a": 1}, lambda: 1, Thing, Thing()):
+            assert hp.convert_to_dict(thing, (1,), {"a": 1}) is thing
+
+    it "doesn't use as_dict if is_dict is set to False":
+
+        class Thing:
+            is_dict = False
+
+            def as_dict(s):
+                return {"b": 1}
+
+        thing = Thing()
+        assert hp.convert_to_dict(thing, (), {}) is thing

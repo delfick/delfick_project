@@ -1,6 +1,8 @@
 from .merge import MergedOptions
 from .joiner import dot_joiner
 
+import inspect
+
 
 def prefixed_path_list(path, prefix=None):
     """Return the prefixed version of this path as a list"""
@@ -54,21 +56,41 @@ def merge_into_dict(target, source, seen=None, ignore=None):
     if ignore is None:
         ignore = []
 
-    if hasattr(source, "is_dict") and source.is_dict:
-        if hasattr(source, "as_dict"):
-            source = source.as_dict(seen=seen, ignore=ignore)
-        else:
-            source = dict(source)
+    source = convert_to_dict(source, (), {"seen": seen, "ignore": ignore})
 
     for key in source.keys():
         if key in ignore:
             continue
         val = source[key]
 
-        is_dict = lambda item: type(item) in (dict, MergedOptions) or isinstance(item, dict)
+        is_dict = (
+            lambda item: type(item) in (dict, MergedOptions)
+            or isinstance(item, dict)
+            or hasattr(item, "as_dict")
+        )
         if is_dict(val):
             if not is_dict(target.get(key)):
                 target[key] = {}
             merge_into_dict(target[key], val, seen=seen, ignore=ignore)
         else:
             target[key] = val
+
+
+def convert_to_dict(val, args, kwargs):
+    """
+    Use the val's as_dict method if it exists and return the result from that or
+    return val as is.
+
+    We also see if as_dict takes in arguments and if it does, we pass in args
+    and kwargs to the as_dict.
+    """
+    if not hasattr(val, "as_dict"):
+        return val
+
+    if hasattr(val, "is_dict") and not val.is_dict:
+        return val
+
+    if inspect.signature(val.as_dict).parameters:
+        return val.as_dict(*args, **kwargs)
+    else:
+        return val.as_dict()

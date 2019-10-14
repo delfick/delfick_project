@@ -15,6 +15,10 @@ Documentation can be found at https://delfick-project.readthedocs.io/en/latest/
 Changelog
 ---------
 
+0.6.0 - TBD
+   * Ensure that as_dict on a dictobj or MergedOptions works if we have objects
+     with an as_dict method that doesn't take in any parameters.
+
 0.5.2 - 3 October 2019
    * Added an option --logging-handler-file for saying where logs should go to.
      This essentially defaults to sys.stderr

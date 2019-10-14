@@ -3,6 +3,7 @@
 from delfick_project.option_merge import Converter, Converters, MergedOptions, NotFound
 from delfick_project.option_merge.storage import Storage, DataPath
 from delfick_project.option_merge.path import Path
+from delfick_project.norms import dictobj
 
 from delfick_project.errors_pytest import assertRaises
 
@@ -475,6 +476,18 @@ describe "Storage":
             options = MergedOptions()
             options[["blah", "stuff"]] = 1
             assert options.as_dict() == {"blah": {"stuff": 1}}
+
+        it "works with dictobj objects and objects with their own as_dict":
+
+            class Thing:
+                def as_dict(s):
+                    return {"a": 1}
+
+            class D(dictobj):
+                fields = ["thing"]
+
+            m = MergedOptions.using(D(thing=Thing()), {"other": Thing()}, Thing(), {"b": 2})
+            assert m.as_dict() == {"thing": {"a": 1}, "other": {"a": 1}, "a": 1, "b": 2}
 
 describe "DataPath":
     it "takes in path, data and source":
