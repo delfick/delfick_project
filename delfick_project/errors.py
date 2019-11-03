@@ -228,8 +228,9 @@ class DelfickErrorTestMixin:
         """
         try:
             yield
-        except Exception as error:
+        except:
             original_exc_info = sys.exc_info()
+            error = original_exc_info[1]
             try:
                 assert issubclass(error.__class__, expected_kls), "Expected {0}, got {1}".format(
                     expected_kls, error.__class__
