@@ -37,10 +37,14 @@ for name in os.listdir(addons_tests):
 
 if locations:
     import pip._internal
+    if hasattr(pip._internal, "main"):
+        _main = pip._internal.main
+    else:
+        from pip._internal.main import main as _main
 
     args = ["install", "-e"]
     args.extend(locations)
-    pip._internal.main(args)
+    _main(args)
 
     importlib.reload(site)
     importlib.reload(pkg_resources)
