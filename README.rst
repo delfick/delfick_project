@@ -19,6 +19,7 @@ Changelog
    * fuzzyAssertRaisesError will now catch BaseExceptions like the pytest
      assertRaises does. Mainly so I can catch asyncio.CancelledError under
      Python 3.8.
+   * delfick_project is now only compatible with Python versions greater than 3.6
 
 0.6.0 - 14 October 2019
    * Ensure that as_dict on a dictobj or MergedOptions works if we have objects

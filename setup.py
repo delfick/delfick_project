@@ -8,7 +8,7 @@ setup(
     , version = VERSION
     , packages = find_packages(include="delfick_project.*", exclude=["tests*"])
 
-    , python_requires = ">= 3.4"
+    , python_requires = ">= 3.6"
 
     , extras_require =
       { 'tests':
