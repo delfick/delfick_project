@@ -7,7 +7,6 @@ from delfick_project.errors_pytest import assertRaises
 
 from unittest import mock
 import pytest
-import sys
 
 describe "Fields":
 
@@ -250,9 +249,6 @@ describe "dictobj":
         assert D().is_dict
 
     it "defines Fields for classes at definition", cached_fields:
-        if sys.version_info.major == 3 and sys.version_info.minor < 6:
-            pytest.skip("No subclass hook before python3.6")
-
         class D(dictobj):
             fields = ["one"]
 
@@ -263,9 +259,6 @@ describe "dictobj":
         assert fields.kwargs == []
 
     it "complains on definition if fields are nonsensical":
-        if sys.version_info.major == 3 and sys.version_info.minor < 6:
-            pytest.skip("No subclass hook before python3.6")
-
         msg = "Found duplicated fields in definition .+"
         with assertRaises(TypeError, msg):
 
