@@ -104,7 +104,7 @@ class JsonOverUDPHandler(logging.handlers.DatagramHandler):
             program=self.program,
             provide_timestamp=True,
         )
-        return "{0}\n".format(super().format(record)).encode()
+        return f"{super().format(record)}\n".encode()
 
 
 class JsonOverTCPHandler(logging.handlers.SocketHandler):
@@ -121,7 +121,7 @@ class JsonOverTCPHandler(logging.handlers.SocketHandler):
             program=self.program,
             provide_timestamp=True,
         )
-        return "{0}\n".format(super().format(record)).encode()
+        return f"{super().format(record)}\n".encode()
 
 
 class JsonToConsoleHandler(logging.StreamHandler):
@@ -157,7 +157,7 @@ class ConsoleHandler(RainbowLoggingHandler):
                     s.append(record.msg["msg"])
                 for k, v in sorted(record.msg.items()):
                     if k != "msg":
-                        s.append("{}={}".format(k, f(v)))
+                        s.append(f"{k}={f(v)}")
                 return "\t".join(s)
             else:
                 return oldGetMessage()
@@ -325,7 +325,7 @@ def setup_logging(
 
     if syslog_address:
         handler.setFormatter(
-            SimpleFormatter("{0}[{1}]: %(message)s".format(program, os.getpid()), ignore_extra=True)
+            SimpleFormatter(f"{program}[{os.getpid()}]: %(message)s", ignore_extra=True)
         )
     elif udp_address or tcp_address or json_to_console:
         handler.setFormatter(SimpleFormatter("%(message)s"))
@@ -343,7 +343,7 @@ def setup_logging(
             handler.setFormatter(SimpleFormatter(base_format))
         else:
             handler.setFormatter(
-                SimpleFormatter("{0} {1}".format("%(asctime)s %(levelname)-7s", base_format))
+                SimpleFormatter(f"%(asctime)s %(levelname)-7s {base_format}")
             )
 
     log.addHandler(handler)

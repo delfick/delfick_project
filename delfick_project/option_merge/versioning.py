@@ -17,8 +17,8 @@ class versioned_value(object):
 
     def __init__(self, func):
         self.func = func
-        self.cached_key = "_{0}_cached".format(self.func.__name__)
-        self.expected_version_key = "_{0}_expected_version".format(self.func.__name__)
+        self.cached_key = f"_{self.func.__name__}_cached"
+        self.expected_version_key = f"_{self.func.__name__}_expected_version"
 
     def __get__(self, instance=None, owner=None):
         def returned(*args, **kwargs):
@@ -91,9 +91,9 @@ class versioned_iterable(object):
 
     def __init__(self, func):
         self.func = func
-        self.cached_key = "_{0}_cached".format(self.func.__name__)
-        self.value_cache_key = "_{0}_value_cache".format(self.func.__name__)
-        self.expected_version_key = "_{0}_expected_version".format(self.func.__name__)
+        self.cached_key = f"_{self.func.__name__}_cached"
+        self.value_cache_key = f"_{self.func.__name__}_value_cache"
+        self.expected_version_key = f"_{self.func.__name__}_expected_version"
 
     def iterator_for(self, instance, prefix, ignore_converters, cached, value_cache):
         for item in value_cache[prefix][ignore_converters]:
@@ -102,7 +102,7 @@ class versioned_iterable(object):
         iterator = cached[prefix][ignore_converters]
         if iterator is self.Finished:
             return
-        ident = cached[prefix][ignore_converters] = "{0}:{1}".format(time.time(), random.random())
+        ident = cached[prefix][ignore_converters] = f"{time.time()}:{random.random()}"
 
         try:
             while True:

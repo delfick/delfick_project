@@ -70,13 +70,12 @@ class DelfickError(Exception):
     def __str__(self):
         message = self.oneline()
         if self.errors:
-            message = "{0}\nerrors:\n=======\n\n\t{1}".format(
-                message,
-                "\n\t".join(
-                    "{0}\n-------".format("\n\t".join(str(error).split("\n")))
-                    for error in self.errors
-                ),
-            )
+            es = []
+            for error in self.errors:
+                s = "\n\t".join(str(error).split('\n'))
+                es.append(f"{s}\n-------")
+            e = "\n\t".join(es)
+            message = f"{message}\nerrors:\n=======\n\n\t{e}"
         return message
 
     def as_dict(self):
@@ -84,8 +83,8 @@ class DelfickError(Exception):
         message = self.message
         if desc:
             if message:
-                message = ". {0}".format(message)
-            desc = "{0}{1}".format(desc, message)
+                message = f". {message}"
+            desc = f"{desc}{message}"
         else:
             if message:
                 desc = message
@@ -107,12 +106,8 @@ class DelfickError(Exception):
         return str(self).decode("utf-8")
 
     def __repr__(self):
-        return "{0}({1}, {2}, _errors={3})".format(
-            self.__class__.__name__,
-            self.message,
-            ", ".join("{0}={1}".format(k, v) for k, v in self.kwargs.items()),
-            self.errors,
-        )
+        s = ", ".join(f"{k}={v}" for k, v in self.kwargs.items())
+        return f"{self.__class__.__name__}({self.message}, {s}, _errors={self.errors})"
 
     def __hash__(self):
         return hash(self.as_tuple(for_hash=True))
@@ -122,22 +117,23 @@ class DelfickError(Exception):
         desc = self.desc
         message = self.message
 
-        info = [
-            "{0}={1}".format(k, self.formatted_val(k, v)) for k, v in sorted(self.kwargs.items())
-        ]
-        info = "\t".join(info)
+        ii = []
+        for k, v in sorted(self.kwargs.items()):
+            ii.append(f"{k}={self.formatted_val(k, v)}")
+        info = "\t".join(ii)
+
         if info and (message or desc):
-            info = "\t{0}".format(info)
+            info = f"\t{info}"
 
         if desc:
             if message:
-                message = ". {0}".format(message)
-            return '"{0}{1}"{2}'.format(desc, message, info)
+                message = f". {message}"
+            return f"\"{desc}{message}\"{info}"
         else:
             if message:
-                return '"{0}"{1}'.format(message, info)
+                return f"\"{message}\"{info}"
             else:
-                return "{0}".format(info)
+                return f"{info}"
 
     def formatted_val(self, key, val):
         """Format a value for display in error message"""
@@ -147,9 +143,7 @@ class DelfickError(Exception):
             try:
                 return val.delfick_error_format(key)
             except Exception as error:
-                return "<|Failed to format val for exception: val={0}, error={1}|>".format(
-                    val, error
-                )
+                return f"<|Failed to format val for exception: val={val}, error={error}|>"
 
     def __eq__(self, error):
         """Say whether this error is like the other error"""
@@ -232,9 +226,9 @@ class DelfickErrorTestMixin:
             original_exc_info = sys.exc_info()
             error = original_exc_info[1]
             try:
-                assert issubclass(error.__class__, expected_kls), "Expected {0}, got {1}".format(
-                    expected_kls, error.__class__
-                )
+                assert issubclass(
+                    error.__class__, expected_kls
+                ), f"Expected {expected_kls}, got {error.__class__}"
 
                 if not issubclass(error.__class__, DelfickError) and not getattr(
                     error, "_fake_delfick_error", False
@@ -265,22 +259,24 @@ class DelfickErrorTestMixin:
                     )
                     print(error)
                     print()
-                    msg = "Expected: {0}".format(expected_kls)
+                    msg = f"Expected: {expected_kls}"
                     if expected_msg_regex is not Empty:
-                        msg = "{0}: {1}".format(msg, expected_msg_regex)
+                        msg = f"{msg}: {expected_msg_regex}"
                     if values:
-                        msg = "{0}: {1}".format(msg, values)
+                        msg = f"{msg}: {values}"
                     print(msg)
                     print("!" * 20)
                 finally:
                     exc_info[1].__traceback__ = exc_info[2]
                     raise exc_info[1]
         else:
-            assert (
-                False
-            ), "Expected an exception to be raised\n\texpected_kls: {0}\n\texpected_msg_regex: {1}\n\thave_atleast: {2}".format(
-                expected_kls, expected_msg_regex, values
-            )
+            ss = [
+                f"Expected an exception to be raised",
+                f"expected_kls: {expected_kls}",
+                f"expected_msg_regex: {expected_msg_regex}",
+                f"have_atleast: {values}",
+            ]
+            assert False, "\n\t".join(ss)
 
     def assertDictContains(self, expected, actual, msg=None):
         """Checks whether actual is a superset of expected."""
@@ -290,9 +286,7 @@ class DelfickErrorTestMixin:
             if key not in actual:
                 missing.append(safe_repr(key))
             elif value != actual[key]:
-                nxt = "{{{0}: expected={1}, got={2}}}".format(
-                    safe_repr(key), safe_repr(value), safe_repr(actual[key])
-                )
+                nxt = f"{{{safe_repr(key)}: expected={safe_repr(value)}, got={safe_repr(actual[key])}}}"
                 mismatched.append(nxt)
 
         if not (missing or mismatched):
@@ -300,10 +294,12 @@ class DelfickErrorTestMixin:
 
         error = []
         if missing:
-            error.append("Missing: {0}".format(", ".join(sorted(missing))))
+            ms = ", ".join(sorted(missing))
+            error.append(f"Missing: {ms}")
 
         if mismatched:
-            error.append("Mismatched: {0}".format(", ".join(sorted(mismatched))))
+            ms = ", ".join(sorted(mismatched))
+            error.append(f"Mismatched: {ms}")
 
         if hasattr(self, "_formatMessage"):
             self.fail(self._formatMessage(msg, "; ".join(error)))

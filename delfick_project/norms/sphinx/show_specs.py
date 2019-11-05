@@ -22,7 +22,7 @@ class ShowDirective(Directive):
             viewlist = ViewList()
             for line in dedent(spec.__doc__).split("\n"):
                 if line:
-                    viewlist.append("    {0}".format(line), name)
+                    viewlist.append(f"    {line}", name)
                 else:
                     viewlist.append("", name)
             self.state.nested_parse(viewlist, self.content_offset, sect)

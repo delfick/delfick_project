@@ -17,7 +17,7 @@ class RegexCompare:
         return self.r.search(other) is not None
 
     def __repr__(self):
-        return "<Regex '{0}'>".format(self.r.pattern)
+        return f"<Regex '{self.r.pattern}'>"
 
 
 class Empty:
@@ -65,22 +65,14 @@ class assertRaises:
         __tracebackhide__ = True
 
         if exc_type is None:
-            info = {
-                "expected_kls": self.expected_kls,
-                "expected_msg_regex": self.expected_msg_regex,
-                "values": self.values,
-                "errors": self.errors,
-            }
             assert False, dedent(
-                """
+                f"""
                 Expected an exception to be raised
-                    expected_kls: {expected_kls}
-                    expected_msg_regex: {expected_msg_regex}
-                    have_atleast: {values}
-                    errors: {errors}
-            """.format(
-                    **info
-                )
+                    expected_kls: {self.expected_kls}
+                    expected_msg_regex: {self.expected_msg_regex}
+                    have_atleast: {self.values}
+                    errors: {self.errors}
+            """
             ).strip()
 
         try:
@@ -101,14 +93,14 @@ class assertRaises:
                 print(line)
             print()
             print("Expected:")
-            print("  class: {0}".format(self.expected_kls))
+            print(f"  class: {self.expected_kls}")
             if self.expected_msg_regex is not Empty:
-                print("  msg: {0}".format(self.expected_msg_regex))
-            print("  values: {0}".format(self.values))
+                print(f"  msg: {self.expected_msg_regex}")
+            print(f"  values: {self.values}")
             if self.errors:
                 print("  errors:")
                 for e in self.errors:
-                    print("    {0}".format(e))
+                    print(f"    {e}")
             print()
             print("!" * 20)
 

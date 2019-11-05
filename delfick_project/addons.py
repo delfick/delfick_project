@@ -136,7 +136,7 @@ class AddonGetter(object):
             )
             return
 
-        entry_point_full_name = "{0}.{1}".format(namespace, entry_point_name)
+        entry_point_full_name = f"{namespace}.{entry_point_name}"
 
         entry_points = self.find_entry_points(namespace, entry_point_name, entry_point_full_name)
 
@@ -168,11 +168,11 @@ class AddonGetter(object):
         entry_points = list(it)
 
         if len(entry_points) > 1:
-            log.warning("Found multiple entry_points for {0}".format(entry_point_full_name))
+            log.warning(f"Found multiple entry_points for {entry_point_full_name}")
         elif len(entry_points) == 0:
             raise self.NoSuchAddon(addon=entry_point_full_name)
         else:
-            log.info("Found {0} addon".format(entry_point_full_name))
+            log.info(f"Found {entry_point_full_name} addon")
 
         return entry_points
 

@@ -436,7 +436,7 @@ class MergedOptions(dict, Mapping):
             yield self[key]
 
     def __repr__(self):
-        return "MergedOptions({0})".format(self.prefix_string)
+        return f"MergedOptions({self.prefix_string})"
 
     def path(self, path, **kwargs):
         """Return us a path instance"""

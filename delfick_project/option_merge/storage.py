@@ -141,7 +141,7 @@ class Storage(object):
     def add(self, path, data, source=None):
         """Add data at the beginning"""
         if not isinstance(path, Path):
-            raise Exception("Path should be a Path object\tgot={0}".format(type(path)))
+            raise Exception(f"Path should be a Path object\tgot={type(path)}")
         self._version += 1
         self.data.insert(0, (path, data, source))
 
@@ -185,11 +185,11 @@ class Storage(object):
                 self._version += 1
                 del self.data[index]
                 return
-            elif dotted_info_path.startswith("{0}.".format(path)):
+            elif dotted_info_path.startswith(f"{path}."):
                 self._version += 1
                 del self.data[index]
                 return
-            elif not dotted_info_path or path.startswith("{0}.".format(dotted_info_path)):
+            elif not dotted_info_path or path.startswith(f"{dotted_info_path}."):
                 remainder = path
                 if info_path:
                     remainder = Path.convert(path).without(dotted_info_path)
@@ -294,7 +294,7 @@ class Storage(object):
                     else:
                         joined = key
 
-                    if not any(s == joined or joined.startswith("{0}.".format(s)) for s in stopped):
+                    if not any(s == joined or joined.startswith(f"{s}.") for s in stopped):
                         if key not in done:
                             yield key
                             done.add(key)
@@ -316,7 +316,7 @@ class Storage(object):
             return True
 
         for key in keys:
-            if path.startswith("{0}.".format(key)):
+            if path.startswith(f"{key}."):
                 if self.delete_from_data(data[key], Path.convert(path).without(key)):
                     return True
 

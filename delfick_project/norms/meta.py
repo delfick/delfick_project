@@ -66,7 +66,7 @@ class Meta(object):
         """
         Return a new instance with ``("", "[index]")`` added to the path
         """
-        return self.new_path([("", "[{0}]".format(index))])
+        return self.new_path([("", f"[{index}]")])
 
     def at(self, val):
         """
@@ -84,8 +84,7 @@ class Meta(object):
         reversed
         """
         return dict(
-            ("_key_name_{0}".format(index), val)
-            for index, (val, _) in enumerate(reversed(self._path))
+            (f"_key_name_{index}", val) for index, (val, _) in enumerate(reversed(self._path))
         )
 
     def __eq__(self, other):
@@ -123,7 +122,7 @@ class Meta(object):
             if name and complete:
                 complete.append(".")
             if name or extra:
-                complete.append("{0}{1}".format(name, extra))
+                complete.append(f"{name}{extra}")
         return "".join(complete)
 
     @property
@@ -148,6 +147,6 @@ class Meta(object):
     def delfick_error_format(self, key):
         """Format a string for display in a delfick error"""
         if self.source in (None, "<unknown>") or self.source == []:
-            return "{{path={0}}}".format(self.path)
+            return f"{{path={self.path}}}"
         else:
-            return "{{source={0}, path={1}}}".format(self.source, self.path)
+            return f"{{source={self.source}, path={self.path}}}"

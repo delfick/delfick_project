@@ -88,7 +88,7 @@ class Collector(object):
             self.kwargs = {}
 
         def __str__(self):
-            return "BadFile: {0}".format(self.message)
+            return f"BadFile: {self.message}"
 
     class BadConfigurationErrorKls(Exception):
         _fake_delfick_error = True
@@ -99,13 +99,12 @@ class Collector(object):
             self.errors = _errors
 
         def __str__(self):
-            message = "errors:\n=======\n\n\t{0}".format(
-                "\n\t".join(
-                    "{0}\n-------".format("\n\t".join(str(error).split("\n")))
-                    for error in self.errors
-                )
-            )
-            return "BadConfiguration:\n{0}".format(message)
+            ss = []
+            for error in self.errors:
+                ss.append("\n\t".join(str(error).split("\n")))
+            s = "\n\t".join(ss)
+            message = f"errors:\n=======\n\n\t{s}"
+            return f"BadConfiguration:\n{message}"
 
     def __init__(self):
         self.setup()

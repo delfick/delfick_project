@@ -101,7 +101,7 @@ class Path(object):
                 yield part
 
     def __repr__(self):
-        return "<Path({0})>".format(str(self))
+        return f"<Path({str(self)})>"
 
     def __eq__(self, other):
         """

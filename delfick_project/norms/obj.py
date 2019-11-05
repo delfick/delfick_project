@@ -31,9 +31,7 @@ class Fields:
             result = self.kwargs
         else:
             raise TypeError(
-                "Fields on kls {0} should be a list, tuple or dictionary, got {1}".format(
-                    kls, type(fields)
-                )
+                f"Fields on kls {kls} should be a list, tuple or dictionary, got {type(fields)}"
             )
 
         for i, field in enumerate(fields):
@@ -42,9 +40,7 @@ class Fields:
             elif isinstance(field, tuple) and len(field) == 2 and isinstance(field[0], str):
                 result.append(field)
             else:
-                raise TypeError(
-                    "Field {0} of kls {1} is not a valid field, got {2}".format(i, kls, field)
-                )
+                raise TypeError(f"Field {i} of kls {kls} is not a valid field, got {field}")
 
         names = [f[0] for f in result]
         if len(set(names)) != len(names):
@@ -52,11 +48,8 @@ class Fields:
             for n in names:
                 by_name[n] += 1
             duplicated = {n: num for n, num in by_name.items() if num > 1}
-            raise TypeError(
-                "Found duplicated fields in definition of {0}: {1}".format(
-                    kls, sorted(duplicated.keys())
-                )
-            )
+            ks = sorted(duplicated.keys())
+            raise TypeError(f"Found duplicated fields in definition of {kls}: {ks}")
 
     def resolve(self, args, kwargs):
         if args and self.kwargs:
@@ -64,9 +57,7 @@ class Fields:
 
         if len(args) > len(self.posargs):
             raise TypeError(
-                "Expected up to {0} positional arguments, got {1}".format(
-                    len(self.posargs), len(args)
-                )
+                f"Expected up to {len(self.posargs)} positional arguments, got {len(args)}"
             )
 
         result = {}
@@ -102,17 +93,13 @@ class Fields:
                 if name == field:
                     if name in result:
                         raise TypeError(
-                            "Cannot provide a field ({0}) as both positional and keyword arguments".format(
-                                name
-                            )
+                            f"Cannot provide a field ({name}) as both positional and keyword arguments"
                         )
                     result[field] = value
                     found = True
 
             if not found:
-                raise TypeError(
-                    "Received a keyword argument ({0}) that isn't on the class".format(field)
-                )
+                raise TypeError(f"Received a keyword argument ({field}) that isn't on the class")
 
         return pos
 
@@ -128,9 +115,7 @@ class Fields:
                 (name,) = item
                 if name not in result:
                     raise TypeError(
-                        "No default value set for positional argument {0} ({1}) and no value provided".format(
-                            i + pos, name
-                        )
+                        f"No default value set for positional argument {i + pos} ({name}) and no value provided"
                     )
 
     def resolve_kwargs_dflts(self, result):
@@ -145,9 +130,7 @@ class Fields:
                 (name,) = item
                 if name not in result:
                     raise TypeError(
-                        "No default value set for keyword argument ({0}) and no value provided".format(
-                            name
-                        )
+                        f"No default value set for keyword argument ({name}) and no value provided"
                     )
 
 
@@ -246,9 +229,9 @@ class dictobj(dict):
 
         if fields is None:
             if args:
-                raise TypeError("Expected 0 positional arguments, got {0}".format(len(args)))
+                raise TypeError(f"Expected 0 positional arguments, got {len(args)}")
             if kwargs:
-                raise TypeError("Expected 0 keyword arguments, got {0}".format(len(kwargs)))
+                raise TypeError(f"Expected 0 keyword arguments, got {len(kwargs)}")
         else:
             for key, value in fields.resolve(args, kwargs).items():
                 setattr(self, key, value)

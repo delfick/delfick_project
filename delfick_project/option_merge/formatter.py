@@ -11,7 +11,7 @@ formatter that can format strings using a MergedOptions object.
 
         def special_format_field(self, obj, format_spec):
             if format_spec == "env":
-                return "${{{0}}}".format(obj)
+                return f"${{{obj}}}"
 
     m = MergedOptions.using({"a": {"b": 3}, "c": 5, "d": "{c}"})
     formatted = Formatter(m, "a.b: {a.b}, d: {d} and c={c} and d={BLAH:env}").format()

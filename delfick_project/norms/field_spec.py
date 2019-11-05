@@ -146,7 +146,7 @@ class FieldSpec(object):
             spec = None
             if isinstance(options, Field):
                 if not meta.path:
-                    m = meta.at(".{0}".format(name))
+                    m = meta.at(f".{name}")
                 else:
                     m = meta.at(name)
 

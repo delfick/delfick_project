@@ -308,18 +308,15 @@ class App(object):
             print("", file=print_errors_to)
             print("!" * 80, file=print_errors_to)
             print(
-                "Something went wrong! -- {0}".format(error.__class__.__name__),
-                file=print_errors_to,
+                f"Something went wrong! -- {error.__class__.__name__}", file=print_errors_to,
             )
-            print("\t{0}".format(error), file=print_errors_to)
+            print(f"\t{error}", file=print_errors_to)
             if cli_parser and cli_parser.parse_args(argv)[0].debug:
                 raise
             sys.exit(1)
         except Exception:
-            msg = "Something unexpected happened!! Please file a ticket in the issue tracker! {0}".format(
-                self.issue_tracker_link
-            )
-            print("\n\n{0}\n{1}\n".format(msg, "=" * len(msg)))
+            msg = f"Something unexpected happened!! Please file a ticket in the issue tracker! {self.issue_tracker_link}"
+            print(f"\n\n{msg}\n{'=' * len(msg)}\n")
             raise
 
     def exception_handler(self, exc_info, args_obj, args_dict, extra_args):
@@ -406,7 +403,7 @@ class CliParser(object):
         for key, val in sorted(vars(args_obj).items()):
             found = False
             for category in categories:
-                if key.startswith("{0}_".format(category)):
+                if key.startswith(f"{category}_"):
                     args_dict[category][key[(len(category) + 1) :]] = val
                     found = True
                     break

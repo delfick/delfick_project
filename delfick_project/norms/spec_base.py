@@ -1237,7 +1237,7 @@ class many_format(Spec):
     It essentially does ``formatted(spec, formatter, expected_type=typ).normalise(meta, val)``
     until the result doesn't change anymore.
 
-    Before doing the same thing on ``"{{{val}}}".format(val)``
+    Before doing the same thing on ``f"{{{val}}}"``
 
     Example:
 
@@ -1287,7 +1287,7 @@ class many_format(Spec):
 
         return formatted(
             string_spec(), formatter=self.formatter, expected_type=self.expected_type
-        ).normalise(meta, "{{{0}}}".format(val))
+        ).normalise(meta, f"{{{val}}}")
 
 
 @spec
@@ -1613,7 +1613,7 @@ class many_item_formatted_spec(Spec):
 
     def determine_spec(self, spec, vals, dividers, expected_type, index, meta, original_val):
         passthrough = lambda spec, *args: spec
-        wrapper = getattr(self, "spec_wrapper_{0}".format(index), passthrough)
+        wrapper = getattr(self, f"spec_wrapper_{index}", passthrough)
         return wrapper(spec, *list(vals)[:index] + [meta, original_val, dividers])
 
     def determine_val(self, spec, vals, dividers, expected_type, index, meta, original_val):
@@ -1633,7 +1633,7 @@ class many_item_formatted_spec(Spec):
             vals.append(val)
 
         passthrough = lambda *args: val
-        determine = getattr(self, "determine_{0}".format(index), passthrough)
+        determine = getattr(self, f"determine_{index}", passthrough)
         val = determine(*list(vals)[:index] + [meta, original_val])
         vals[index - 1] = val
 
@@ -1655,7 +1655,7 @@ class many_item_formatted_spec(Spec):
             val = self.normalise_val(spec, meta, val)
 
         passthrough = lambda *args: val
-        alter = getattr(self, "alter_{0}".format(index), passthrough)
+        alter = getattr(self, f"alter_{index}", passthrough)
         altered = alter(*(vals[:index] + [val, meta, original_val]))
         vals[index - 1] = altered
 
