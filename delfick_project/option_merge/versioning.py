@@ -23,7 +23,7 @@ class versioned_value(object):
     def __get__(self, instance=None, owner=None):
         def returned(*args, **kwargs):
             version = getattr(instance, "version", 0)
-            if version is -1:
+            if version == -1:
                 return self.func(instance, *args, **kwargs)
 
             if args:
@@ -119,7 +119,7 @@ class versioned_iterable(object):
         def returned(*args, **kwargs):
 
             version = getattr(instance, "version", 0)
-            if version is -1:
+            if version == -1:
                 return self.func(instance, *args, **kwargs)
 
             if args:
