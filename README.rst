@@ -15,7 +15,7 @@ Documentation can be found at https://delfick-project.readthedocs.io/en/latest/
 Changelog
 ---------
 
-0.7.0 - TBD
+0.7.0 - 5 November 2019
    * fuzzyAssertRaisesError will now catch BaseExceptions like the pytest
      assertRaises does. Mainly so I can catch asyncio.CancelledError under
      Python 3.8.
