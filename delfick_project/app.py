@@ -558,7 +558,7 @@ class CliParser(object):
 
         logging.add_argument("--debug", help="Debug logs", action="store_true")
 
-        logging.add_argument(
+        parser.add_argument(
             "--logging-program", help="The program name to use when not logging to the console"
         )
 
