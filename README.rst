@@ -15,7 +15,7 @@ Documentation can be found at https://delfick-project.readthedocs.io/en/latest/
 Changelog
 ---------
 
-0.7.2 - TBD
+0.7.2 - 31 December 2019
    * The option_merge formatter will now let through ``None``
 
 0.7.1 - 19 November 2019
