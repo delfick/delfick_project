@@ -126,6 +126,7 @@ class MergedOptionStringFormatter(string.Formatter):
             is_special_type = any(
                 isinstance(obj, typ)
                 for typ in (
+                    type(None),
                     types.LambdaType,
                     types.FunctionType,
                     types.MethodType,

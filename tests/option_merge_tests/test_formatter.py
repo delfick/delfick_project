@@ -141,6 +141,18 @@ describe "MergedOptionStringFormatter":
 
             special_format_field.assert_called_once_with(obj, format_spec)
 
+        it "returns the object if it's None", ms:
+            obj = None
+
+            format_spec = mock.Mock(name="format_spec")
+            special_format_field = mock.Mock(name="special_format_field", return_value=None)
+
+            formatter = MergedOptionStringFormatter(ms.all_options, ms.value)
+            with mock.patch.object(formatter, "special_format_field", special_format_field):
+                assert formatter.format_field(obj, format_spec) is None
+
+            special_format_field.assert_called_once_with(obj, format_spec)
+
         it "returns the object if it's a mock", ms:
             obj = mock.Mock(name="obj")
 

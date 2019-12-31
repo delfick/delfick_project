@@ -15,6 +15,9 @@ Documentation can be found at https://delfick-project.readthedocs.io/en/latest/
 Changelog
 ---------
 
+0.7.2 - TBD
+   * The option_merge formatter will now let through ``None``
+
 0.7.1 - 19 November 2019
    * ``--logging-program`` can now be specified at the same time as ``--silent``
      or ``--debug``
