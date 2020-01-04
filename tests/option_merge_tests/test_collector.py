@@ -162,6 +162,37 @@ describe "Collector":
                     (3, collector.configuration, args_dict),
                 ]
 
+        it "takes in extra files":
+            called = []
+            args_dict = {}
+
+            root = self.fake_config('{"one": 1}')
+            extra1 = self.fake_config('{"two": 2, "three": 3}')
+            extra2 = {"three": 4, "five": 5}
+
+            with root as (config_root, config_file), extra1 as (_, e1):
+
+                class Col(Collector):
+                    def start_configuration(s):
+                        return MergedOptions.using({})
+
+                    def read_file(s, location):
+                        return json.load(open(location))
+
+                    def add_configuration(
+                        s, configuration, collect_another_source, done, result, src
+                    ):
+                        configuration.update(result)
+
+                collector = Col()
+                collector.prepare(config_file, args_dict, extra_files=[e1, extra2])
+
+                expected = {"one": 1, "two": 2, "three": 4, "five": 5}
+                dct = collector.configuration.as_dict()
+
+                for k, v in expected.items():
+                    assert dct[k] == v
+
     describe "Collecting configuration":
         it "uses start_configuration, read_file, home_dir_configuration, config_file, add_configuration and extra_configuration_collection":
             called = []

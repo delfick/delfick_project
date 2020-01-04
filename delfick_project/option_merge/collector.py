@@ -67,11 +67,32 @@ from .converter import Converter
 
 from delfick_project.norms import Meta, sb
 
+from contextlib import contextmanager
 from getpass import getpass
+import tempfile
 import logging
+import json
 import os
 
 log = logging.getLogger("delfick_project.option_merge.collector")
+
+
+@contextmanager
+def a_file(source):
+    if isinstance(source, dict):
+        filename = None
+        try:
+            tmp = tempfile.NamedTemporaryFile(delete=False, prefix="<internal>")
+            filename = tmp.name
+
+            with open(filename, "w") as fle:
+                fle.write(json.dumps(source))
+            yield filename
+        finally:
+            if filename and os.path.exists(filename):
+                os.remove(filename)
+    else:
+        yield source
 
 
 class Collector(object):
@@ -309,7 +330,8 @@ class Collector(object):
             self.add_configuration(configuration, add_configuration, done, result, src)
 
         for source in sources:
-            add_configuration(source)
+            with a_file(source) as source:
+                add_configuration(source)
 
         self.extra_configuration_collection(configuration)
 

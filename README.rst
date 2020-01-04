@@ -15,6 +15,9 @@ Documentation can be found at https://delfick-project.readthedocs.io/en/latest/
 Changelog
 ---------
 
+0.7.3 - TBD
+   * Made ``extra_files`` option to ``Collector#prepare`` take in dictionaries.
+
 0.7.2 - 31 December 2019
    * The option_merge formatter will now let through ``None``
 
