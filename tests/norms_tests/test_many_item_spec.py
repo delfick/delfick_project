@@ -4,7 +4,6 @@ from delfick_project.norms import sb, BadSpecValue, Meta
 
 from delfick_project.errors_pytest import assertRaises
 
-from noseOfYeti.tokeniser.support import noy_sup_setUp
 from unittest import mock
 import pytest
 
