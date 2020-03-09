@@ -8,6 +8,7 @@
    api/layerz
    api/option_merge/index.rst
    api/norms/index.rst
+   api/changelog
 
 .. _delfick_project:
 

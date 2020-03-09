@@ -45,27 +45,10 @@ class Addon(dictobj.Spec):
     resolver = dictobj.Field(sb.any_spec)
     namespace = dictobj.Field(sb.string_spec)
 
-    class BadHook(DelfickError):
-        desc = "Bad Hook"
-
     @property
     def resolved(self):
-        errors = []
         if getattr(self, "_resolved", None) is None:
-            try:
-                self._resolved = list(self.resolver())
-            except Exception as error:
-                errors.append(
-                    self.BadHook(
-                        "Failed to resolve a hook",
-                        name=self.name,
-                        namespace=self.namespace,
-                        error=str(error),
-                    )
-                )
-
-        if errors:
-            raise self.BadHook(_errors=errors)
+            self._resolved = list(self.resolver())
 
         return self._resolved
 
@@ -164,8 +147,7 @@ class AddonGetter(object):
         )
 
     def find_entry_points(self, namespace, entry_point_name, entry_point_full_name):
-        it = self.entry_points[namespace][entry_point_name]
-        entry_points = list(it)
+        entry_points = list(self.entry_points[namespace][entry_point_name])
 
         if len(entry_points) > 1:
             log.warning(f"Found multiple entry_points for {entry_point_full_name}")

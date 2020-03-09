@@ -74,13 +74,7 @@ describe "Failure":
         register = Register(getter, collector)
         register.add_pairs(("failure.addons", "bad_hook"))
         register.recursive_import_known()
-        error = Addon.BadHook(
-            "Failed to resolve a hook",
-            error=expected_import_error("wasdf"),
-            name="bad_hook",
-            namespace="failure.addons",
-        )
-        with assertRaises(Addon.BadHook, _errors=[error]):
+        with assertRaises(ImportError, expected_import_error("wasdf")):
             register.recursive_resolve_imported()
 
     it "Only logs a warning if namespace isn't registered", getter, collector:
