@@ -3,7 +3,7 @@
 Changelog
 ---------
 
-0.7.4 - TBD
+0.7.4 - 9 March 2020
    * Import failure of resolving hooks doesn't hide the exception behind a
      BadHook exception.
 
