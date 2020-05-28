@@ -3,6 +3,10 @@
 Changelog
 ---------
 
+0.7.5 - 28 May 2020
+   * Fixed a bug with json to console logs. It was writing {"msg": <message>}
+     instead of just <message> like it should be.
+
 0.7.4 - 9 March 2020
    * Import failure of resolving hooks doesn't hide the exception behind a
      BadHook exception.
