@@ -34,11 +34,21 @@ def obj_to_string(v):
         return repr(v)
 
 
-def make_message(instance, record, oldGetMessage, program="", provide_timestamp=False):
+def make_message(
+    instance, record, oldGetMessage, program="", provide_timestamp=False, prefix_record=True
+):
     if isinstance(record.msg, dict):
         base = dict(record.msg)
     else:
-        base = {"msg": oldGetMessage()}
+        base = oldGetMessage()
+        if prefix_record:
+            base = {"msg": base}
+        else:
+            if isinstance(base, str):
+                try:
+                    base = json.loads(base)
+                except (ValueError, KeyError):
+                    base = {"msg": base}
 
     if program:
         base["program"] = program
@@ -131,7 +141,12 @@ class JsonToConsoleHandler(logging.StreamHandler):
 
     def format(self, record):
         return make_message(
-            self, record, record.getMessage, program=self.program, provide_timestamp=True
+            self,
+            record,
+            record.getMessage,
+            program=self.program,
+            provide_timestamp=True,
+            prefix_record=False,
         )
 
 
