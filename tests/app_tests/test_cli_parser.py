@@ -307,7 +307,6 @@ describe "CliParser":
             positional_replacements = [("--config", "a/nicer/place.yml")]
             parser = CliParser("")
 
-            somewhere = "/some/nice/config.yml"
             defaults = parser.make_defaults(argv, positional_replacements, environment_defaults)
 
             assert argv == []

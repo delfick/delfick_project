@@ -5,7 +5,6 @@ from delfick_project.addons import AddonGetter, addon_hook
 from delfick_project.errors_pytest import assertRaises
 from delfick_project.norms import Meta
 
-from operator import attrgetter
 from unittest import mock
 import pytest
 import uuid

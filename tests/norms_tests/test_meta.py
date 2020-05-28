@@ -91,7 +91,6 @@ describe "Meta":
         it "asks everything for source if it has source_for":
             path = [(str(mock.Mock(name="path")), "")]
             source = mock.Mock(name="source")
-            source_for = mock.Mock(name="source_for")
             everything = mock.Mock(name="everything")
             everything.source_for.return_value = source
 
@@ -110,7 +109,6 @@ describe "Meta":
 
     describe "Formatting in a delfick error":
         it "formats with source and path":
-            path = mock.Mock(name="path")
             everything = mock.Mock(name="everything")
 
             meta = Meta(everything, [("one", ""), ("three", ""), ("five", ""), ("", [1])])
@@ -122,7 +120,6 @@ describe "Meta":
             ) == "{{source={0}, path=one.three.five[1]}}".format(source)
 
         it "doesn't print out source if there is no source":
-            path = mock.Mock(name="path")
             everything = mock.Mock(name="everything")
 
             meta = Meta(everything, [("one", ""), ("three", ""), ("five", ""), ("", [1])])

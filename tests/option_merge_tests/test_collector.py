@@ -163,7 +163,6 @@ describe "Collector":
                 ]
 
         it "takes in extra files":
-            called = []
             args_dict = {}
 
             root = self.fake_config('{"one": 1}')

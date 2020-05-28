@@ -249,6 +249,7 @@ describe "dictobj":
         assert D().is_dict
 
     it "defines Fields for classes at definition", cached_fields:
+
         class D(dictobj):
             fields = ["one"]
 
@@ -274,7 +275,7 @@ describe "dictobj":
             def setup(self, *args, **kwargs):
                 called.append((args, kwargs))
 
-        d = D(1, two=3)
+        D(1, two=3)
         assert called == [((1,), {"two": 3})]
 
     it "complains if no fields but specified positional arguments":

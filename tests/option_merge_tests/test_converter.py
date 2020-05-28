@@ -62,7 +62,7 @@ describe "Converter":
 
 describe "Converters":
     it "defaults activated to False":
-        assert Converters().activated == False
+        assert Converters().activated is False
 
     describe "Iteration":
         it "yields nothing if not activated":
@@ -72,7 +72,7 @@ describe "Converters":
             converters.append(1)
             converters.append(2)
             converters.append(3)
-            assert converters.activated == False
+            assert converters.activated is False
             assert list(converters) == []
 
         it "yields all the converters if activated":
@@ -80,11 +80,11 @@ describe "Converters":
             converters.append(1)
             converters.append(2)
             converters.append(3)
-            assert converters.activated == False
+            assert converters.activated is False
             assert list(converters) == []
 
             converters.activate()
-            assert converters.activated == True
+            assert converters.activated is True
             assert list(converters) == [1, 2, 3]
 
     describe "Adding converters":
@@ -103,10 +103,10 @@ describe "Converters":
     describe "Activation":
         it "just sets activated to True":
             converters = Converters()
-            assert converters.activated == False
+            assert converters.activated is False
 
             converters.activate()
-            assert converters.activated == True
+            assert converters.activated is True
 
     describe "Marking a path as done":
         it "stores a value for that path in _converted":
@@ -121,25 +121,25 @@ describe "Converters":
         it "says no if not activated":
             converters = Converters()
             path = Path("1.2.3")
-            assert converters.converted(path) == False
+            assert converters.converted(path) is False
 
             val = mock.Mock(name="val")
             converters.done("1.2.3", val)
-            assert converters.activated == False
-            assert converters.converted(path) == False
+            assert converters.activated is False
+            assert converters.converted(path) is False
 
         it "says yes if there is a converted val for the path":
             converters = Converters()
             path = Path("1.2.3")
-            assert converters.converted(path) == False
+            assert converters.converted(path) is False
 
             val = mock.Mock(name="val")
             converters.done("1.2.3", val)
-            assert converters.activated == False
-            assert converters.converted(path) == False
+            assert converters.activated is False
+            assert converters.converted(path) is False
 
             converters.activate()
-            assert converters.converted(path) == True
+            assert converters.converted(path) is True
 
     describe "Retrieving converted value":
         it "returns the converted value":

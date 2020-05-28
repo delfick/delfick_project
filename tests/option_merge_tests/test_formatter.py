@@ -3,7 +3,6 @@
 from delfick_project.option_merge import MergedOptionStringFormatter, MergedOptions, BadOptionFormat
 
 from delfick_project.errors_pytest import assertRaises
-from delfick_project.norms import sb
 
 from unittest import mock
 import pytest

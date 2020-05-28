@@ -225,7 +225,7 @@ describe "dictionary specs":
             do = sb.dictof(name_spec, value_spec)
             assert do.name_spec == name_spec
             assert do.value_spec == value_spec
-            assert do.nested == False
+            assert do.nested is False
 
         it "complains if a key doesn't match the name_spec", meta_mock:
             at_one = mock.Mock(name="at_one")
@@ -1360,7 +1360,7 @@ describe "formatted":
 
         formatted_spec = sb.formatted(spec, formatter=formatterK, after_format=after_format)
 
-        assert formatted_spec.normalise(meta, val) is 12
+        assert formatted_spec.normalise(meta, val) == 12
 
         formatterK.assert_called_once_with(mock.ANY, "{thing}", chain=[])
 
@@ -1495,7 +1495,7 @@ describe "container_spec":
                     assert False, "Shouldn't have instantiated a new kls: Got {0}".format(contents)
 
         assert type(sb.container_spec(kls, spec).normalise(meta, kls(alright))) is kls
-        assert len(normalise.mock_calls) is 0
+        assert len(normalise.mock_calls) == 0
 
     it "returns the kls instantiated with the fake val of the spec on fake_filled", meta:
         spec = mock.Mock(name="spec")

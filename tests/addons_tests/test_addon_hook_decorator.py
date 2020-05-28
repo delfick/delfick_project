@@ -10,7 +10,7 @@ from unittest import mock
 describe "addon_hook":
     it "defaults extras to an empty dictionary and post_register to False":
         assert addon_hook().extras == []
-        assert addon_hook().post_register == False
+        assert addon_hook().post_register is False
 
     it "complains if you set extras and post_register at the same time":
         with assertRaises(
@@ -20,7 +20,7 @@ describe "addon_hook":
             addon_hook(extras={"option_merge.addon": "other"}, post_register=True)
 
     it "doesn't complain if you only set post_register":
-        assert addon_hook(post_register=True).post_register == True
+        assert addon_hook(post_register=True).post_register is True
 
     it "doesn't complain if you only set extras":
         assert addon_hook(extras=[("1", "2")]).extras == [("1", ["2"])]

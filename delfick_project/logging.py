@@ -342,9 +342,7 @@ def setup_logging(
         if only_message:
             handler.setFormatter(SimpleFormatter(base_format))
         else:
-            handler.setFormatter(
-                SimpleFormatter(f"%(asctime)s %(levelname)-7s {base_format}")
-            )
+            handler.setFormatter(SimpleFormatter(f"%(asctime)s %(levelname)-7s {base_format}"))
 
     log.addHandler(handler)
     log.setLevel(level)

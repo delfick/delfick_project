@@ -3,11 +3,9 @@
 from delfick_project.errors import DelfickError, DelfickErrorTestMixin
 from delfick_project.errors_pytest import assertRaises
 
-from contextlib import contextmanager
 from unittest import mock, TestCase
 import random
 import uuid
-import sys
 
 # Used in the tests
 class AError(DelfickError):

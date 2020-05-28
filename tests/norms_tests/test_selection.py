@@ -113,7 +113,7 @@ describe "Selection":
             error2 = BadSpecValue("Expected a value but got none", meta=m.at("one"))
 
             with assertRaises(BadSpecValue, _errors=[error1, error2]):
-                changed = Changed.FieldSpec().normalise(m, {})
+                Changed.FieldSpec().normalise(m, {})
 
         it "can override all_required with optional":
 
@@ -131,7 +131,7 @@ describe "Selection":
             error2 = BadSpecValue("Expected a value but got none", meta=m.at("one"))
 
             with assertRaises(BadSpecValue, _errors=[error2]):
-                changed = Changed.FieldSpec().normalise(m, {})
+                Changed.FieldSpec().normalise(m, {})
 
         it "can override all_optional with required":
 
@@ -149,4 +149,4 @@ describe "Selection":
             error1 = BadSpecValue("Expected a value but got none", meta=m.at("two"))
 
             with assertRaises(BadSpecValue, _errors=[error1]):
-                changed = Changed.FieldSpec().normalise(m, {})
+                Changed.FieldSpec().normalise(m, {})

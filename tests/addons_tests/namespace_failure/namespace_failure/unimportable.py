@@ -1,1 +1,1 @@
-import wasdf
+__import__("wasdf")

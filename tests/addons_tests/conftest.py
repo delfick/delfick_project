@@ -37,6 +37,7 @@ for name in os.listdir(addons_tests):
 
 if locations:
     import pip._internal
+
     if hasattr(pip._internal, "main"):
         _main = pip._internal.main
     else:

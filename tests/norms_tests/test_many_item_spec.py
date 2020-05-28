@@ -78,24 +78,24 @@ describe "many_item_formatted_spec":
                 optional_specs = [spec3]
 
                 def determine_2(slf, pval1, pval2, meta, original_value):
-                    assert pval1 is "spec1_normalised"
-                    assert pval2 is val2
+                    assert pval1 == "spec1_normalised"
+                    assert pval2 == val2
                     return "spec2_determined"
 
                 def alter_3(slf, pval1, pval2, pval3, pval3_normalised, m, original_value):
-                    assert pval1 is "spec1_normalised"
-                    assert pval2 is "spec2_normalised"
+                    assert pval1 == "spec1_normalised"
+                    assert pval2 == "spec2_normalised"
                     assert pval3 is val3
-                    assert pval3_normalised is "spec3_normalised"
+                    assert pval3_normalised == "spec3_normalised"
                     assert m is meta
                     assert original_value is ms.val
                     assert dividers == [":", ":"]
                     return "spec3_altered"
 
                 def create_result(slf, pval1, pval2, pval3, m, original_val, dividers):
-                    assert pval1 is "spec1_normalised"
-                    assert pval2 is "spec2_normalised"
-                    assert pval3 is "spec3_altered"
+                    assert pval1 == "spec1_normalised"
+                    assert pval2 == "spec2_normalised"
+                    assert pval3 == "spec3_altered"
                     assert m is meta
                     assert original_val is ms.val
                     assert dividers == [":", ":"]
@@ -247,7 +247,6 @@ describe "many_item_formatted_spec":
         it "just uses the spec if no formatter", meta, ms:
             val = mock.Mock(name="value")
             formatted = mock.Mock(name="formatted")
-            the_formatter = mock.Mock(name="formatter")
             normalised = mock.Mock(name="normalised")
             ms.spec.normalise.return_value = normalised
 

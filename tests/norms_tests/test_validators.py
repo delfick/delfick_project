@@ -1,6 +1,6 @@
 # coding: spec
 
-from delfick_project.norms import BadSpec, BadSpecValue, DeprecatedKey, BadSpecDefinition
+from delfick_project.norms import BadSpecValue, DeprecatedKey, BadSpecDefinition
 from delfick_project.norms import sb, va, Validator, Meta
 
 from delfick_project.errors_pytest import assertRaises
@@ -69,7 +69,7 @@ describe "has_only_one_of":
     it "ensures choices is specified":
         choices = []
         with assertRaises(BadSpecDefinition, "Must specify atleast one choice", got=choices):
-            validator = va.has_only_one_of(choices)
+            va.has_only_one_of(choices)
 
     it "complains if none of the values are satisfied", meta:
         choices = ["one", "two"]
@@ -318,4 +318,4 @@ describe "choice":
             va.choice(1, 2, 3).normalise(meta, 4)
 
     it "returns the val if it's one of the choices", meta:
-        assert va.choice(1, 2, 3, 4).normalise(meta, 4) is 4
+        assert va.choice(1, 2, 3, 4).normalise(meta, 4) == 4

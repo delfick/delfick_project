@@ -108,7 +108,10 @@ describe "Layers":
 
             for index, layer in enumerate(created):
                 nxt = expected[index]
-                assert sorted(layer) if layer else None == sorted(nxt) if nxt else None
+                if layer is None:
+                    assert nxt is None
+                else:
+                    assert sorted(layer) == sorted(nxt)
 
         it "has a method for adding all the deps", instance, deps:
             add_to_layers = mock.Mock(name="add_to_layers")

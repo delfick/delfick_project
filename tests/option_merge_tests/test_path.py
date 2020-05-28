@@ -151,19 +151,19 @@ describe "Path":
 
     describe "startswith":
         it "says whether the dot join of the path startswith the base":
-            assert Path(["a.b", "c.d"]).startswith("a.b.c") == True
-            assert Path("a.b.c.d").startswith("a.b.c") == True
+            assert Path(["a.b", "c.d"]).startswith("a.b.c") is True
+            assert Path("a.b.c.d").startswith("a.b.c") is True
 
-            assert Path(["a.b", "c.d"]).startswith("b.c.d") == False
-            assert Path("a.b.c.d").startswith("b.c.d") == False
+            assert Path(["a.b", "c.d"]).startswith("b.c.d") is False
+            assert Path("a.b.c.d").startswith("b.c.d") is False
 
     describe "endswith":
         it "says whether the dot join of the path endswith the suffix":
-            assert Path(["a.b", "c.d"]).endswith("b.c.d") == True
-            assert Path("a.b.c.d").endswith("b.c.d") == True
+            assert Path(["a.b", "c.d"]).endswith("b.c.d") is True
+            assert Path("a.b.c.d").endswith("b.c.d") is True
 
-            assert Path(["a.b", "c.d"]).endswith("a.b.c") == False
-            assert Path("a.b.c.d").endswith("a.b.c") == False
+            assert Path(["a.b", "c.d"]).endswith("a.b.c") is False
+            assert Path("a.b.c.d").endswith("a.b.c") is False
 
     describe "using":
         it "returns the same class with the new path and other same values and ignore_converters as True":
@@ -268,7 +268,7 @@ describe "Path":
             converters.activate()
 
             path = Path(p1, converters=converters)
-            assert converters.converted(path) == False
+            assert converters.converted(path) is False
 
             converted = mock.Mock(name="converted")
             converter = mock.Mock(name="converter")
@@ -281,7 +281,7 @@ describe "Path":
                 assert path.do_conversion(value) == (converted, True)
 
             # Converters should now have converted value
-            assert converters.converted(path) == True
+            assert converters.converted(path) is True
             assert converters.converted_val(path) is converted
 
             converter.assert_called_once_with(path, value)
@@ -341,7 +341,7 @@ describe "Path":
         it "returns False if there are no converters":
             p1 = mock.Mock(name="p1")
             path = Path(p1, converters=None)
-            assert path.converted() == False
+            assert path.converted() is False
 
         it "returns what converters returns":
             p1 = mock.Mock(name="p1")

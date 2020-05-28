@@ -1,7 +1,6 @@
 # coding: spec
 
 from delfick_project.option_merge import (
-    NotFound,
     Converter,
     MergedOptions,
     ConverterProperty,
@@ -58,9 +57,9 @@ describe "MergedOptions":
     it "doesn't infinitely recurse when has self referential information added afterwards":
         data = MergedOptions.using({"items": {"a": 1}})
         items = data["items"]
-        assert items["a"] is 1
+        assert items["a"] == 1
         data.update({"items": items})
-        assert items["a"] is 1
+        assert items["a"] == 1
         assert True, "It didn't reach maximum recursion depth"
 
     describe "source_for":
@@ -571,7 +570,6 @@ describe "Converters":
                 "five": converted.prefixed("five"),
             }
             assert dict(converted["five"].items()) == {"six": converted["five"].prefixed("six")}
-            six = converted["five"]["six"]
             assert dict(converted["five"]["six"].items()) == {"seven": "eight", "nine": "ten"}
             assert dict(converted["one"].items()) == {"two": "three"}
 

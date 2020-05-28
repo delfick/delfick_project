@@ -40,7 +40,7 @@ describe "FieldSpec":
             assert type(res) == MyKls
             assert res.one == "1"
             assert res.two == 2
-            assert res.three == None
+            assert res.three is None
             assert res.four == 6
 
             class MyChildKls(MyKls):
@@ -54,8 +54,8 @@ describe "FieldSpec":
             assert type(child) == MyChildKls
             assert child.one == "1"
             assert child.two == 2
-            assert child.three == None
-            assert child.four == False
+            assert child.three is None
+            assert child.four is False
             assert child.five == {}
 
             class MyGrandChildKls(MyChildKls):
@@ -67,10 +67,10 @@ describe "FieldSpec":
             assert type(child) == MyGrandChildKls
             assert child.one == "1"
             assert child.two == 2
-            assert child.three == None
-            assert child.four == False
+            assert child.three is None
+            assert child.four is False
             assert child.five == {}
-            assert child.six == True
+            assert child.six is True
 
         it "works with mixin classes":
 
@@ -144,7 +144,7 @@ describe "FieldSpec":
             assert child.one == "1"
             assert child.two == "2"
             assert child.three == "3"
-            assert child.four == False
+            assert child.four is False
             assert child.five == {}
 
         it "can take fields from a normal dictobj with a dict fields":
@@ -169,7 +169,7 @@ describe "FieldSpec":
             assert child.one == "1"
             assert child.two == "2"
             assert child.three == "3"
-            assert child.four == False
+            assert child.four is False
             assert child.five == {}
 
     describe "usage":
@@ -184,7 +184,7 @@ describe "FieldSpec":
             assert type(res) == MyKls
             assert res.one == "1"
             assert res.two == 2
-            assert res.three == None
+            assert res.three is None
 
         it "works with a seperate create_kls":
 
@@ -383,15 +383,15 @@ describe "NullableField":
         spec = mock.Mock(name="spec")
         field = NullableField(spec, default=False)
         assert issubclass(type(field), Field) is True
-        assert field.nullable == True
-        assert field.default == False
+        assert field.nullable is True
+        assert field.default is False
 
     it "is Field but with nullable=True and works with format_into instead of spec":
         format_into = mock.Mock(name="format_into")
         field = NullableField(default=False, format_into=format_into)
         assert issubclass(type(field), Field) is True
-        assert field.nullable == True
-        assert field.default == False
+        assert field.nullable is True
+        assert field.default is False
 
 describe "Field":
     it "references mixin and metaclass":
@@ -399,8 +399,8 @@ describe "Field":
         assert Field.metaclass is FieldSpecMetakls
 
     it "has is_dictobj_field set to True":
-        assert Field.is_dictobj_field == True
-        assert Field(lambda: 1).is_dictobj_field == True
+        assert Field.is_dictobj_field is True
+        assert Field(lambda: 1).is_dictobj_field is True
 
     it "takes in several things like spec, help, formatted, wrapper and default":
         spec = mock.Mock(name="spec")
@@ -436,13 +436,13 @@ describe "Field":
 
     it "complains if we have after_format, but formatted is False":
         with assertRaises(ProgrammerError, "after_format was specified when formatted was false"):
-            field = Field(sb.any_spec, formatted=False, after_format=sb.integer_spec)
+            Field(sb.any_spec, formatted=False, after_format=sb.integer_spec)
 
     it "complains if neither spec or format_into is specified":
         with assertRaises(
             ProgrammerError, "Declaring a Field must give a spec, otherwise provide format_into"
         ):
-            field = Field()
+            Field()
 
     describe "clone":
         it "creates a new instance with the same fields":
@@ -485,7 +485,6 @@ describe "Field":
             wrapper = mock.Mock(name="wrapper")
             default = mock.Mock(name="default")
             default2 = mock.Mock(name="default2")
-            after_format = mock.Mock(name="after_format")
             after_format2 = mock.Mock(name="after_format2")
 
             field = Field(
@@ -568,7 +567,7 @@ describe "Field":
         describe "nullable=True":
             it "defaults to None", meta, formatter:
                 spec = NullableField(sb.string_spec).make_spec(meta, formatter)
-                assert spec.normalise(meta, sb.NotSpecified) == None
+                assert spec.normalise(meta, sb.NotSpecified) is None
 
             it "allows None as a value", meta, formatter:
 
@@ -579,7 +578,7 @@ describe "Field":
                         return None
 
                 spec = NullableField(i_hate_none_spec).make_spec(meta, formatter)
-                assert spec.normalise(meta, sb.NotSpecified) == None
+                assert spec.normalise(meta, sb.NotSpecified) is None
 
             it "calls the spec for you", meta, formatter:
                 spec = NullableField(sb.integer_spec).make_spec(meta, formatter)
@@ -594,5 +593,5 @@ describe "Field":
                 formatter = mock.NonCallableMock(name="formatter", spec=[])
                 spec = NullableField(format_into=sb.integer_spec).make_spec(meta, formatter)
 
-                assert spec.normalise(meta, sb.NotSpecified) == None
-                assert spec.normalise(meta, None) == None
+                assert spec.normalise(meta, sb.NotSpecified) is None
+                assert spec.normalise(meta, None) is None

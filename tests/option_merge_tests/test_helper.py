@@ -2,7 +2,6 @@
 
 from delfick_project.option_merge import MergedOptions
 from delfick_project.option_merge import helper as hp
-from delfick_project.option_merge.path import Path
 
 from delfick_project.norms import dictobj
 
@@ -48,7 +47,7 @@ describe "prefixed_path_string":
             assert hp.prefixed_path_string(blahpos, prefix=stuffpos) == (
                 "stuff.blah",
                 "stuff.blah",
-            )  #
+            )
 
 describe "make_dict":
     it "returns just with first and data if no rest":

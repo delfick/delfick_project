@@ -1,6 +1,6 @@
 # coding: spec
 
-from delfick_project.addons import AddonGetter, Register, Addon
+from delfick_project.addons import AddonGetter, Register
 
 from delfick_project.errors_pytest import assertRaises
 from delfick_project.errors import ProgrammerError
@@ -96,9 +96,9 @@ describe "Failure":
     it "doesn't complain if the addon has no hook", getter, collector, global_register:
         register = Register(getter, collector)
         register.add_pairs(("failure.addons", "nohook"))
-        assert global_register["nohook_found"] == False
+        assert global_register["nohook_found"] is False
         register.recursive_import_known()
-        assert global_register["nohook_found"] == True
+        assert global_register["nohook_found"] is True
 
     it "doesn't complain if the hook doesn't have a result", getter, collector:
         assert collector.configuration["resolved"] == []

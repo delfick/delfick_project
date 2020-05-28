@@ -72,7 +72,7 @@ class DelfickError(Exception):
         if self.errors:
             es = []
             for error in self.errors:
-                s = "\n\t".join(str(error).split('\n'))
+                s = "\n\t".join(str(error).split("\n"))
                 es.append(f"{s}\n-------")
             e = "\n\t".join(es)
             message = f"{message}\nerrors:\n=======\n\n\t{e}"
@@ -128,10 +128,10 @@ class DelfickError(Exception):
         if desc:
             if message:
                 message = f". {message}"
-            return f"\"{desc}{message}\"{info}"
+            return f'"{desc}{message}"{info}'
         else:
             if message:
-                return f"\"{message}\"{info}"
+                return f'"{message}"{info}'
             else:
                 return f"{info}"
 
@@ -271,7 +271,7 @@ class DelfickErrorTestMixin:
                     raise exc_info[1]
         else:
             ss = [
-                f"Expected an exception to be raised",
+                "Expected an exception to be raised",
                 f"expected_kls: {expected_kls}",
                 f"expected_msg_regex: {expected_msg_regex}",
                 f"have_atleast: {values}",

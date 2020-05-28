@@ -3,7 +3,6 @@
 from delfick_project.option_merge.joiner import dot_joiner, join
 from delfick_project.option_merge.path import Path
 
-from unittest import mock
 import itertools
 
 

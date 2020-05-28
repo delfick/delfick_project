@@ -1,7 +1,7 @@
 # coding: spec
 
-from delfick_project.option_merge import Converter, Converters, MergedOptions, NotFound
 from delfick_project.option_merge.storage import Storage, DataPath
+from delfick_project.option_merge import MergedOptions, NotFound
 from delfick_project.option_merge.path import Path
 from delfick_project.norms import dictobj
 
@@ -61,9 +61,6 @@ describe "Storage":
 
         source1 = mock.Mock(name="source1")
         source2 = mock.Mock(name="source2")
-
-        converter1 = mock.Mock(name="converter1")
-        converter2 = mock.Mock(name="converter2")
 
         assert storage.deleted == []
         assert storage.data == []
@@ -546,7 +543,7 @@ describe "DataPath":
         it "raises NotFound if not found":
             p = DataPath(Path(["a", "b", "c"]), d1, s1)
             with assertRaises(NotFound):
-                assert p.value_after(Path("b")) == None
+                assert p.value_after(Path("b")) is None
 
             p = DataPath(Path(["a"]), {"b": d1}, s1)
             with assertRaises(NotFound):

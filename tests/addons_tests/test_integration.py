@@ -91,13 +91,18 @@ describe "order of import, resolution and post order":
             # ---- POST RESOLVE ---- #
             # ---- ROUND 5 ---- #
             ,
-            ("namespace_black.four",),  # black six
-            ("namespace_black.ten",),  # green four
-            ("namespace_green.ten",),  # green three
-            ("namespace_black.seven",)  # black one
+            # black six
+            ("namespace_black.four",),
+            # green four
+            ("namespace_black.ten",),
+            # green three
+            ("namespace_green.ten",),
+            # black one
+            ("namespace_black.seven",)
             # ---- ROUND 6 ---- #
             ,
-            ("namespace_black.five",),  # black ten
+            # black 10
+            ("namespace_black.five",),
         ]
 
         found = [[key for key, _ in layer] for layer in register.layered]

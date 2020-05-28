@@ -1,17 +1,15 @@
 # coding: spec
 
-from delfick_project.errors import DelfickError, DelfickErrorTestMixin
 from delfick_project.errors_pytest import assertRaises
+from delfick_project.errors import DelfickError
 from delfick_project.app import App, CliParser
 
 from textwrap import dedent
 from unittest import mock
 import datetime
-import tempfile
 import logging
 import pytest
 import io
-import os
 import re
 
 
@@ -123,7 +121,6 @@ describe "App":
                 MyApp().mainline(["--debug"])
 
         it "raises the KeyboardInterrupt if we have --debug":
-            error = ValueError("hi")
 
             class MyApp(App):
                 def execute(slf, args_obj, args_dict, extra_args, handler):
@@ -142,8 +139,6 @@ describe "App":
             extra_args = mock.Mock(name="extra_args")
             args_dict = mock.Mock(name="args_dict")
             handler = mock.Mock(name="handler")
-            syslog = mock.Mock(name="syslog")
-            syslog_address = mock.Mock(name="syslog_address")
 
             cli_parser.interpret_args = mock.Mock(name="interpret_args")
 
