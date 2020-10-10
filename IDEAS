@@ -1,0 +1,253 @@
+Changing input_algorithms api
+=============================
+
+I built this https://delfick-project.readthedocs.io/en/latest/api/norms/index.html
+many years ago which is based on the premise that if you have a value and a
+``meta`` object, you can validate and normalise that value by saying
+``spec.normalise(meta, val)`` and then the rest of the library is making it
+easy to create that ``spec`` object.
+
+This has served me well, but organic growth and decisions that have aged poorly
+means the API I have created is less than ideal. So I want to fix that.
+
+Currently, what I use the most is creating a ``FieldSpec`` on a ``dictobj.Spec``
+class to turn a dictionary into an instance of a class:
+
+.. code-block:: python
+
+    from delfick_project.norm import dictobj, sb, Meta
+
+
+    class special_spec(sb.Spec):
+        def normalise(self, meta, val):
+            return (val, 1)
+
+
+    class FormattedThing(dictobj.Spec):
+        fmt_string = dictobj.Field(format_into=sb.string_spec)
+
+
+    class MyFormatterClass:
+        """Does the special formatting stuff, that part no different"""
+
+
+    class Thing(dictobj.Spec):
+        thing = dictobj.Field(sb.integer_spec, wrapper=sb.required)
+        other = dictobj.Field(sb.string_spec, wrapper=sb.optional_spec)
+        blah = dictobj.NullableField(sb.listof(sb.string_spec()))
+        special = dictobj.Field(special_spec)
+        fmted = dictobj.Field(FormattedThing.FieldSpec(formatter=MyFormatterClass))
+
+    meta = Meta({"hello": {"there": "you"}}, [])
+    val = {"thing": 2, "blah": ["meh"], "fmted": "{hello.there}"}
+    thing = Thing.FieldSpec().normalise(meta, val)
+
+The new way would look like:
+
+.. code-block:: python
+
+    from delfick_project.norm import DO, sb, Meta
+
+
+    class norm_special(sb.Norm):
+        def normalise(self, meta, val):
+            return (val, 1)
+
+
+    class FormattedThing(DO.Container):
+        fmt_string = DO.Field(format_into=sb.norm_string)
+
+
+    class Thing(DO.Container):
+        thing = DO.RequiredField(sb.norm_integer)
+        other = DO.OptionalField(sb.norm_string)
+        blah = DO.NullableField(sb.create(sb.norm_list_of, sb.norm_string))
+        special = DO.Field(norm_special)
+        fmted = DO.Field(FormattedThing)
+
+
+    class MyFormatterClass:
+        """Does the special formatting stuff, that part no different"""
+
+
+    meta = Meta({"hello": {"there": "you"}}, formatter=MyformatterClass)
+    val = {"thing": 2, "blah": ["meh"], "fmted": "{hello.there}"}
+    thing = sb.using(Thing).create(val, meta=meta)
+
+``create`` would be an alias for ``sb.using(Thing).normalise(meta, val)`` so it
+can be used as a normal "spec" in current way of doing things and is necessary
+to avoid having ``SpecClass.FieldSpec().empty_normalise(**val)`` which exists to avoid
+having to say ``SpecClass.FieldSpec().normalise(Meta.empty(), val)``
+
+And by having ``create`` as a separate method name, I can have a separate
+signature where it's much easier to say I don't care about having my own meta
+object.
+
+The other thing to note here is putting the formatter on meta, so it gets
+propagated everywhere. Currently there isn't a way to do that and so for every
+``dictobj.Spec`` that requires a formatter, I have to give it when I create the
+``spec`` with ``FieldSpec``. In all code that uses this, I always give the same
+formatter class.
+
+Renaming fields
+---------------
+
+Currently with ``dictobj.Spec``, if I want the object I'm normalising to have a
+different field name than the one on the class, I need to wrap it in it's own
+``spec`` that does the renaming:
+
+.. code-block:: python
+
+    class Thing(dictobj.Spec):
+        special = dictobj.Field(sb.integer_spec)
+
+
+    class thing_spec(sb.Spec):
+        def normalise(self, meta, val):
+            val = sb.dictionary_spec().normalise(meta, val)
+            if "special-value" not in val:
+                raise BadSpecValue("Expected special-value in the value", meta=meta)
+            return {"special": val["special-value"]}
+
+
+    thing = thing_spec().normalise(Meta.empty(), {"special-value": 20})
+
+The idea is to make this unnecessary. Either with this when it's just a rename:
+
+.. code-block:: python
+
+    class Thing(DO.Container):
+        special = DO.RenamedField(sb.norm_integer, rename="special-value")
+
+
+    thing = sb.using(Thing).create({"special-value": 20})
+
+Or with some kind of transformer defined on the class:
+
+.. code-block:: python
+
+    class norm_transform_input(sb.Norm):
+        def normalise(meta, val):
+            return sb.norm_changed_keys_dict(("special-value", "special")).normalise(meta, val)
+
+
+    class Thing(DO.Container.Transformed(transform_input)):
+        special = DO.Field(sb.norm_integer)
+
+
+    thing = sb.using(Thing).create({"special-value": 20})
+
+In both new ways, I don't have to care that when I normalise with this class I
+first must transform the value.
+
+Non dictionaries
+----------------
+
+The other problem with the ``FieldSpec`` thing is there isn't consistency when
+I want to normalise a value that isn't a dictionary:
+
+.. code-block:: python
+
+    thing = sb.listof(sb.string_spec()).normalise(Meta.empty(), ["one", "two"])
+
+But with new way I can use the ``sb.using(norm).create(val)``:
+
+.. code-block:: python
+
+    thing = sb.using(sb.create(sb.norm_list_of, sb.string_spec)).create(["one", "two"])
+
+Creating a simple norm
+----------------------
+
+Currently if I want something with a normalise method that does essentially
+nothing I have to create the entire class:
+
+.. code-block:: python
+
+    class simple_spec(sb.Spec):
+        def normalise(meta, val):
+            return hard_coded_value
+
+I can make this better:
+
+.. code-block:: python
+        
+    norm_simple = sb.from_func(lambda meta, val: return hard_coded_value)
+
+    # or
+
+    norm_simple = sb.hardcoded(hard_coded_value)
+
+Different design decisions
+--------------------------
+
+I want to make it harder to create instances without normalising and I want to
+make it harder to create class normalisers with invalid specifications.
+
+So for the first one, currently if you have:
+
+.. code-block:: python
+
+    class Thing(dictobj.Spec):
+        one = ...
+        two = ...
+        three = ...
+
+You can say ``thing = Thing(one=1, two=3, three="asdf")`` and it'll bypass
+whatever rules you had. I allowed this in the first place because the idea was
+in tests you may not want that normalisation. However that essentially never
+happens, and it makes it possible to not do that normalisation if you don't know
+that you should.
+
+Instead I'll make it raise an error if you try that and also ensure that doing a
+``sb.using(Thing).create(val)`` returns an instance that allows
+``isinstance(instance, Thing)`` to still return True.
+
+The second want, making sure I don't have invalid normalisers is to avoid this
+problem:
+
+.. code-block:: python
+
+    class Thing(dictobj.Spec):
+        one = dictobj.Field(sb.listof(sb.string_spec))
+
+Here I've given ``listof`` a ``spec`` that isn't instantiated, and I won't know
+that till runtime when I try to normalise it and it complains I gave the normalise
+method ``meta, val`` rather than ``self, meta, val``. Super infuriating!
+
+I fix this by making it consistent to provide a ``norm`` without instantiating it
+so saying ``sb.create(sb.listof, sb.string_spec)`` which is essentially lisp
+for ``sb.listof(sb.string_spec())``.
+
+Extra fields on the class
+-------------------------
+
+Currently you have to say ``Thing.FieldSpec()`` because I want to limit what I
+add to the class to make sure that you don't accidentally override machinery
+that needs to exist. I hate this method name very much. I'll make it so the only
+extra thing I add to the class is a ``instance.Meta`` which will hold all the
+information on the original definition and a ``norm`` for creating an instance of
+the class from a value that has instantiated as much as it can.
+
+For this reason, you have to say ``sb.using(Thing).create`` instead of
+``Thing.create``. But having the latter would be useful, so I'd have:
+
+.. code-block:: python
+
+    class Thing(DO.Container.WithCreate()):
+       ...
+
+    thing = Thing.create(val)
+
+Consistent naming
+-----------------
+
+Currently I have a mix of ``sb.<name>_spec`` and ``sb.<name>`` for example,
+``sb.integer_spec`` vs ``sb.required``. Also, people get confused by the word
+``spec``, so I want to instead make a more consistent naming scheme of
+``sb.norm_<name>`` for example ``sb.norm_integer`` and ``sb.norm_required``
+and anything that does a transformation that isn't itself an ``sb.Norm`` object
+can not have that prefix. For example ``sb.create``.
+
+And I'd rename the current ones, and make the current names an alias to the new
+implementation with a deprecation notice on use.
