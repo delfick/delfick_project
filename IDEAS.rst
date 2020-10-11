@@ -309,11 +309,25 @@ To remove all instances of the word Spec, I'll do the following:
 
 .. code-block:: python
 
-    class BadNormValue(...):
+    class BadNorm(...):
         pass
 
-    BadSpecValue = BadNormValue
+    BadSpecValue = BadNorm
 
+Also, I want to force having a meta in the kwargs so I'll make a new error to
+raise with a slightly different signature:
+
+.. code-block:: python
+
+    class NormError(BadNorm):
+        def __init__(self, msg="", *, meta, **kwargs):
+            super().InvalidValue(msg, **kwargs)
+
+And start using ``raise nz.NormError("nope", meta=meta)`` everywhere.
+
+I can't just make ``BadNorm`` have this signature because I want
+``except BadSpecValue`` to still catch these and I don't want existing code
+using ``BadSpecValue`` to have this new restriction on ``__init__``.
 
 Delayed looking at values
 -------------------------
