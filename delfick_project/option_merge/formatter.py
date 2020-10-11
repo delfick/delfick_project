@@ -18,11 +18,10 @@ formatter that can format strings using a MergedOptions object.
     assert formatted == "a.b: 3, d: 5 and c=5 and d=${BLAH}"
 """
 
-from .merge import MergedOptions
-
 from delfick_project.errors import DelfickError
 from delfick_project.norms import Meta
 
+from unittest import mock
 import string
 import types
 
@@ -38,12 +37,27 @@ class NoFormat(object):
         self.val = val
 
 
+raise Exception("I changed merged options")
+
+
 class MergedOptionStringFormatter(string.Formatter):
     """
     Resolve format options into a MergedOptions dictionary
     """
 
     passthrough_format_specs = []
+
+    return_object_types = (
+        type(None),
+        types.LambdaType,
+        types.FunctionType,
+        types.MethodType,
+        types.BuiltinFunctionType,
+        types.BuiltinMethodType,
+        mock.Mock,
+    )
+
+    return_object_markers = ("_merged_options_formattable",)
 
     def __init__(self, all_options, value, chain=None):
         if chain is None:
@@ -120,26 +134,16 @@ class MergedOptionStringFormatter(string.Formatter):
         special = self.special_format_field(obj, format_spec)
         if special:
             return special
+        elif self.can_return_object(obj):
+            return obj
         else:
-            is_dict = type(obj) is MergedOptions or isinstance(obj, dict)
-            is_a_mock = hasattr(obj, "mock_calls")
-            is_special_type = any(
-                isinstance(obj, typ)
-                for typ in (
-                    type(None),
-                    types.LambdaType,
-                    types.FunctionType,
-                    types.MethodType,
-                    types.BuiltinFunctionType,
-                    types.BuiltinMethodType,
-                )
-            )
-            is_formattable = getattr(obj, "_merged_options_formattable", False)
+            return super().format_field(obj, format_spec)
 
-            if is_dict or is_special_type or is_a_mock or is_formattable:
-                return obj
-            else:
-                return super().format_field(obj, format_spec)
+    def can_return_object(self, obj):
+        if any(getattr(obj, key, None) for key in self.return_object_markers):
+            return True
+        else:
+            return isinstance(obj, self.return_object_types)
 
     def vformat(self, format_string, args, kwargs):
         """This changes in 3.5.1 and I want it to not have changed"""
