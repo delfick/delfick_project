@@ -348,7 +348,7 @@ I can do better and make a descriptor that does this on access:
 .. code-block:: python
 
     class Thing(nz.Container):
-        stuff = nz.DescriptorField(expensive_spec)
+        stuff = nz.DelayedNormField(expensive_spec)
 
     thing = nz.using(Thing).create()
     stuff = thing.stuff # does the expensive_spec.normalise(meta, val) at this point
@@ -378,14 +378,14 @@ In this example, descriptor can be any normal python descriptor and using
 ``nz.Descriptor`` is optional, but removes some boilerplate you'd otherwise have
 to implement.
 
-The descriptor value may be combined with a ``nz.DescriptorField`` and will run
+The descriptor value may be combined with a ``nz.DelayedNormField`` and will run
 the values it receives through the norm with original meta object before your
 descriptor gets the value.
 
 Why nz?
 -------
 
-Using everything off ``nz\.`` makes it super easy to search for instances of
+Using everything off ``nz.`` makes it super easy to search for instances of
 using this library, which means changes like this one in the future are even
 easier to find in your codebase.
 
@@ -399,3 +399,32 @@ it's easy/quick to type, and easy to search for.
 
 It's short for ``normalize``. I'd use ``norm`` but that's too close to the
 current ``delfick_project.norms`` module, and ``norm.norm_string`` is a stutter.
+
+Adding to Meta
+--------------
+
+I can make Meta easier to use by fixing the ``__init__``:
+
+.. code-block:: python
+        
+    # currently
+    def __init__(self, everything, path)
+        pass
+
+    # Better
+    def __init__(self, everything, path=None):
+        if path is None:
+            path = []
+
+And I can make it easier to make a new meta with different information:
+
+.. code-block:: python
+
+    # currently
+    new_meta = Meta(MergedOptions.using(old_meta.everything, {"other": 1}), [])
+
+    # better
+    meta = meta.different_information(lambda current: MergedOptions.using(...))
+
+And also rename ``everything`` as ``information`` and make ``everything`` an
+alias for ``information``.
