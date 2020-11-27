@@ -3,6 +3,9 @@
 Changelog
 ---------
 
+0.7.6 - TBD
+   * Fixed a memory leak
+
 0.7.5 - 28 May 2020
    * Fixed a bug with json to console logs. It was writing {"msg": <message>}
      instead of just <message> like it should be.

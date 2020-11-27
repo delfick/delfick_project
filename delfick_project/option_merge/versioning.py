@@ -62,11 +62,11 @@ class versioned_value(object):
                         False,
                     )
                 except KeyError as error:
-                    cached[prefix][ignore_converters] = (error, True)
+                    cached[prefix][ignore_converters] = (str(error), True)
 
             val, is_error = cached[prefix][ignore_converters]
             if is_error:
-                raise val
+                raise KeyError(val)
             else:
                 return val
 
