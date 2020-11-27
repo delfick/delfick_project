@@ -3,7 +3,7 @@
 Changelog
 ---------
 
-0.7.6 - TBD
+0.7.6 - 27 November 2020
    * Fixed a memory leak
 
 0.7.5 - 28 May 2020
