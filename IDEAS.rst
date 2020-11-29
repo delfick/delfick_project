@@ -1,3 +1,15 @@
+Random notes
+------------
+
+nz.disable and nz.enable
+
+nz.EnvironmentField
+
+nz.FromMeta
+
+meta.find
+
+
 Changing input_algorithms api
 =============================
 
