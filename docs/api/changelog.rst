@@ -3,7 +3,7 @@
 Changelog
 ---------
 
-0.7.7 - TBD
+0.7.7 - 13 December 2020
    * Make it possible to make silent default and have ``--unsilent`` instead
      of ``--silent``
 
