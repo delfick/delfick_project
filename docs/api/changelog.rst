@@ -3,6 +3,10 @@
 Changelog
 ---------
 
+0.7.7 - TBD
+   * Make it possible to make silent default and have ``--unsilent`` instead
+     of ``--silent``
+
 0.7.6 - 27 November 2020
    * Fixed a memory leak
 

@@ -422,6 +422,102 @@ describe "CliParser":
             assert args_obj.silent is False
             assert args_obj.debug is True
 
+        it "can have silent by default":
+            cli_parser = CliParser(
+                "", silent_by_default_environ_name="MY_AMAZING_SILENT_BY_DEFAULT"
+            )
+
+            class Empty:
+                pass
+
+            @contextmanager
+            def change_env(**new):
+                reset = {}
+
+                for k in new:
+                    if k not in os.environ:
+                        reset[k] = Empty
+                    else:
+                        reset[k] = os.environ[k]
+
+                try:
+                    for k, v in new.items():
+                        if v is Empty:
+                            if k in os.environ:
+                                del os.environ[k]
+                        else:
+                            os.environ[k] = v
+
+                    yield
+
+                finally:
+                    for k, v in reset.items():
+                        if v is Empty:
+                            if k in os.environ:
+                                del os.environ[k]
+                        else:
+                            os.environ[k] = v
+
+            with change_env(MY_AMAZING_SILENT_BY_DEFAULT=Empty):
+                assert not cli_parser.silent_by_default
+                parser = cli_parser.make_parser()
+                args = parser.parse_args([])
+                assert not args.silent
+                assert not args.verbose
+                assert not args.debug
+
+                args = parser.parse_args(["--silent"])
+                assert args.silent
+                assert not args.verbose
+                assert not args.debug
+
+                called = []
+
+                def print_message(message, fle):
+                    called.append(message)
+                    assert fle is sys.stderr
+
+                print_message = mock.Mock(name="print_message", side_effect=print_message)
+                with mock.patch.multiple(parser, _print_message=print_message):
+                    try:
+                        parser.parse_args(["--unsilent"])
+                    except SystemExit as error:
+                        assert error.code == 2
+                    else:
+                        assert False, "Expected an exception"
+
+                assert "unrecognized arguments: --unsilent" in called[-1]
+
+            with change_env(MY_AMAZING_SILENT_BY_DEFAULT="1"):
+                assert cli_parser.silent_by_default
+                parser = cli_parser.make_parser()
+                args = parser.parse_args([])
+                assert args.silent
+                assert not args.verbose
+                assert not args.debug
+
+                args = parser.parse_args(["--unsilent"])
+                assert not args.silent
+                assert not args.verbose
+                assert not args.debug
+
+                called = []
+
+                def print_message(message, fle):
+                    called.append(message)
+                    assert fle is sys.stderr
+
+                print_message = mock.Mock(name="print_message", side_effect=print_message)
+                with mock.patch.multiple(parser, _print_message=print_message):
+                    try:
+                        parser.parse_args(["--silent"])
+                    except SystemExit as error:
+                        assert error.code == 2
+                    else:
+                        assert False, "Expected an exception"
+
+                assert "unrecognized arguments: --silent" in called[-1]
+
         it "complains if silent, verbose and debug are specified at the same time":
             called = []
             parser = CliParser("").make_parser({})

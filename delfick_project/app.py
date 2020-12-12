@@ -179,6 +179,17 @@ class App(object):
 
         ``--version``
             Print out the version and quit
+
+        Setting silent by default
+            If you want ``--silent`` to be default then you can set
+            ``silent_by_default_environ_name`` to be the name of a special
+            environment variable that when set to "1" will mean we have an
+            ``--unsilent`` instead of ``--silent``.
+
+            By default it will recognise ``DELFICK_APP_SILENT_BY_DEFAULT``
+
+            You may turn this off altogether by setting that property to
+            ``None``
     """
 
     ########################
@@ -195,6 +206,8 @@ class App(object):
     cli_description = "My amazing app"
     cli_environment_defaults = None
     cli_positional_replacements = None
+
+    silent_by_default_environ_name = "DELFICK_APP_SILENT_BY_DEFAULT"
 
     ########################
     ###   USAGE
@@ -308,7 +321,8 @@ class App(object):
             print("", file=print_errors_to)
             print("!" * 80, file=print_errors_to)
             print(
-                f"Something went wrong! -- {error.__class__.__name__}", file=print_errors_to,
+                f"Something went wrong! -- {error.__class__.__name__}",
+                file=print_errors_to,
             )
             print(f"\t{error}", file=print_errors_to)
             if cli_parser and cli_parser.parse_args(argv)[0].debug:
@@ -357,10 +371,15 @@ class App(object):
 
     def make_cli_parser(self):
         """Return a CliParser instance"""
-        properties = {"specify_other_args": self.specify_other_args}
+        properties = {
+            "specify_other_args": self.specify_other_args,
+        }
         kls = type("CliParser", (self.CliParserKls,), properties)
         return kls(
-            self.cli_description, self.cli_positional_replacements, self.cli_environment_defaults
+            self.cli_description,
+            self.cli_positional_replacements,
+            self.cli_environment_defaults,
+            silent_by_default_environ_name=self.silent_by_default_environ_name,
         )
 
 
@@ -372,9 +391,16 @@ class App(object):
 class CliParser(object):
     """Knows what argv looks like"""
 
-    def __init__(self, description, positional_replacements=None, environment_defaults=None):
+    def __init__(
+        self,
+        description,
+        positional_replacements=None,
+        environment_defaults=None,
+        silent_by_default_environ_name=None,
+    ):
         self.description = description
         self.positional_replacements = positional_replacements
+        self.silent_by_default_environ_name = silent_by_default_environ_name
         if self.positional_replacements is None:
             self.positional_replacements = []
 
@@ -543,18 +569,38 @@ class CliParser(object):
 
         return defaults
 
-    def make_parser(self, defaults):
+    @property
+    def silent_by_default(self):
+        """
+        Return whether we create a ``--silent`` or ``--unsilent`` option for
+        logging options.
+
+        By default, this only returns true if your environment has a particular
+        environment variable set to 1.
+
+        The name of this variable is determined by the
+        ``silent_by_default_environ_name`` property on the class
+        """
+        if self.silent_by_default_environ_name is None:
+            return False
+        return os.environ.get(self.silent_by_default_environ_name) == "1"
+
+    def make_parser(self, defaults=None):
         """Create an argparse ArgumentParser with some default flags for logging"""
+        if defaults is None:
+            defaults = {}
+
         parser = argparse.ArgumentParser(description=self.description)
 
         logging = parser.add_mutually_exclusive_group()
         logging.add_argument("--verbose", help="Enable debug logging", action="store_true")
 
-        if "default" in defaults.get("--silent", {}):
-            kwargs = defaults["--silent"]
+        if self.silent_by_default:
+            logging.add_argument(
+                "--unsilent", help="Log more than just errors", action="store_false", dest="silent"
+            )
         else:
-            kwargs = {"action": "store_true"}
-        logging.add_argument("--silent", help="Only log errors", **kwargs)
+            logging.add_argument("--silent", help="Only log errors", action="store_true")
 
         logging.add_argument("--debug", help="Debug logs", action="store_true")
 
