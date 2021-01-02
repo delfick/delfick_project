@@ -20,7 +20,7 @@ setup(
 
     , author = 'Stephen Moore'
     , license = 'MIT'
-    , author_email = 'delfick755@gmail.com'
+    , author_email = 'github@delfick.com'
 
     , url = "https://github.com/delfick/delfick_project"
     , description = 'Common code I use in all my projects'
