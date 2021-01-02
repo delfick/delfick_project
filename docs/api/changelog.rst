@@ -3,7 +3,7 @@
 Changelog
 ---------
 
-0.7.8 - TBD
+0.7.8 - 2 January 2021
    * Include LICENSE in the pypi package
 
 0.7.7 - 13 December 2020
