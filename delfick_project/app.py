@@ -339,7 +339,7 @@ class App(object):
     def setup_logging(self, args_obj, log=None, only_message=False):
         """Setup the handler for the logs and call setup_other_logging"""
         level = [logging.INFO, logging.DEBUG][args_obj.verbose or args_obj.debug]
-        if args_obj.silent:
+        if args_obj.silent and level == logging.INFO:
             level = logging.ERROR
 
         logging_handler_file = args_obj.logging_handler_file

@@ -3,6 +3,9 @@
 Changelog
 ---------
 
+0.7.9 - TBD
+   * Allow ``--debug`` to override default silent
+
 0.7.8 - 2 January 2021
    * Include LICENSE in the pypi package
 
