@@ -3,36 +3,56 @@
 Changelog
 ---------
 
+.. _release-0-7-9:
+
 0.7.9 - TBD
    * Allow ``--debug`` to override default silent
 
+.. _release-0-7-8:
+
 0.7.8 - 2 January 2021
    * Include LICENSE in the pypi package
+
+.. _release-0-7-7:
 
 0.7.7 - 13 December 2020
    * Make it possible to make silent default and have ``--unsilent`` instead
      of ``--silent``
 
+.. _release-0-7-6:
+
 0.7.6 - 27 November 2020
    * Fixed a memory leak
+
+.. _release-0-7-5:
 
 0.7.5 - 28 May 2020
    * Fixed a bug with json to console logs. It was writing {"msg": <message>}
      instead of just <message> like it should be.
 
+.. _release-0-7-4:
+
 0.7.4 - 9 March 2020
    * Import failure of resolving hooks doesn't hide the exception behind a
      BadHook exception.
 
+.. _release-0-7-3:
+
 0.7.3 - 4 January 2020
    * Made ``extra_files`` option to ``Collector#prepare`` take in dictionaries.
+
+.. _release-0-7-2:
 
 0.7.2 - 31 December 2019
    * The option_merge formatter will now let through ``None``
 
+.. _release-0-7-1:
+
 0.7.1 - 19 November 2019
    * ``--logging-program`` can now be specified at the same time as ``--silent``
      or ``--debug``
+
+.. _release-0-7-0:
 
 0.7.0 - 5 November 2019
    * fuzzyAssertRaisesError will now catch BaseExceptions like the pytest
@@ -40,16 +60,24 @@ Changelog
      Python 3.8.
    * delfick_project is now only compatible with Python versions greater than 3.6
 
+.. _release-0-6-0:
+
 0.6.0 - 14 October 2019
    * Ensure that as_dict on a dictobj or MergedOptions works if we have objects
      with an as_dict method that doesn't take in any parameters.
+
+.. _release-0-5-2:
 
 0.5.2 - 3 October 2019
    * Added an option --logging-handler-file for saying where logs should go to.
      This essentially defaults to sys.stderr
 
+.. _release-0-5-1:
+
 0.5.1 - 18 September 2019
    * Removed six import I didn't notice in migration
+
+.. _release-0-5:
 
 0.5 - 18 September 2019
    Moved the following projects into here

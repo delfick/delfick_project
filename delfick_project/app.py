@@ -321,8 +321,7 @@ class App(object):
             print("", file=print_errors_to)
             print("!" * 80, file=print_errors_to)
             print(
-                f"Something went wrong! -- {error.__class__.__name__}",
-                file=print_errors_to,
+                f"Something went wrong! -- {error.__class__.__name__}", file=print_errors_to,
             )
             print(f"\t{error}", file=print_errors_to)
             if cli_parser and cli_parser.parse_args(argv)[0].debug:
