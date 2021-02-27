@@ -5,7 +5,7 @@ Changelog
 
 .. _release-0-7-9:
 
-0.7.9 - TBD
+0.7.9 - 27 February 2021
    * Allow ``--debug`` to override default silent
 
 .. _release-0-7-8:
