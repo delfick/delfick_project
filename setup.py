@@ -12,8 +12,8 @@ setup(
 
     , extras_require =
       { 'tests':
-        [ 'pytest'
-        , 'noseOfYeti==2.0.2'
+        [ 'pytest>=7.0.1'
+        , 'noseOfYeti>=2.3.1'
         , 'rainbow_logging_handler==2.2.2'
         ]
       }
