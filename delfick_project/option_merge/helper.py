@@ -53,13 +53,14 @@ def make_dict(first, rest, data):
 
 def merge_into_dict(target, source, seen=None, ignore=None):
     """Merge source into target"""
-    if ignore is None:
-        ignore = []
+    ignores = ignore
+    if ignores is None:
+        ignores = []
 
-    source = convert_to_dict(source, (), {"seen": seen, "ignore": ignore})
+    source = convert_to_dict(source, (), {"seen": seen, "ignore": ignores})
 
     for key in source.keys():
-        if key in ignore:
+        if key in ignores:
             continue
         val = source[key]
 
@@ -71,7 +72,7 @@ def merge_into_dict(target, source, seen=None, ignore=None):
         if is_dict(val):
             if not is_dict(target.get(key)):
                 target[key] = {}
-            merge_into_dict(target[key], val, seen=seen, ignore=ignore)
+            merge_into_dict(target[key], val, seen=seen, ignore=ignores)
         else:
             target[key] = val
 

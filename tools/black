@@ -1,0 +1,9 @@
+#!/usr/bin/env python3
+
+from venvstarter import manager
+
+
+m = manager("black")
+m.add_pypi_deps("noseOfYeti[black]==2.4.1")
+m.add_no_binary("black")
+m.run()

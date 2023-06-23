@@ -17,7 +17,9 @@ jobs:
 
       - run: python -m pip install pip venvstarter -U
 
-      - run: ./tools/pylama --help
+      - run: ./tools/pylama
+        env:
+          VENVSTARTER_ONLY_MAKE_VENV: "1"
 
       - name: Ensure linter is happy
         run: ./lint
@@ -34,7 +36,9 @@ jobs:
 
       - run: python -m pip install pip venvstarter -U
 
-      - run: ./tools/black/setup_venv
+      - run: ./tools/black
+        env:
+          VENVSTARTER_ONLY_MAKE_VENV: "1"
 
       - name: Ensure code is formatted
         run: |

@@ -827,7 +827,7 @@ describe "string_specs":
                 self.make_spec().normalise(meta, opt)
 
     it "returns string as is if it is a string", meta:
-        for opt in ("", "asdf", u"adsf"):
+        for opt in ("", "asdf", "adsf"):
             assert self.make_spec().normalise(meta, opt) == opt
 
     describe "string_spec":
