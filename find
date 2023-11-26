@@ -5,6 +5,11 @@
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 (
-    cd $DIR
-    exec ack "$@" $DIR/delfick_project $DIR/tests
+    cd "$DIR" || exit 1
+    exec ack "$@" \
+        --ignore-directory .tox \
+        --ignore-directory .mypy_cache \
+        --ignore-directory dist \
+        --ignore-directory build \
+        --ignore-directory tools \
 )

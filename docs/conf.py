@@ -1,4 +1,13 @@
-extensions = ["sphinx.ext.autodoc", "sphinx_rtd_theme", "delfick_project.norms.sphinx.show_specs"]
+import pathlib
+import sys
+
+sys.path.append(str(pathlib.Path(__file__).parent))
+
+extensions = [
+    "sphinx.ext.autodoc",
+    "sphinx_rtd_theme",
+    "delfick_project.norms.sphinx.show_specs"
+]
 
 html_theme = "sphinx_rtd_theme"
 html_static_path = ["_static"]
@@ -11,7 +20,7 @@ source_suffix = ".rst"
 
 pygments_style = "pastie"
 
-copyright = "2019, delfick"
+copyright = "Stephen Moore"
 project = "delfick_project"
 
 version = "0.1"
