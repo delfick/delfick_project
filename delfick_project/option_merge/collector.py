@@ -82,11 +82,12 @@ def a_file(source):
     if isinstance(source, dict):
         filename = None
         try:
-            tmp = tempfile.NamedTemporaryFile(delete=False, prefix="<internal>")
-            filename = tmp.name
+            with tempfile.NamedTemporaryFile(delete=False, prefix="-internal-") as tmp:
+                filename = tmp.name
 
             with open(filename, "w") as fle:
                 fle.write(json.dumps(source))
+
             yield filename
         finally:
             if filename and os.path.exists(filename):

@@ -9,8 +9,9 @@ import pytest
 def temp_file():
     fle = None
     try:
-        fle = tempfile.NamedTemporaryFile(delete=False)
-        yield fle.name
+        with tempfile.NamedTemporaryFile(delete=False) as fle:
+            filename = fle.name
+        yield filename
     finally:
         if fle and os.path.exists(fle.name):
             os.remove(fle.name)
