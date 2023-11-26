@@ -1,0 +1,24 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "namespace-blue"
+dynamic = ["version"]
+license = ""
+
+[project.entry-points."blue.addons"]
+five = "namespace_blue.five"
+four = "namespace_blue.four"
+one = "namespace_blue.one"
+six = "namespace_blue.six"
+three = "namespace_blue.three"
+two = "namespace_blue.two"
+
+[tool.hatch.version]
+path = "namespace_blue/__init__.py"
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/namespace_blue",
+]

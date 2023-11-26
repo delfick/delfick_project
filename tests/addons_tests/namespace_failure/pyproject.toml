@@ -1,0 +1,27 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "namespace-failure"
+dynamic = ["version"]
+license = ""
+
+[project.entry-points."failure.addons"]
+bad_hook = "namespace_failure.bad_hook"
+nohook = "namespace_failure.nohook"
+noresult = "namespace_failure.noresult"
+postregister_and_extras = "namespace_failure.postregister_and_extras"
+recursive1 = "namespace_failure.recursive1"
+recursive1_extra = "namespace_failure.recursive1_extra"
+recursive2 = "namespace_failure.recursive2"
+recursive2_extra = "namespace_failure.recursive2_extra"
+unimportable = "namespace_failure.unimportable"
+
+[tool.hatch.version]
+path = "namespace_failure/__init__.py"
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/namespace_failure",
+]

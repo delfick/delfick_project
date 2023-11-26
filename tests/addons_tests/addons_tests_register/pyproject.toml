@@ -1,0 +1,16 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "addons-tests-register"
+dynamic = ["version"]
+license = ""
+
+[tool.hatch.version]
+path = "addons_tests_register/__init__.py"
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/addons_tests_register",
+]

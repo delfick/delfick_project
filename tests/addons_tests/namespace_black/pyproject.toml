@@ -1,0 +1,28 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "namespace-black"
+dynamic = ["version"]
+license = ""
+
+[project.entry-points."black.addons"]
+eight = "namespace_black.eight"
+five = "namespace_black.five"
+four = "namespace_black.four"
+nine = "namespace_black.nine"
+one = "namespace_black.one"
+seven = "namespace_black.seven"
+six = "namespace_black.six"
+ten = "namespace_black.ten"
+three = "namespace_black.three"
+two = "namespace_black.two"
+
+[tool.hatch.version]
+path = "namespace_black/__init__.py"
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/namespace_black",
+]
