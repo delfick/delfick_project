@@ -50,29 +50,6 @@ do something before calling the post_register hooks:
     extra_args = {"my_amazing_addons": {"arg1": 1}}
     self.register.post_register(extra_args)
 
-You can also define your own entry points programmatically by doing something
-like:
-
-.. code-block:: python
-
-    # Register __main__ as an entry point
-    try:
-        __main__ = __import__("__main__")
-    except ImportError:
-        pass
-    else:
-        if any(hasattr(getattr(__main__, attr, None), "_delfick_project_addon_entry") for attr in dir(__main__)):
-            working_set = pkg_resources.working_set
-            dist = pkg_resources.Distribution("__main__")
-            mp = pkg_resources.EntryPoint.parse_group("my_amazing_addons", ["__main__ = __main__"])
-
-            def get_entry_map(group=None):
-                if group == "my_amazing_addons":
-                    return mp
-                return {}
-            dist.get_entry_map = get_entry_map
-            working_set.add(dist, entry="__main__")
-
 Defining hooks
 --------------
 

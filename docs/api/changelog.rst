@@ -3,6 +3,14 @@
 Changelog
 ---------
 
+.. _release-0-8-0:
+
+0.8.0 - 26 November 2023
+   * Improve dev tooling
+   * Convert to hatchling
+   * delfick_project is now python 3.8+
+   * Remove the use of pkg_resources
+
 .. _release-0-7-9:
 
 0.7.9 - 27 February 2021

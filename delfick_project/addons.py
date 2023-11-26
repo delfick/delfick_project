@@ -1,7 +1,7 @@
 import logging
 from collections import defaultdict
 
-import pkg_resources
+from backports.entry_points_selectable import entry_points
 
 from delfick_project.errors import DelfickError, ProgrammerError
 from delfick_project.layerz import Layers
@@ -99,7 +99,7 @@ class AddonGetter(object):
             addon_spec or Addon.FieldSpec(),
         )
         self.entry_points[namespace] = defaultdict(list)
-        for e in pkg_resources.iter_entry_points(namespace):
+        for e in entry_points(group=namespace):
             self.entry_points[namespace][e.name].append(e)
 
     def all_for(self, namespace):
@@ -171,7 +171,7 @@ class AddonGetter(object):
     ):
         modules = []
         for entry_point in entry_points:
-            modules.append(entry_point.resolve())
+            modules.append(entry_point.load())
 
         hooks, extras = self.get_hooks_and_extras(modules, known)
         resolver = self.get_resolver(collector, result_maker, hooks)
