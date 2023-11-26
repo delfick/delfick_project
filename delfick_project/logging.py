@@ -5,15 +5,15 @@
     :members:
     :member-order: bysource
 """
-from datetime import datetime
-from functools import partial
-import logging.handlers
-import traceback
-import logging
 import inspect
 import json
-import sys
+import logging
+import logging.handlers
 import os
+import sys
+import traceback
+from datetime import datetime
+from functools import partial
 
 try:
     from rainbow_logging_handler import RainbowLoggingHandler

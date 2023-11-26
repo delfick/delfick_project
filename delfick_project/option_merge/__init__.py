@@ -1,8 +1,12 @@
-from .merge import ConverterProperty, KeyValuePairsConverter, AttributesConverter
-from .formatter import MergedOptionStringFormatter, NoFormat, BadOptionFormat
-from .converter import Converter, Converters
-from .merge import MergedOptions
 from .collector import Collector
+from .converter import Converter, Converters
+from .formatter import BadOptionFormat, MergedOptionStringFormatter, NoFormat
+from .merge import (
+    AttributesConverter,
+    ConverterProperty,
+    KeyValuePairsConverter,
+    MergedOptions,
+)
 from .not_found import NotFound
 
 __all__ = [

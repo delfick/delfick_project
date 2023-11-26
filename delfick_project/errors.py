@@ -45,12 +45,12 @@ This module also provides:
 
 .. autoclass:: DelfickErrorTestMixin
 """
+import re
+import sys
+import traceback
 from contextlib import contextmanager
 from functools import total_ordering
 from unittest.util import safe_repr
-import traceback
-import sys
-import re
 
 
 @total_ordering

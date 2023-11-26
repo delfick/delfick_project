@@ -1,7 +1,7 @@
-from .merge import MergedOptions
-from .joiner import dot_joiner
-
 import inspect
+
+from .joiner import dot_joiner
+from .merge import MergedOptions
 
 
 def prefixed_path_list(path, prefix=None):

@@ -11,14 +11,14 @@ With the ability to delete from the dictionary and the ability to convert values
 on access.
 """
 
-from .versioning import versioned_iterable, versioned_value
-from .converter import Converters, Converter
-from .not_found import NotFound
-from .joiner import dot_joiner
-from .path import Path
-
-from collections.abc import Mapping
 import logging
+from collections.abc import Mapping
+
+from .converter import Converter, Converters
+from .joiner import dot_joiner
+from .not_found import NotFound
+from .path import Path
+from .versioning import versioned_iterable, versioned_value
 
 log = logging.getLogger("delfick_project.option_merge.merge")
 

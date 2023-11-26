@@ -1,9 +1,10 @@
 # coding: spec
 
-from delfick_project.addons import AddonGetter, Register
-
 from unittest import mock
+
 import pytest
+
+from delfick_project.addons import AddonGetter, Register
 
 
 @pytest.fixture()

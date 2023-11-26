@@ -18,13 +18,13 @@ formatter that can format strings using a MergedOptions object.
     assert formatted == "a.b: 3, d: 5 and c=5 and d=${BLAH}"
 """
 
-from .merge import MergedOptions
+import string
+import types
 
 from delfick_project.errors import DelfickError
 from delfick_project.norms import Meta
 
-import string
-import types
+from .merge import MergedOptions
 
 
 class BadOptionFormat(DelfickError):

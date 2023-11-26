@@ -1,14 +1,14 @@
 # coding: spec
 
-from delfick_project.app import CliParser, Ignore, BadOption
-from delfick_project.errors_pytest import assertRaises
-
+import os
+import re
+import sys
 from contextlib import contextmanager
 from itertools import combinations
 from unittest import mock
-import sys
-import re
-import os
+
+from delfick_project.app import BadOption, CliParser, Ignore
+from delfick_project.errors_pytest import assertRaises
 
 describe "CliParser":
 

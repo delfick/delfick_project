@@ -1,9 +1,10 @@
 # coding: spec
 
-from delfick_project.addons import Register, addon_hook
-
 from unittest import mock
+
 import pytest
+
+from delfick_project.addons import Register, addon_hook
 
 describe "Register":
     it "takes in an addon_getter and a collector":

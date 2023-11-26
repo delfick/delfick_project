@@ -1,12 +1,12 @@
 # coding: spec
 
-from delfick_project.norms.obj import Fields
-from delfick_project.norms import dictobj
+from unittest import mock
+
+import pytest
 
 from delfick_project.errors_pytest import assertRaises
-
-from unittest import mock
-import pytest
+from delfick_project.norms import dictobj
+from delfick_project.norms.obj import Fields
 
 describe "Fields":
 

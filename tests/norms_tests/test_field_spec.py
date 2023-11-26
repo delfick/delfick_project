@@ -1,20 +1,20 @@
 # coding: spec
 
-from delfick_project.norms import sb, dictobj, Meta, BadSpec
-from delfick_project.norms.field_spec import (
-    FieldSpec,
-    Field,
-    NullableField,
-    FieldSpecMixin,
-    FieldSpecMetakls,
-)
-
-from delfick_project.option_merge import MergedOptions, MergedOptionStringFormatter
-from delfick_project.errors_pytest import assertRaises
-from delfick_project.errors import ProgrammerError
-
 from unittest import mock
+
 import pytest
+
+from delfick_project.errors import ProgrammerError
+from delfick_project.errors_pytest import assertRaises
+from delfick_project.norms import BadSpec, Meta, dictobj, sb
+from delfick_project.norms.field_spec import (
+    Field,
+    FieldSpec,
+    FieldSpecMetakls,
+    FieldSpecMixin,
+    NullableField,
+)
+from delfick_project.option_merge import MergedOptions, MergedOptionStringFormatter
 
 
 @pytest.fixture()

@@ -1,8 +1,7 @@
 # coding: spec
 
-from delfick_project.norms import BadSpecValue, dictobj, sb, Meta
-
 from delfick_project.errors_pytest import assertRaises
+from delfick_project.norms import BadSpecValue, Meta, dictobj, sb
 
 describe "Selection":
     describe "plain dictobj with lists":

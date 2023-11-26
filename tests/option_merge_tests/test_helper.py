@@ -1,13 +1,11 @@
 # coding: spec
 
-from delfick_project.option_merge import MergedOptions
-from delfick_project.option_merge import helper as hp
+import itertools
+from unittest import mock
 
 from delfick_project.norms import dictobj
-
-from unittest import mock
-import itertools
-
+from delfick_project.option_merge import MergedOptions
+from delfick_project.option_merge import helper as hp
 
 describe "prefixed_path_list":
     it "returns a clone if there is no prefix":

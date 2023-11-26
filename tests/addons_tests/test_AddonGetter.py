@@ -1,13 +1,13 @@
 # coding: spec
 
-from delfick_project.addons import AddonGetter, addon_hook
+import uuid
+from unittest import mock
 
+import pytest
+
+from delfick_project.addons import AddonGetter, addon_hook
 from delfick_project.errors_pytest import assertRaises
 from delfick_project.norms import Meta
-
-from unittest import mock
-import pytest
-import uuid
 
 describe "AddonGetter":
     it "defaults a delfick_project.addons namespace":

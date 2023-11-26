@@ -1,13 +1,20 @@
 # coding: spec
 
-from delfick_project.norms import BadSpec, BadSpecValue, BadDirectory, BadFilename
-from delfick_project.norms import sb, Meta, dictobj
+import uuid
+from unittest import mock
+
+import pytest
 
 from delfick_project.errors_pytest import assertRaises
-
-from unittest import mock
-import pytest
-import uuid
+from delfick_project.norms import (
+    BadDirectory,
+    BadFilename,
+    BadSpec,
+    BadSpecValue,
+    Meta,
+    dictobj,
+    sb,
+)
 
 
 @pytest.fixture()

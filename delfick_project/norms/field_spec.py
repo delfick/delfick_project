@@ -89,6 +89,7 @@ You can also have a form of dependency injection by combining this from objects 
 """
 
 from delfick_project.errors import ProgrammerError
+
 from . import spec_base as sb
 from .errors import BadSpec
 from .meta import Meta

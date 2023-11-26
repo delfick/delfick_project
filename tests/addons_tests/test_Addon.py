@@ -1,10 +1,9 @@
 # coding: spec
 
-from delfick_project.addons import Addon
-
-from delfick_project.norms import Meta
-
 from unittest import mock
+
+from delfick_project.addons import Addon
+from delfick_project.norms import Meta
 
 describe "Addon":
     it "has name, a resolver and a namespace":

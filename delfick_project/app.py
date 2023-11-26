@@ -11,14 +11,14 @@ The class is as follows:
 
 .. autoclass:: App
 """
-from .logging import setup_logging, setup_logging_theme
-from .errors import DelfickError, UserQuit
-
-import logging.handlers
 import argparse
 import logging
-import sys
+import logging.handlers
 import os
+import sys
+
+from .errors import DelfickError, UserQuit
+from .logging import setup_logging, setup_logging_theme
 
 
 class Ignore(object):

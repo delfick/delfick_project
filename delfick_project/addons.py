@@ -1,10 +1,11 @@
-from delfick_project.norms import BadSpecValue, dictobj, sb, Meta
+import logging
+from collections import defaultdict
+
+import pkg_resources
+
 from delfick_project.errors import DelfickError, ProgrammerError
 from delfick_project.layerz import Layers
-
-from collections import defaultdict
-import pkg_resources
-import logging
+from delfick_project.norms import BadSpecValue, Meta, dictobj, sb
 
 log = logging.getLogger("delfick_project.addons")
 

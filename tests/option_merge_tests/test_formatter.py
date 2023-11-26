@@ -1,13 +1,16 @@
 # coding: spec
 
-from delfick_project.option_merge import MergedOptionStringFormatter, MergedOptions, BadOptionFormat
+import string
+from unittest import mock
+
+import pytest
 
 from delfick_project.errors_pytest import assertRaises
-
-from unittest import mock
-import pytest
-import string
-
+from delfick_project.option_merge import (
+    BadOptionFormat,
+    MergedOptions,
+    MergedOptionStringFormatter,
+)
 
 describe "MergedOptionStringFormatter":
 

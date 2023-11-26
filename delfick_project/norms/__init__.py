@@ -1,3 +1,5 @@
+from . import spec_base as sb
+from . import validators as va
 from .errors import (
     BadDirectory,
     BadFilename,
@@ -6,11 +8,9 @@ from .errors import (
     BadSpecValue,
     DeprecatedKey,
 )
-from .validators import Validator
-from . import validators as va
-from . import spec_base as sb
-from .obj import dictobj
 from .meta import Meta
+from .obj import dictobj
+from .validators import Validator
 
 __all__ = [
     "sb",

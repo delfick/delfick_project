@@ -1,16 +1,17 @@
 # coding: spec
 
-from delfick_project.errors_pytest import assertRaises
-from delfick_project.errors import DelfickError
-from delfick_project.app import App, CliParser
-
+import datetime
+import io
+import logging
+import re
 from textwrap import dedent
 from unittest import mock
-import datetime
-import logging
+
 import pytest
-import io
-import re
+
+from delfick_project.app import App, CliParser
+from delfick_project.errors import DelfickError
+from delfick_project.errors_pytest import assertRaises
 
 
 @pytest.fixture(autouse=True)

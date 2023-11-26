@@ -1,14 +1,13 @@
 # coding: spec
 
+from unittest import mock
+
+import pytest
+
+from delfick_project.errors_pytest import assertRaises
 from delfick_project.option_merge import Converters, NotFound
 from delfick_project.option_merge.joiner import dot_joiner
 from delfick_project.option_merge.path import Path
-
-from delfick_project.errors_pytest import assertRaises
-
-from unittest import mock
-import pytest
-
 
 describe "Path":
     it "takes in path, configuration, converters and ignore_converters":

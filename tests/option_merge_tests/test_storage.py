@@ -1,15 +1,14 @@
 # coding: spec
 
-from delfick_project.option_merge.storage import Storage, DataPath
-from delfick_project.option_merge import MergedOptions, NotFound
-from delfick_project.option_merge.path import Path
-from delfick_project.norms import dictobj
-
-from delfick_project.errors_pytest import assertRaises
-
 from unittest import mock
+
 import pytest
 
+from delfick_project.errors_pytest import assertRaises
+from delfick_project.norms import dictobj
+from delfick_project.option_merge import MergedOptions, NotFound
+from delfick_project.option_merge.path import Path
+from delfick_project.option_merge.storage import DataPath, Storage
 
 d1 = mock.Mock(name="d1", spec=[])
 d2 = mock.Mock(name="d2", spec=[])

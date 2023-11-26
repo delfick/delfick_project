@@ -1,11 +1,11 @@
 """
 .. autoclass:: dictobj
 """
-from .field_spec import Field, NullableField
+from collections import defaultdict
+
 from . import spec_base as sb
 from .errors import BadSpec
-
-from collections import defaultdict
+from .field_spec import Field, NullableField
 
 _cached_fields = {}
 

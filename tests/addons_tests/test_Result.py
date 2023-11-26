@@ -1,12 +1,12 @@
 # coding: spec
 
-from delfick_project.addons import Result
+from unittest import mock
 
+import pytest
+
+from delfick_project.addons import Result
 from delfick_project.errors_pytest import assertRaises
 from delfick_project.norms import BadSpecValue, Meta
-
-from unittest import mock
-import pytest
 
 describe "Result":
 

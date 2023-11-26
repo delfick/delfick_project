@@ -1,11 +1,12 @@
 # coding: spec
 
-from delfick_project.errors_pytest import assertRaises
-from delfick_project.layerz import Layers, DepCycle
-
 from itertools import zip_longest
 from unittest import mock
+
 import pytest
+
+from delfick_project.errors_pytest import assertRaises
+from delfick_project.layerz import DepCycle, Layers
 
 
 @pytest.fixture()

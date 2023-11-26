@@ -1,6 +1,6 @@
-from delfick_project.addons import addon_hook
-
 from addons_tests_register import global_register
+
+from delfick_project.addons import addon_hook
 
 global_register["imported"].append((__name__,))
 

@@ -27,11 +27,11 @@ The following items are all found under ``delfick_project.norms.sb``. For exampl
 
 .. show_specs::
 """
-from .errors import BadSpec, BadSpecValue, BadDirectory, BadFilename
-
-import operator
 import io
+import operator
 import os
+
+from .errors import BadDirectory, BadFilename, BadSpec, BadSpecValue
 
 default_specs = []
 

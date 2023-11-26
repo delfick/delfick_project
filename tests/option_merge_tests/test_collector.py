@@ -1,19 +1,17 @@
 # coding: spec
 
-from delfick_project.option_merge import Collector, MergedOptions
-
-from delfick_project.errors_pytest import assertRaises
-from delfick_project.errors import DelfickError
-from delfick_project.norms import sb, Meta
-
+import json
+import os
+import shutil
+import tempfile
 from contextlib import contextmanager
 from getpass import getpass
 from unittest import mock
-import tempfile
-import shutil
-import json
-import os
 
+from delfick_project.errors import DelfickError
+from delfick_project.errors_pytest import assertRaises
+from delfick_project.norms import Meta, sb
+from delfick_project.option_merge import Collector, MergedOptions
 
 describe "Collector":
 

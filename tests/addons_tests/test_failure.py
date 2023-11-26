@@ -1,14 +1,14 @@
 # coding: spec
 
-from delfick_project.addons import AddonGetter, Register
-
-from delfick_project.errors_pytest import assertRaises
-from delfick_project.errors import ProgrammerError
-from delfick_project.layerz import DepCycle
-
-from unittest import mock
-import pytest
 import sys
+from unittest import mock
+
+import pytest
+
+from delfick_project.addons import AddonGetter, Register
+from delfick_project.errors import ProgrammerError
+from delfick_project.errors_pytest import assertRaises
+from delfick_project.layerz import DepCycle
 
 
 @pytest.fixture()

@@ -1,10 +1,9 @@
 # coding: spec
 
-from delfick_project.option_merge.joiner import dot_joiner, join
-from delfick_project.option_merge.path import Path
-
 import itertools
 
+from delfick_project.option_merge.joiner import dot_joiner, join
+from delfick_project.option_merge.path import Path
 
 describe "dot_joiner":
     it "joins keeping all dots in between":

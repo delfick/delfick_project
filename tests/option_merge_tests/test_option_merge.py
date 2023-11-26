@@ -1,18 +1,18 @@
 # coding: spec
 
-from delfick_project.option_merge import (
-    Converter,
-    MergedOptions,
-    ConverterProperty,
-    AttributesConverter,
-    KeyValuePairsConverter,
-)
-from delfick_project.option_merge.storage import Storage
+from unittest import mock
+
+import pytest
 
 from delfick_project.errors_pytest import assertRaises
-
-from unittest import mock
-import pytest
+from delfick_project.option_merge import (
+    AttributesConverter,
+    Converter,
+    ConverterProperty,
+    KeyValuePairsConverter,
+    MergedOptions,
+)
+from delfick_project.option_merge.storage import Storage
 
 
 @pytest.fixture()

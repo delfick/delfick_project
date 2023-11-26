@@ -1,11 +1,10 @@
 # coding: spec
 
-from delfick_project.addons import addon_hook
-
-from delfick_project.errors_pytest import assertRaises
-from delfick_project.errors import ProgrammerError
-
 from unittest import mock
+
+from delfick_project.addons import addon_hook
+from delfick_project.errors import ProgrammerError
+from delfick_project.errors_pytest import assertRaises
 
 describe "addon_hook":
     it "defaults extras to an empty dictionary and post_register to False":

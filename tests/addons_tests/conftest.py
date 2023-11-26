@@ -1,8 +1,9 @@
-import pkg_resources
 import importlib
+import os
 import runpy
 import site
-import os
+
+import pkg_resources
 
 addons_tests = os.path.dirname(__file__)
 

@@ -1,10 +1,9 @@
 # coding: spec
 
-from delfick_project.option_merge import Converter, Converters
-from delfick_project.option_merge.path import Path
-
 from unittest import mock
 
+from delfick_project.option_merge import Converter, Converters
+from delfick_project.option_merge.path import Path
 
 describe "Converter":
     it "takes in conversion logic and convert_path":

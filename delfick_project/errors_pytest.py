@@ -1,12 +1,12 @@
 """
 .. autofunction:: assertRaises
 """
-from delfick_project.errors import DelfickError
-
-from textwrap import dedent
-import traceback
-import sys
 import re
+import sys
+import traceback
+from textwrap import dedent
+
+from delfick_project.errors import DelfickError
 
 
 class RegexCompare:

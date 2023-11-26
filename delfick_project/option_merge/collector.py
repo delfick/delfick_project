@@ -63,16 +63,16 @@ For example:
     collector.configuration["some.contrived.example"] == 4
 """
 
-from .converter import Converter
+import json
+import logging
+import os
+import tempfile
+from contextlib import contextmanager
+from getpass import getpass
 
 from delfick_project.norms import Meta, sb
 
-from contextlib import contextmanager
-from getpass import getpass
-import tempfile
-import logging
-import json
-import os
+from .converter import Converter
 
 log = logging.getLogger("delfick_project.option_merge.collector")
 

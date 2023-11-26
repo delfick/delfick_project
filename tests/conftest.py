@@ -1,7 +1,8 @@
-import tempfile
-import pytest
-import shutil
 import os
+import shutil
+import tempfile
+
+import pytest
 
 
 @pytest.fixture()

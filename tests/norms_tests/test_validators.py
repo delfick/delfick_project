@@ -1,13 +1,20 @@
 # coding: spec
 
-from delfick_project.norms import BadSpecValue, DeprecatedKey, BadSpecDefinition
-from delfick_project.norms import sb, va, Validator, Meta
+import uuid
+from unittest import mock
+
+import pytest
 
 from delfick_project.errors_pytest import assertRaises
-
-from unittest import mock
-import pytest
-import uuid
+from delfick_project.norms import (
+    BadSpecDefinition,
+    BadSpecValue,
+    DeprecatedKey,
+    Meta,
+    Validator,
+    sb,
+    va,
+)
 
 
 @pytest.fixture()

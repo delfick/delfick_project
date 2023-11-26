@@ -8,14 +8,14 @@ which can be used to get keys and values for some path.
 It is also used to get thesource for particular paths.
 """
 
-from .versioning import versioned_iterable, versioned_value
+from . import helper as hp
 from .helper import convert_to_dict
+from .joiner import dot_joiner
 from .merge import MergedOptions
 from .not_found import NotFound
-from .value_at import value_at
-from .joiner import dot_joiner
-from . import helper as hp
 from .path import Path
+from .value_at import value_at
+from .versioning import versioned_iterable, versioned_value
 
 
 class DataPath(object):

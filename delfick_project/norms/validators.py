@@ -28,11 +28,11 @@ The following is all available under ``delfick_project.norms.va``. For example:
 
 .. show_validators::
 """
-from .errors import BadSpecValue, DeprecatedKey, BadSpecDefinition
-from . import spec_base as sb
-
-from itertools import chain
 import re
+from itertools import chain
+
+from . import spec_base as sb
+from .errors import BadSpecDefinition, BadSpecValue, DeprecatedKey
 
 default_validators = []
 

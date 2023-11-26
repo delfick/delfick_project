@@ -1,9 +1,10 @@
 # coding: spec
 
-from delfick_project.norms import Meta
-
 from unittest import mock
+
 import pytest
+
+from delfick_project.norms import Meta
 
 describe "Meta":
     it "holds everything and a path":

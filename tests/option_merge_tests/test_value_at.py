@@ -1,13 +1,11 @@
 # coding: spec
 
-from delfick_project.option_merge import NotFound, MergedOptions
-from delfick_project.option_merge.value_at import value_at
-from delfick_project.option_merge.path import Path
-
-from delfick_project.errors_pytest import assertRaises
-
 from unittest import mock
 
+from delfick_project.errors_pytest import assertRaises
+from delfick_project.option_merge import MergedOptions, NotFound
+from delfick_project.option_merge.path import Path
+from delfick_project.option_merge.value_at import value_at
 
 describe "value_at":
     it "returns as is if no path":

@@ -1,9 +1,10 @@
-from delfick_project.norms import sb, va
-
-from docutils.statemachine import ViewList
-from docutils.parsers.rst import Directive
 from textwrap import dedent
+
 from docutils import nodes
+from docutils.parsers.rst import Directive
+from docutils.statemachine import ViewList
+
+from delfick_project.norms import sb, va
 
 
 class ShowDirective(Directive):

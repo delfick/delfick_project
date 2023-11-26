@@ -1,11 +1,12 @@
 # coding: spec
 
+import random
+import uuid
+from unittest import TestCase, mock
+
 from delfick_project.errors import DelfickError, DelfickErrorTestMixin
 from delfick_project.errors_pytest import assertRaises
 
-from unittest import mock, TestCase
-import random
-import uuid
 
 # Used in the tests
 class AError(DelfickError):
