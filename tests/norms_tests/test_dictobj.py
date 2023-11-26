@@ -366,7 +366,7 @@ describe "dictobj":
                     instance.nonexistant
 
             it "can't override non settable properties", instance:
-                with assertRaises(AttributeError, "can't set attribute"):
+                with assertRaises(AttributeError, "(can't set attribute|object has no setter)"):
                     instance.three = 6
 
                 instance.five = 7
@@ -408,7 +408,10 @@ describe "dictobj":
                     instance["nonexistant"]
 
             it "can't override non settable properties", instance:
-                with assertRaises(AttributeError, "can't set attribute"):
+                with assertRaises(
+                    AttributeError,
+                    "(can't set attribute|property 'three' of '[^']+' object has no setter)",
+                ):
                     instance["three"] = 6
 
                 instance["five"] = 7
